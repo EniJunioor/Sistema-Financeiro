@@ -83,7 +83,7 @@ Implementação incremental da plataforma financeira usando TypeScript + NestJS 
 
 ### Fase 3: Gestão de Transações
 
-- [ ] 8. Implementar CRUD de transações (Backend)
+- [x] 8. Implementar CRUD de transações (Backend)
   - Criar TransactionsModule com controller e service
   - Implementar endpoints para criar, listar, editar e excluir transações
   - Adicionar sistema de categorização automática com IA/ML
