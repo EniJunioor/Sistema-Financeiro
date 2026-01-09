@@ -1,0 +1,25 @@
+{
+  "name": "@plataforma-financeira/mobile",
+  "version": "1.0.0",
+  "description": "Aplicativo mobile da Plataforma Financeira",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "build": "echo 'Mobile app build - to be implemented'",
+    "test": "echo 'Mobile app tests - to be implemented'"
+  },
+  "dependencies": {
+    "expo": "~49.0.0",
+    "react": "18.2.0",
+    "react-native": "0.72.0"
+  },
+  "devDependencies": {
+    "@types/react": "~18.2.0",
+    "typescript": "^5.1.3"
+  },
+  "note": "Este é um placeholder para o futuro aplicativo mobile React Native"
+}

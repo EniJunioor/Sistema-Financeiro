@@ -1,0 +1,245 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  name              String?
+  avatar            String?
+  emailVerified     DateTime?
+  password          String?
+  twoFactorEnabled  Boolean   @default(false)
+  twoFactorSecret   String?
+  twoFactorBackupCodes String? // JSON array of backup codes
+  smsPhone          String?   // Phone number for SMS 2FA
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relacionamentos
+  accounts          Account[]
+  transactions      Transaction[]
+  investments       Investment[]
+  goals             Goal[]
+  notifications     Notification[]
+  sessions          Session[]
+  oauthAccounts     OAuthAccount[]
+  refreshTokens     RefreshToken[]
+  loginAttempts     LoginAttempt[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String    @id @default(cuid())
+  userId            String
+  type              String    // 'checking', 'savings', 'credit_card', 'investment'
+  provider          String?   // 'plaid', 'truelayer', 'manual'
+  providerAccountId String?
+  name              String
+  balance           Decimal
+  currency          String    @default("BRL")
+  isActive          Boolean   @default(true)
+  lastSyncAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relacionamentos
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions      Transaction[]
+
+  @@map("accounts")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  icon        String?
+  color       String?
+  parentId    String?
+  isSystem    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  // Relacionamentos
+  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  transactions Transaction[]
+
+  @@map("categories")
+}
+
+model Transaction {
+  id              String    @id @default(cuid())
+  userId          String
+  accountId       String?
+  categoryId      String?
+  type            String    // 'income', 'expense', 'transfer'
+  amount          Decimal
+  description     String
+  date            DateTime
+  location        String?
+  tags            String?
+  isRecurring     Boolean   @default(false)
+  recurringRule   String?
+  attachments     String?
+  metadata        String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relacionamentos
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account         Account?  @relation(fields: [accountId], references: [id])
+  category        Category? @relation(fields: [categoryId], references: [id])
+
+  @@map("transactions")
+}
+
+model Investment {
+  id              String    @id @default(cuid())
+  userId          String
+  symbol          String
+  name            String
+  type            String    // 'stock', 'fund', 'etf', 'crypto', 'bond'
+  quantity        Decimal
+  averagePrice    Decimal
+  currentPrice    Decimal?
+  currency        String    @default("BRL")
+  broker          String?
+  sector          String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relacionamentos
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions    InvestmentTransaction[]
+
+  @@map("investments")
+}
+
+model InvestmentTransaction {
+  id            String    @id @default(cuid())
+  investmentId  String
+  type          String    // 'buy', 'sell', 'dividend'
+  quantity      Decimal
+  price         Decimal
+  fees          Decimal?
+  date          DateTime
+  createdAt     DateTime  @default(now())
+
+  // Relacionamentos
+  investment    Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+
+  @@map("investment_transactions")
+}
+
+model Goal {
+  id            String    @id @default(cuid())
+  userId        String
+  name          String
+  description   String?
+  type          String    // 'savings', 'spending_limit', 'investment'
+  targetAmount  Decimal
+  currentAmount Decimal   @default(0)
+  targetDate    DateTime?
+  categoryId    String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relacionamentos
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("goals")
+}
+
+model Notification {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String
+  message     String
+  type        String    // 'info', 'warning', 'success', 'error'
+  isRead      Boolean   @default(false)
+  actionUrl   String?
+  metadata    String?
+  createdAt   DateTime  @default(now())
+
+  // Relacionamentos
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model Session {
+  id          String    @id @default(cuid())
+  userId      String
+  token       String    @unique
+  deviceInfo  String?
+  ipAddress   String?
+  isActive    Boolean   @default(true)
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+
+  // Relacionamentos
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model OAuthAccount {
+  id                String  @id @default(cuid())
+  userId            String
+  provider          String  // 'google', 'apple', 'microsoft', 'facebook'
+  providerAccountId String
+  accessToken       String?
+  refreshToken      String?
+  expiresAt         DateTime?
+  tokenType         String?
+  scope             String?
+  idToken           String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relacionamentos
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("oauth_accounts")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  isRevoked Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relacionamentos
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model LoginAttempt {
+  id          String   @id @default(cuid())
+  userId      String?
+  email       String
+  ipAddress   String
+  userAgent   String?
+  success     Boolean
+  failureReason String?
+  createdAt   DateTime @default(now())
+
+  // Relacionamentos
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("login_attempts")
+}
