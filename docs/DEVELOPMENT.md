@@ -1,6 +1,10 @@
-# Guia de Desenvolvimento
+# 🛠️ Guia de Desenvolvimento - Plataforma Financeira
 
-## Configuração do Ambiente
+## 🎯 Visão Geral
+
+Este guia fornece instruções detalhadas para desenvolver na Plataforma Financeira, incluindo configuração do ambiente, padrões de código, workflows e melhores práticas.
+
+## 🚀 Configuração do Ambiente
 
 ### Pré-requisitos
 
@@ -8,22 +12,33 @@
 - **Docker** e **Docker Compose** ([Download](https://www.docker.com/))
 - **Git** ([Download](https://git-scm.com/))
 - **VS Code** (recomendado) com extensões:
-  - TypeScript
+  - TypeScript and JavaScript Language Features
   - Prisma
   - ESLint
-  - Prettier
+  - Prettier - Code formatter
   - Docker
+  - GitLens
+  - Thunder Client (para testar APIs)
 
 ### Primeira Configuração
 
 1. **Clone e configure o projeto**
    ```bash
-   git clone <repository-url>
-   cd plataforma-financeira
+   git clone https://github.com/EniJunioor/Sistema-Financeiro.git
+   cd Sistema-Financeiro
    npm install
    ```
 
-2. **Execute o script de setup**
+2. **Configure variáveis de ambiente**
+   ```bash
+   # Backend
+   cp backend/.env.example backend/.env
+   
+   # Frontend
+   cp frontend/.env.local.example frontend/.env.local
+   ```
+
+3. **Execute o script de setup**
    ```bash
    # Linux/Mac
    ./scripts/setup.sh
@@ -32,14 +47,75 @@
    .\scripts\setup.ps1
    ```
 
-3. **Inicie o desenvolvimento**
+4. **Inicie os serviços**
    ```bash
+   # Inicia PostgreSQL e Redis
+   npm run docker:up
+   
+   # Executa migrations e seeds
+   npm run db:migrate
+   npm run db:seed
+   
+   # Inicia desenvolvimento
    npm run dev
    ```
 
-## Estrutura do Código
+### URLs de Acesso
+
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:3001
+- **API Docs**: http://localhost:3001/api/docs
+- **Prisma Studio**: `npm run db:studio`
+
+## 🏗️ Estrutura do Código
 
 ### Backend (NestJS)
+
+#### Arquitetura de Módulos
+```
+backend/src/
+├── modules/                    # Módulos de negócio
+│   ├── auth/                  # Autenticação JWT + OAuth + 2FA
+│   │   ├── controllers/       # AuthController, ProfileController
+│   │   ├── services/          # AuthService, TwoFactorService
+│   │   ├── guards/            # JwtGuard, RolesGuard
+│   │   ├── strategies/        # JwtStrategy, GoogleStrategy
+│   │   └── dto/               # LoginDto, RegisterDto
+│   │
+│   ├── accounts/              # Contas bancárias + Open Banking
+│   │   ├── controllers/       # AccountsController
+│   │   ├── services/          # AccountsService, OpenBankingService
+│   │   └── providers/         # PlaidService, TrueLayerService
+│   │
+│   ├── transactions/          # Transações + IA + Deduplicação
+│   │   ├── controllers/       # TransactionsController, DeduplicationController
+│   │   ├── services/          # TransactionsService, MLCategorizationService
+│   │   └── processors/        # RecurringTransactionsProcessor
+│   │
+│   ├── investments/           # Investimentos + Cotações
+│   ├── goals/                 # Metas + Gamificação
+│   ├── notifications/         # Notificações inteligentes
+│   ├── reports/               # Relatórios + Analytics
+│   └── ai/                    # Inteligência Artificial
+│
+├── common/                    # Código compartilhado
+│   ├── decorators/            # @CurrentUser, @Public
+│   ├── filters/               # GlobalExceptionFilter
+│   ├── guards/                # JwtAuthGuard, RolesGuard
+│   ├── interceptors/          # TransformInterceptor
+│   ├── pipes/                 # ValidationPipe
+│   └── prisma/                # PrismaService
+│
+├── config/                    # Configurações
+│   ├── database.config.ts     # Config do PostgreSQL
+│   ├── redis.config.ts        # Config do Redis
+│   ├── jwt.config.ts          # Config JWT
+│   └── app.config.ts          # Config geral
+│
+└── jobs/                      # Background jobs
+    ├── processors/            # Job processors
+    └── queues/                # Queue definitions
+```
 
 #### Criando um novo módulo
 ```bash
@@ -49,14 +125,17 @@ npx nest generate controller modules/exemplo/controllers/exemplo
 npx nest generate service modules/exemplo/services/exemplo
 ```
 
-#### Padrões de código
-- Use **DTOs** para validação de entrada
+#### Padrões de código Backend
+- Use **DTOs** com class-validator para validação
 - Implemente **Guards** para autorização
 - Use **Interceptors** para transformação de resposta
 - Aplique **Pipes** para validação e transformação
+- Documente APIs com **Swagger/OpenAPI**
+- Use **Prisma** para todas as operações de banco
 
-#### Exemplo de Controller
+#### Exemplo de Controller Completo
 ```typescript
+@ApiTags('exemplo')
 @Controller('exemplo')
 @UseGuards(JwtAuthGuard)
 export class ExemploController {
@@ -64,46 +143,131 @@ export class ExemploController {
 
   @Get()
   @ApiOperation({ summary: 'Listar exemplos' })
-  async findAll(@Query() query: FindAllExemploDto) {
-    return this.exemploService.findAll(query);
+  @ApiResponse({ status: 200, description: 'Lista de exemplos' })
+  async findAll(
+    @Query() query: FindAllExemploDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.exemploService.findAll(userId, query);
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Criar exemplo' })
+  @ApiResponse({ status: 201, description: 'Exemplo criado' })
+  async create(
+    @Body() createDto: CreateExemploDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.exemploService.create(userId, createDto);
   }
 }
 ```
 
 ### Frontend (Next.js)
 
-#### Estrutura de componentes
+#### Arquitetura de Componentes
 ```
-components/
-├── ui/           # Componentes base (Shadcn/ui)
-├── layout/       # Componentes de layout
-├── forms/        # Formulários
-├── charts/       # Gráficos
-└── features/     # Componentes por feature
+frontend/src/
+├── app/                       # App Router (Next.js 14)
+│   ├── (auth)/               # Grupo de rotas de autenticação
+│   │   ├── login/            # Página de login
+│   │   ├── register/         # Página de registro
+│   │   └── layout.tsx        # Layout de auth
+│   │
+│   ├── (dashboard)/          # Grupo de rotas do dashboard
+│   │   ├── dashboard/        # Dashboard principal
+│   │   ├── accounts/         # Contas bancárias
+│   │   ├── transactions/     # Transações
+│   │   ├── investments/      # Investimentos
+│   │   └── layout.tsx        # Layout do dashboard
+│   │
+│   └── api/                  # API Routes
+│
+├── components/               # Componentes React
+│   ├── ui/                   # Componentes base (Shadcn/ui)
+│   │   ├── button.tsx        # Botão
+│   │   ├── card.tsx          # Card
+│   │   ├── dialog.tsx        # Modal
+│   │   └── ...               # Outros componentes UI
+│   │
+│   ├── layout/               # Componentes de layout
+│   │   ├── sidebar.tsx       # Sidebar principal
+│   │   ├── header.tsx        # Header
+│   │   └── navigation.tsx    # Navegação
+│   │
+│   ├── accounts/             # Componentes de contas
+│   │   ├── account-card.tsx  # Card de conta
+│   │   ├── connect-dialog.tsx # Dialog de conexão
+│   │   └── transactions-list.tsx # Lista de transações
+│   │
+│   ├── transactions/         # Componentes de transações
+│   ├── dashboard/            # Componentes do dashboard
+│   ├── charts/               # Gráficos e visualizações
+│   └── forms/                # Formulários
+│
+├── lib/                      # Utilitários e configurações
+│   ├── api.ts                # Cliente API base
+│   ├── accounts-api.ts       # API de contas
+│   ├── transactions-api.ts   # API de transações
+│   ├── auth.ts               # Configuração NextAuth
+│   ├── utils.ts              # Utilitários gerais
+│   └── validations.ts        # Schemas Zod
+│
+├── hooks/                    # Custom hooks
+│   ├── use-auth.ts           # Hook de autenticação
+│   ├── use-accounts.ts       # Hook de contas
+│   ├── use-transactions.ts   # Hook de transações
+│   └── use-debounce.ts       # Hook de debounce
+│
+├── store/                    # Estado global (Zustand)
+│   ├── auth-store.ts         # Store de autenticação
+│   ├── ui-store.ts           # Store de UI
+│   └── data-store.ts         # Store de dados
+│
+└── types/                    # Tipos TypeScript
+    ├── auth.ts               # Tipos de autenticação
+    ├── transaction.ts        # Tipos de transação
+    ├── account.ts            # Tipos de conta
+    └── api.ts                # Tipos de API
 ```
 
-#### Padrões de código
+#### Padrões de código Frontend
 - Use **React Hook Form** + **Zod** para formulários
 - Implemente **React Query** para cache de dados
 - Use **Zustand** para estado global
 - Aplique **TypeScript** rigorosamente
+- Use **Shadcn/ui** para componentes base
+- Implemente **Error Boundaries** para tratamento de erros
 
-#### Exemplo de componente
+#### Exemplo de componente com hooks
 ```typescript
 interface ExemploProps {
-  data: ExemploData[];
-  onUpdate: (id: string, data: Partial<ExemploData>) => void;
+  accountId: string;
 }
 
-export function Exemplo({ data, onUpdate }: ExemploProps) {
-  const { mutate } = useMutation({
-    mutationFn: updateExemplo,
-    onSuccess: () => queryClient.invalidateQueries(['exemplos']),
-  });
+export function Exemplo({ accountId }: ExemploProps) {
+  const { data: account, isLoading, error } = useAccount(accountId);
+  const updateMutation = useUpdateAccount();
+
+  const handleUpdate = (data: UpdateAccountData) => {
+    updateMutation.mutate({ accountId, data });
+  };
+
+  if (isLoading) return <Skeleton className="h-32 w-full" />;
+  if (error) return <ErrorMessage error={error} />;
 
   return (
     <Card>
-      {/* Implementação do componente */}
+      <CardHeader>
+        <CardTitle>{account.name}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <AccountForm 
+          account={account} 
+          onSubmit={handleUpdate}
+          isLoading={updateMutation.isPending}
+        />
+      </CardContent>
     </Card>
   );
 }

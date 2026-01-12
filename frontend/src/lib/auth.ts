@@ -1,6 +1,7 @@
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
+import { apiClient } from "./api"
 
 // Note: In a real implementation, you would import your Prisma client here
 // For now, we'll use a mock configuration without the PrismaAdapter
@@ -23,14 +24,31 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        // TODO: Implement actual authentication logic with backend API
-        // This is a mock implementation
-        if (credentials.email === "admin@example.com" && credentials.password === "password") {
-          return {
-            id: "1",
-            email: credentials.email,
-            name: "Admin User",
+        try {
+          // Call backend API for authentication
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          })
+
+          if (response.ok) {
+            const data = await response.json()
+            return {
+              id: data.user.id,
+              email: data.user.email,
+              name: data.user.name,
+              accessToken: data.accessToken,
+              refreshToken: data.refreshToken,
+            }
           }
+        } catch (error) {
+          console.error('Authentication error:', error)
         }
 
         return null
@@ -48,6 +66,17 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
+        token.accessToken = user.accessToken
+        token.refreshToken = user.refreshToken
+      }
+      return token
+    },
+    async session({ session, token }) {
+      session.user.id = token.id as string
+      session.accessToken = token.accessToken as string
+      session.refreshToken = token.refreshToken as string
+      return session
+    },
       }
       return token
     },
