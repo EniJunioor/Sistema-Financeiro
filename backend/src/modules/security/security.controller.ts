@@ -91,7 +91,7 @@ export class SecurityController {
       req.user.id,
       'decryption',
       'data',
-      'read',
+      'READ',
       req,
       true,
       { algorithm: body.algorithm }
@@ -128,7 +128,7 @@ export class SecurityController {
       req.user.id,
       'hsm_decryption',
       'hsm',
-      'read',
+      'READ',
       req,
       true,
       { keyId: body.keyId }
@@ -165,7 +165,7 @@ export class SecurityController {
       req.user.id,
       'hsm_verification',
       'hsm',
-      'read',
+      'READ',
       req,
       true,
       { keyId: body.keyId, algorithm: body.algorithm }

@@ -33,8 +33,16 @@ class NotificationsApi {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
-      ...filters,
     });
+
+    // Add filters if provided
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined) {
+          params.append(key, value.toString());
+        }
+      });
+    }
 
     const response = await api.get<NotificationApiResponse<PaginatedNotifications>>(
       `${this.baseUrl}?${params}`
@@ -76,7 +84,9 @@ class NotificationsApi {
 
   // Delete multiple notifications
   async deleteMultiple(notificationIds: string[]): Promise<void> {
-    await api.delete(`${this.baseUrl}/bulk-delete`, {
+    await api.request({
+      method: 'DELETE',
+      url: `${this.baseUrl}/bulk-delete`,
       data: { notificationIds },
     });
   }

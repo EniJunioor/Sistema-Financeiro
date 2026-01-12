@@ -11,13 +11,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { Separator } from '@/components/ui/separator';
 import { X, Eye, Download, Calendar, Share2, FileText } from 'lucide-react';
 import { useReports } from '@/hooks/use-reports';
-import { useTransactions } from '@/hooks/use-transactions';
+import { useTransactions, useCategories } from '@/hooks/use-transactions';
 import { useAccounts } from '@/hooks/use-accounts';
 import { ReportPreview } from './report-preview';
 import { ReportScheduler } from './report-scheduler';
@@ -61,8 +60,8 @@ export function ReportGenerator({ onClose, initialTemplate }: ReportGeneratorPro
     isGenerating 
   } = useReports();
   
-  const { categories } = useTransactions();
-  const { accounts } = useAccounts();
+  const { data: categories } = useCategories();
+  const { data: accounts } = useAccounts();
 
   const form = useForm<ReportConfigForm>({
     resolver: zodResolver(reportConfigSchema),
@@ -287,12 +286,12 @@ export function ReportGenerator({ onClose, initialTemplate }: ReportGeneratorPro
                     <div className="space-y-2">
                       <FormLabel>Período</FormLabel>
                       <DateRangePicker
-                        onUpdate={(values) => {
-                          if (values?.range?.from) {
-                            form.setValue('startDate', values.range.from.toISOString());
+                        onSelect={(range) => {
+                          if (range?.from) {
+                            form.setValue('startDate', range.from.toISOString());
                           }
-                          if (values?.range?.to) {
-                            form.setValue('endDate', values.range.to.toISOString());
+                          if (range?.to) {
+                            form.setValue('endDate', range.to.toISOString());
                           }
                         }}
                       />

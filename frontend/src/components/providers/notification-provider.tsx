@@ -351,7 +351,9 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     markAllAsRead: markAllAsReadMutation.mutateAsync,
     deleteNotification: deleteNotificationMutation.mutateAsync,
     clearAll: clearAllMutation.mutateAsync,
-    updatePreferences: updatePreferencesMutation.mutateAsync,
+    updatePreferences: async (preferences: Partial<NotificationPreferences>) => {
+      await updatePreferencesMutation.mutateAsync(preferences);
+    },
     updateSettings,
     
     // Toast actions

@@ -38,28 +38,6 @@ export class RiskMetricsDto {
   riskFreeRate?: number = 0.05;
 }
 
-export class OptimalAllocationDto {
-  @ApiProperty({ 
-    description: 'Risk tolerance level',
-    enum: ['conservative', 'moderate', 'aggressive']
-  })
-  @IsEnum(['conservative', 'moderate', 'aggressive'])
-  riskTolerance: 'conservative' | 'moderate' | 'aggressive';
-
-  @ApiPropertyOptional({ description: 'Investment time horizon in years' })
-  @IsOptional()
-  @IsNumber()
-  @Min(1)
-  @Max(50)
-  @Type(() => Number)
-  timeHorizon?: number = 10;
-
-  @ApiPropertyOptional({ description: 'Custom constraints for optimization' })
-  @IsOptional()
-  @IsObject()
-  constraints?: OptimizationConstraintsDto;
-}
-
 export class OptimizationConstraintsDto {
   @ApiPropertyOptional({ description: 'Minimum weight per asset (symbol -> percentage)' })
   @IsOptional()
@@ -97,6 +75,28 @@ export class OptimizationConstraintsDto {
   @Max(1)
   @Type(() => Number)
   turnoverLimit?: number;
+}
+
+export class OptimalAllocationDto {
+  @ApiProperty({ 
+    description: 'Risk tolerance level',
+    enum: ['conservative', 'moderate', 'aggressive']
+  })
+  @IsEnum(['conservative', 'moderate', 'aggressive'])
+  riskTolerance: 'conservative' | 'moderate' | 'aggressive';
+
+  @ApiPropertyOptional({ description: 'Investment time horizon in years' })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(50)
+  @Type(() => Number)
+  timeHorizon?: number = 10;
+
+  @ApiPropertyOptional({ description: 'Custom constraints for optimization' })
+  @IsOptional()
+  @IsObject()
+  constraints?: OptimizationConstraintsDto;
 }
 
 export class RebalancingStrategyDto {

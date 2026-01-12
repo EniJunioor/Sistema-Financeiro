@@ -2,24 +2,32 @@ import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuditService } from './audit.service';
-import * as rateLimit from 'express-rate-limit';
-import * as slowDown from 'express-slow-down';
-import * as ExpressBrute from 'express-brute';
-import * as ExpressBruteRedis from 'express-brute-redis';
+import rateLimit from 'express-rate-limit';
+import slowDown from 'express-slow-down';
+
+interface RequestWithUser extends Request {
+  user?: {
+    id: string;
+    [key: string]: any;
+  };
+  session?: {
+    id?: string;
+  };
+}
 
 @Injectable()
 export class SecurityMiddleware implements NestMiddleware {
   private readonly logger = new Logger(SecurityMiddleware.name);
-  private readonly rateLimiter: any;
-  private readonly speedLimiter: any;
-  private readonly bruteForce: any;
+  private rateLimiter: any;
+  private speedLimiter: any;
+  private strictRateLimiter: any; // For sensitive endpoints
 
   constructor(
     private configService: ConfigService,
     private auditService: AuditService,
   ) {
     this.initializeRateLimiting();
-    this.initializeBruteForceProtection();
+    this.initializeStrictRateLimiting();
   }
 
   private initializeRateLimiting() {
@@ -35,7 +43,7 @@ export class SecurityMiddleware implements NestMiddleware {
       },
       standardHeaders: true,
       legacyHeaders: false,
-      handler: (req: Request, res: Response) => {
+      handler: (req: RequestWithUser, res: Response) => {
         this.auditService.logSuspiciousActivity(
           req.user?.id || 'anonymous',
           'Rate limit exceeded',
@@ -59,38 +67,34 @@ export class SecurityMiddleware implements NestMiddleware {
     });
   }
 
-  private initializeBruteForceProtection() {
-    const bruteConfig = this.configService.get('security.bruteForce');
-    
-    // Redis store for brute force protection
-    const store = new ExpressBruteRedis({
-      host: this.configService.get('REDIS_HOST', 'localhost'),
-      port: this.configService.get('REDIS_PORT', 6379),
-      password: this.configService.get('REDIS_PASSWORD'),
-    });
-
-    this.bruteForce = new ExpressBrute(store, {
-      freeRetries: bruteConfig.freeRetries,
-      minWait: bruteConfig.minWait,
-      maxWait: bruteConfig.maxWait,
-      lifetime: bruteConfig.lifetime,
-      failCallback: (req: Request, res: Response, next: NextFunction, nextValidRequestDate: Date) => {
+  private initializeStrictRateLimiting() {
+    // Strict rate limiting for sensitive endpoints (login, password reset, etc.)
+    this.strictRateLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 5, // limit each IP to 5 requests per windowMs for sensitive endpoints
+      message: {
+        error: 'Too many attempts from this IP, please try again later.',
+        retryAfter: Math.ceil(15 * 60), // 15 minutes in seconds
+      },
+      standardHeaders: true,
+      legacyHeaders: false,
+      handler: (req: RequestWithUser, res: Response) => {
         this.auditService.logSuspiciousActivity(
           req.user?.id || 'anonymous',
-          'Brute force attack detected',
+          'Strict rate limit exceeded on sensitive endpoint',
           req,
-          { nextValidRequestDate }
+          { limit: 5, window: 15 * 60 * 1000 }
         );
-
+        
         res.status(429).json({
-          error: 'Too many failed attempts, please try again later.',
-          nextValidRequestDate,
+          error: 'Too many attempts from this IP, please try again later.',
+          retryAfter: Math.ceil(15 * 60),
         });
       },
     });
   }
 
-  use(req: Request, res: Response, next: NextFunction) {
+  use(req: RequestWithUser, res: Response, next: NextFunction) {
     // Apply security headers
     this.setSecurityHeaders(res);
 
@@ -150,7 +154,7 @@ export class SecurityMiddleware implements NestMiddleware {
     return str.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase();
   }
 
-  private async logRequest(req: Request) {
+  private async logRequest(req: RequestWithUser) {
     // Log all requests for audit purposes
     const shouldLog = this.shouldLogRequest(req);
     
@@ -175,13 +179,13 @@ export class SecurityMiddleware implements NestMiddleware {
     }
   }
 
-  private shouldLogRequest(req: Request): boolean {
+  private shouldLogRequest(req: RequestWithUser): boolean {
     // Don't log health checks and static assets
     const skipPaths = ['/health', '/metrics', '/favicon.ico', '/robots.txt'];
     return !skipPaths.some(path => req.path.startsWith(path));
   }
 
-  private calculateRequestRiskLevel(req: Request): 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' {
+  private calculateRequestRiskLevel(req: RequestWithUser): 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' {
     // High-risk paths
     const highRiskPaths = ['/auth', '/admin', '/api/v1/users', '/api/v1/accounts'];
     if (highRiskPaths.some(path => req.path.startsWith(path))) {
@@ -196,7 +200,7 @@ export class SecurityMiddleware implements NestMiddleware {
     return 'LOW';
   }
 
-  private getClientIP(req: Request): string {
+  private getClientIP(req: RequestWithUser): string {
     return (
       req.headers['x-forwarded-for'] as string ||
       req.headers['x-real-ip'] as string ||
@@ -207,14 +211,14 @@ export class SecurityMiddleware implements NestMiddleware {
   }
 
   /**
-   * Get brute force middleware for specific routes
+   * Get strict rate limiter for sensitive routes (replaces brute force protection)
    */
-  getBruteForceMiddleware() {
-    return this.bruteForce.prevent;
+  getStrictRateLimiter() {
+    return this.strictRateLimiter;
   }
 
   /**
-   * Get rate limiter for specific routes
+   * Get rate limiter for general routes
    */
   getRateLimiter() {
     return this.rateLimiter;

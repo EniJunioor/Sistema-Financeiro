@@ -86,7 +86,6 @@ export function Toast({ toast, onDismiss, position, index }: ToastProps) {
 
   const getPositionClasses = () => {
     const baseClasses = 'fixed z-50 transition-all duration-300 ease-out';
-    const offset = index * 10; // Stack toasts with slight offset
     
     switch (position) {
       case 'top-right':
@@ -118,6 +117,7 @@ export function Toast({ toast, onDismiss, position, index }: ToastProps) {
     }
   };
 
+  const offset = 10; // Stack toasts with slight offset
   const config = getTypeConfig(toast.type);
   const Icon = config.icon;
 

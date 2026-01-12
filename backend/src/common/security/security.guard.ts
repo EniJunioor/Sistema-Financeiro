@@ -3,6 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import { AuditService } from './audit.service';
 import { Request } from 'express';
 
+interface RequestWithUser extends Request {
+  user?: {
+    id: string;
+    [key: string]: any;
+  };
+}
+
 @Injectable()
 export class SecurityGuard implements CanActivate {
   private readonly logger = new Logger(SecurityGuard.name);
@@ -13,7 +20,7 @@ export class SecurityGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<Request>();
+    const request = context.switchToHttp().getRequest<RequestWithUser>();
     
     // Perform security checks
     const checks = [

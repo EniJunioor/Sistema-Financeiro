@@ -347,7 +347,7 @@ export function GoalCard({
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir Meta</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir a meta "{goal.name}"? 
+              Tem certeza que deseja excluir a meta &quot;{goal.name}&quot;? 
               Esta ação não pode ser desfeita e todos os dados relacionados serão perdidos.
             </AlertDialogDescription>
           </AlertDialogHeader>

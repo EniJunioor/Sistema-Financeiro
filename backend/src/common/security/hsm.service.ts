@@ -19,8 +19,8 @@ export interface SignatureResult {
 @Injectable()
 export class HSMService {
   private readonly logger = new Logger(HSMService.name);
-  private readonly kms: AWS.KMS;
-  private readonly vaultClient: any;
+  private kms: AWS.KMS;
+  private vaultClient: any;
   private readonly hsmEnabled: boolean;
   private readonly provider: string;
 

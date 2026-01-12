@@ -16,7 +16,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Separator } from '@/components/ui/separator';
 import { X, Plus, Trash2, Calendar, Mail, Clock } from 'lucide-react';
 import { useReports } from '@/hooks/use-reports';
-import { CRON_PRESETS, type ReportConfig, type ScheduledReport } from '@/types/report';
+import { CRON_PRESETS, type ReportConfig } from '@/types/report';
+import type { ScheduledReport } from '@/lib/reports-api';
 import { toast } from 'sonner';
 
 const scheduleSchema = z.object({

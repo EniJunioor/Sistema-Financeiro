@@ -85,18 +85,18 @@ export interface ShareReportResponse {
 export const reportsApi = {
   // Report Templates
   async getTemplates(): Promise<{ templates: ReportTemplate[] }> {
-    const response = await api.get('/reports/templates');
+    const response = await api.get<{ templates: ReportTemplate[] }>('/reports/templates');
     return response.data;
   },
 
   // Report Generation
   async generateReport(request: GenerateReportRequest): Promise<ReportResponse> {
-    const response = await api.post('/reports/generate', request);
+    const response = await api.post<ReportResponse>('/reports/generate', request);
     return response.data;
   },
 
   async downloadReport(request: GenerateReportRequest): Promise<Blob> {
-    const response = await api.post('/reports/generate/download', request, {
+    const response = await api.post<Blob>('/reports/generate/download', request, {
       responseType: 'blob',
     });
     return response.data;
@@ -104,27 +104,27 @@ export const reportsApi = {
 
   // Report Scheduling
   async scheduleReport(request: ScheduleReportRequest): Promise<ScheduledReport> {
-    const response = await api.post('/reports/schedule', request);
+    const response = await api.post<ScheduledReport>('/reports/schedule', request);
     return response.data;
   },
 
   async getScheduledReports(): Promise<ScheduledReport[]> {
-    const response = await api.get('/reports/scheduled');
+    const response = await api.get<ScheduledReport[]>('/reports/scheduled');
     return response.data;
   },
 
   async getScheduledReport(id: string): Promise<ScheduledReport> {
-    const response = await api.get(`/reports/scheduled/${id}`);
+    const response = await api.get<ScheduledReport>(`/reports/scheduled/${id}`);
     return response.data;
   },
 
   async updateScheduledReport(id: string, updates: Partial<ScheduleReportRequest>): Promise<ScheduledReport> {
-    const response = await api.put(`/reports/scheduled/${id}`, updates);
+    const response = await api.put<ScheduledReport>(`/reports/scheduled/${id}`, updates);
     return response.data;
   },
 
   async toggleScheduledReport(id: string, isActive: boolean): Promise<ScheduledReport> {
-    const response = await api.put(`/reports/scheduled/${id}/toggle`, { isActive });
+    const response = await api.put<ScheduledReport>(`/reports/scheduled/${id}/toggle`, { isActive });
     return response.data;
   },
 

@@ -70,6 +70,12 @@ export function NotificationPreferencesComponent({ className }: NotificationPref
     setLocalPreferences(prev => ({
       ...prev,
       categories: {
+        transactions: false,
+        goals: false,
+        investments: false,
+        security: false,
+        marketing: false,
+        system: false,
         ...prev.categories,
         [category]: value,
       },
@@ -81,6 +87,9 @@ export function NotificationPreferencesComponent({ className }: NotificationPref
     setLocalPreferences(prev => ({
       ...prev,
       quietHours: {
+        enabled: false,
+        startTime: '22:00',
+        endTime: '08:00',
         ...prev.quietHours,
         [key]: value,
       },

@@ -30,12 +30,11 @@ import {
   Trash2,
   Play,
   Pause,
-  FileText,
-  Users
+  FileText
 } from 'lucide-react';
 import { useReports } from '@/hooks/use-reports';
 import { ReportScheduler } from './report-scheduler';
-import type { ScheduledReport } from '@/types/report';
+import type { ScheduledReport } from '@/lib/reports-api';
 import { toast } from 'sonner';
 
 export function ScheduledReportsList() {
@@ -272,7 +271,7 @@ export function ScheduledReportsList() {
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir Relatório Agendado</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir o relatório "{deletingReport?.scheduleName}"?
+              Tem certeza que deseja excluir o relatório &quot;{deletingReport?.scheduleName}&quot;?
               Esta ação não pode ser desfeita e o relatório não será mais gerado automaticamente.
             </AlertDialogDescription>
           </AlertDialogHeader>

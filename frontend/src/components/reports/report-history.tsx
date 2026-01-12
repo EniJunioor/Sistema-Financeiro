@@ -253,9 +253,9 @@ export function ReportHistory() {
             </Select>
 
             <DateRangePicker
-              onUpdate={(values) => {
+              onSelect={(range) => {
                 // In a real app, filter by date range
-                console.log('Date range filter:', values);
+                console.log('Date range filter:', range);
               }}
             />
           </div>

@@ -4,6 +4,12 @@ import * as winston from 'winston';
 import * as DailyRotateFile from 'winston-daily-rotate-file';
 import { Request } from 'express';
 
+interface RequestWithSession extends Request {
+  session?: {
+    id?: string;
+  };
+}
+
 export interface AuditEvent {
   userId?: string;
   sessionId?: string;
@@ -34,8 +40,8 @@ export interface SecurityEvent extends AuditEvent {
 @Injectable()
 export class AuditService {
   private readonly logger = new Logger(AuditService.name);
-  private readonly auditLogger: winston.Logger;
-  private readonly securityLogger: winston.Logger;
+  private auditLogger: winston.Logger;
+  private securityLogger: winston.Logger;
   private readonly sensitiveFields: string[];
 
   constructor(private configService: ConfigService) {
@@ -173,7 +179,7 @@ export class AuditService {
   async logAuthEvent(
     userId: string,
     action: 'LOGIN' | 'LOGOUT' | 'FAILED_LOGIN',
-    request: Request,
+    request: RequestWithSession,
     success: boolean,
     errorMessage?: string
   ): Promise<void> {
@@ -203,7 +209,7 @@ export class AuditService {
     resource: string,
     resourceId: string,
     action: 'READ' | 'create' | 'update' | 'delete',
-    request: Request,
+    request: RequestWithSession,
     success: boolean,
     details?: any
   ): Promise<void> {
@@ -241,7 +247,7 @@ export class AuditService {
   async logSystemAccess(
     userId: string,
     action: string,
-    request: Request,
+    request: RequestWithSession,
     success: boolean,
     details?: any
   ): Promise<void> {
@@ -268,7 +274,7 @@ export class AuditService {
   async logSuspiciousActivity(
     userId: string,
     description: string,
-    request: Request,
+    request: RequestWithSession,
     details?: any
   ): Promise<void> {
     const event: SecurityEvent = {
@@ -360,7 +366,7 @@ export class AuditService {
   /**
    * Get client IP address
    */
-  private getClientIP(request: Request): string {
+  private getClientIP(request: RequestWithSession): string {
     return (
       request.headers['x-forwarded-for'] as string ||
       request.headers['x-real-ip'] as string ||
