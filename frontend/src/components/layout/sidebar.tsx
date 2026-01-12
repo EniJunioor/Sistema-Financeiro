@@ -46,10 +46,7 @@ const sidebarItems: SidebarItem[] = [
     id: 'accounts',
     label: 'Contas',
     icon: Wallet,
-    children: [
-      { id: 'bank-accounts', label: 'Contas Bancárias', icon: Wallet, href: '/accounts/banks' },
-      { id: 'credit-cards', label: 'Cartões de Crédito', icon: CreditCard, href: '/accounts/cards' }
-    ]
+    href: '/accounts'
   },
   {
     id: 'investments',

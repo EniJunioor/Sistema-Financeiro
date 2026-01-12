@@ -106,6 +106,110 @@ export const changePasswordSchema = z
     path: ["newPassword"],
   })
 
+// Transaction validation schemas - Requirements 2.1, 2.2, 2.3
+export const transactionSchema = z.object({
+  type: z.enum(['income', 'expense', 'transfer'], {
+    required_error: "Tipo de transação é obrigatório",
+  }),
+  amount: z
+    .number({
+      required_error: "Valor é obrigatório",
+      invalid_type_error: "Valor deve ser um número",
+    })
+    .min(0.01, "Valor deve ser maior que zero")
+    .max(999999999.99, "Valor muito alto"),
+  description: z
+    .string()
+    .min(1, "Descrição é obrigatória")
+    .max(255, "Descrição deve ter no máximo 255 caracteres"),
+  date: z
+    .string()
+    .min(1, "Data é obrigatória")
+    .refine((date) => !isNaN(Date.parse(date)), "Data deve ser válida"),
+  accountId: z.string().optional(),
+  categoryId: z.string().optional(),
+  tags: z.array(z.string()).optional().default([]),
+  location: z.string().optional(),
+  isRecurring: z.boolean().optional().default(false),
+  recurringRule: z.object({
+    frequency: z.enum(['daily', 'weekly', 'monthly', 'yearly'], {
+      required_error: "Frequência é obrigatória para transações recorrentes",
+    }),
+    interval: z
+      .number({
+        required_error: "Intervalo é obrigatório",
+        invalid_type_error: "Intervalo deve ser um número",
+      })
+      .min(1, "Intervalo deve ser pelo menos 1")
+      .max(365, "Intervalo deve ser no máximo 365"),
+    endDate: z
+      .string()
+      .optional()
+      .refine((date) => !date || !isNaN(Date.parse(date)), "Data de término deve ser válida"),
+    nextDate: z
+      .string()
+      .optional()
+      .refine((date) => !date || !isNaN(Date.parse(date)), "Próxima data deve ser válida"),
+  }).optional(),
+  attachments: z.array(z.string()).optional().default([]),
+}).refine((data) => {
+  // If isRecurring is true, recurringRule must be provided
+  if (data.isRecurring && !data.recurringRule) {
+    return false;
+  }
+  // If endDate is provided, it must be after the transaction date
+  if (data.recurringRule?.endDate && data.date) {
+    const transactionDate = new Date(data.date);
+    const endDate = new Date(data.recurringRule.endDate);
+    return endDate > transactionDate;
+  }
+  return true;
+}, {
+  message: "Configuração de recorrência inválida",
+  path: ["recurringRule"],
+})
+
+export const transactionFiltersSchema = z.object({
+  type: z.enum(['income', 'expense', 'transfer']).optional(),
+  categoryId: z.string().optional(),
+  accountId: z.string().optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+  amountMin: z.number().min(0).optional(),
+  amountMax: z.number().min(0).optional(),
+  search: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  page: z.number().min(1).optional().default(1),
+  limit: z.number().min(1).max(100).optional().default(20),
+})
+
+// Category validation schema
+export const categorySchema = z.object({
+  name: z
+    .string()
+    .min(1, "Nome da categoria é obrigatório")
+    .max(100, "Nome deve ter no máximo 100 caracteres"),
+  icon: z.string().optional(),
+  color: z.string().optional(),
+  parentId: z.string().optional(),
+})
+
+// Account validation schema
+export const accountSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Nome da conta é obrigatório")
+    .max(100, "Nome deve ter no máximo 100 caracteres"),
+  type: z.enum(['checking', 'savings', 'credit_card', 'investment'], {
+    required_error: "Tipo de conta é obrigatório",
+  }),
+  balance: z
+    .number()
+    .min(-999999999.99, "Saldo muito baixo")
+    .max(999999999.99, "Saldo muito alto"),
+  currency: z.string().min(3).max(3).default("BRL"),
+})
+
 // Type exports for form data
 export type LoginFormData = z.infer<typeof loginSchema>
 export type RegisterFormData = z.infer<typeof registerSchema>
@@ -114,3 +218,7 @@ export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
 export type TwoFactorSetupFormData = z.infer<typeof twoFactorSetupSchema>
 export type TwoFactorVerifyFormData = z.infer<typeof twoFactorVerifySchema>
 export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>
+export type TransactionFormData = z.infer<typeof transactionSchema>
+export type TransactionFiltersData = z.infer<typeof transactionFiltersSchema>
+export type CategoryFormData = z.infer<typeof categorySchema>
+export type AccountFormData = z.infer<typeof accountSchema>

@@ -1,6 +1,7 @@
-import { IsEnum, IsDecimal, IsString, IsDateString, IsOptional, IsUUID, IsArray, IsBoolean, MinLength, MaxLength, Min } from 'class-validator';
+import { IsEnum, IsDecimal, IsString, IsDateString, IsOptional, IsUUID, IsArray, IsBoolean, MinLength, MaxLength, Min, ValidateNested } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { RecurringRuleDto } from './recurring-rule.dto';
 
 export class CreateTransactionDto {
   @ApiProperty({
@@ -81,12 +82,13 @@ export class CreateTransactionDto {
   isRecurring?: boolean;
 
   @ApiPropertyOptional({
-    description: 'Recurring rule (JSON)',
-    example: '{"frequency": "monthly", "interval": 1}'
+    description: 'Recurring rule configuration',
+    type: RecurringRuleDto
   })
   @IsOptional()
-  @IsString()
-  recurringRule?: string;
+  @ValidateNested()
+  @Type(() => RecurringRuleDto)
+  recurringRule?: RecurringRuleDto;
 
   @ApiPropertyOptional({
     description: 'Attachment URLs',

@@ -96,7 +96,7 @@ Implementação incremental da plataforma financeira usando TypeScript + NestJS 
   - **Propriedade 8: Filtros Funcionais**
   - **Valida: Requisitos 2.1, 2.2, 2.3**
 
-- [ ] 9. Implementar sistema de categorias
+- [x] 9. Implementar sistema de categorias
   - Criar modelo Category com hierarquia (categoria/subcategoria)
   - Implementar categorias padrão do sistema
   - Adicionar ML para sugestão automática baseada em descrição
@@ -107,7 +107,7 @@ Implementação incremental da plataforma financeira usando TypeScript + NestJS 
   - **Propriedade 31: Precisão de Categorização**
   - **Valida: Requisitos 11.1**
 
-- [ ] 10. Implementar interface de transações (Frontend)
+- [x] 10. Implementar interface de transações (Frontend)
   - Criar páginas de listagem e formulário de transações
   - Implementar filtros avançados e busca
   - Adicionar componentes de categorização automática
@@ -119,7 +119,7 @@ Implementação incremental da plataforma financeira usando TypeScript + NestJS 
   - Testar filtros e busca
   - _Requisitos: 2.1, 2.3_
 
-- [ ] 11. Implementar transações recorrentes
+- [x] 11. Implementar transações recorrentes
   - Adicionar campos de recorrência no modelo Transaction
   - Criar job scheduler para criação automática
   - Implementar padrões de recorrência (diário, semanal, mensal, anual)
@@ -132,7 +132,7 @@ Implementação incremental da plataforma financeira usando TypeScript + NestJS 
 
 ### Fase 4: Dashboard e Visualizações
 
-- [ ] 12. Implementar serviço de analytics (Backend)
+- [x] 12. Implementar serviço de analytics (Backend)
   - Criar ReportsModule para cálculos financeiros
   - Implementar agregações de receitas, despesas e saldos
   - Adicionar cálculos de tendências e comparações
@@ -143,7 +143,7 @@ Implementação incremental da plataforma financeira usando TypeScript + NestJS 
   - **Propriedade 11: Completude do Dashboard**
   - **Valida: Requisitos 3.1**
 
-- [ ] 13. Implementar dashboard principal (Frontend)
+- [x] 13. Implementar dashboard principal (Frontend)
   - Criar componente Dashboard com cards personalizáveis
   - Implementar gráficos com Recharts (linha, barra, pizza)
   - Adicionar seletores de período e comparações
@@ -154,7 +154,7 @@ Implementação incremental da plataforma financeira usando TypeScript + NestJS 
   - **Propriedade 12: Geração de Gráficos**
   - **Valida: Requisitos 3.2**
 
-- [ ] 14. Implementar previsões com IA
+- [x] 14. Implementar previsões com IA
   - Adicionar algoritmos de time series forecasting
   - Implementar previsão de gastos e receitas futuras
   - Criar endpoints para servir previsões
@@ -168,7 +168,7 @@ Implementação incremental da plataforma financeira usando TypeScript + NestJS 
 
 ### Fase 5: Integração Open Banking
 
-- [ ] 15. Implementar conexões bancárias (Backend)
+- [x] 15. Implementar conexões bancárias (Backend)
   - Criar AccountsModule para gestão de contas
   - Integrar com APIs Plaid, TrueLayer, Pluggy e Belvo
   - Implementar autenticação segura e armazenamento de tokens
@@ -180,7 +180,7 @@ Implementação incremental da plataforma financeira usando TypeScript + NestJS 
   - **Propriedade 15: Sincronização Automática**
   - **Valida: Requisitos 4.1, 4.2**
 
-- [ ] 16. Implementar deduplicação inteligente
+- [x] 16. Implementar deduplicação inteligente
   - Criar algoritmo de detecção de duplicatas
   - Implementar comparação por múltiplos critérios (data, valor, descrição)
   - Adicionar interface para revisar e aprovar duplicatas
@@ -191,7 +191,7 @@ Implementação incremental da plataforma financeira usando TypeScript + NestJS 
   - **Propriedade 16: Deduplicação Inteligente**
   - **Valida: Requisitos 4.3**
 
-- [ ] 17. Implementar interface de contas bancárias (Frontend)
+- [x] 17. Implementar interface de contas bancárias (Frontend)
   - Criar páginas para conectar e gerenciar contas
   - Implementar fluxo de autenticação bancária
   - Adicionar visualização de transações importadas

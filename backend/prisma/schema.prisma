@@ -42,13 +42,18 @@ model Account {
   id                String    @id @default(cuid())
   userId            String
   type              String    // 'checking', 'savings', 'credit_card', 'investment'
-  provider          String?   // 'plaid', 'truelayer', 'manual'
+  provider          String?   // 'plaid', 'truelayer', 'pluggy', 'belvo', 'manual'
   providerAccountId String?
   name              String
   balance           Decimal
   currency          String    @default("BRL")
   isActive          Boolean   @default(true)
   lastSyncAt        DateTime?
+  accessToken       String?   // Encrypted access token for Open Banking
+  refreshToken      String?   // Encrypted refresh token
+  tokenExpiresAt    DateTime? // Token expiration time
+  syncError         String?   // Last sync error message
+  metadata          String?   // JSON: provider-specific metadata
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -88,7 +93,8 @@ model Transaction {
   location        String?
   tags            String?
   isRecurring     Boolean   @default(false)
-  recurringRule   String?
+  recurringRule   String?   // JSON: {frequency, interval, endDate, nextDate}
+  parentTransactionId String? // Reference to the original recurring transaction
   attachments     String?
   metadata        String?
   createdAt       DateTime  @default(now())
@@ -98,6 +104,8 @@ model Transaction {
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   account         Account?  @relation(fields: [accountId], references: [id])
   category        Category? @relation(fields: [categoryId], references: [id])
+  parentTransaction Transaction? @relation("RecurringTransactions", fields: [parentTransactionId], references: [id])
+  childTransactions Transaction[] @relation("RecurringTransactions")
 
   @@map("transactions")
 }

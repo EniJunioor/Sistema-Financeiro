@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { PrismaService } from '../../../common/prisma/prisma.service';
 import { CreateTransactionDto, UpdateTransactionDto, TransactionFiltersDto } from '../dto';
 import { PaginatedTransactions, Transaction, TransactionStats } from '../interfaces/transaction.interface';
 import { MLCategorizationService } from './ml-categorization.service';
+import { DeduplicationService } from './deduplication.service';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -12,6 +13,7 @@ export class TransactionsService {
   constructor(
     private prisma: PrismaService,
     private mlCategorizationService: MLCategorizationService,
+    @Inject(forwardRef(() => DeduplicationService)) private deduplicationService: DeduplicationService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
@@ -33,6 +35,18 @@ export class TransactionsService {
     const tags = dto.tags ? JSON.stringify(dto.tags) : null;
     const attachments = dto.attachments ? JSON.stringify(dto.attachments) : null;
 
+    // Handle recurring rule
+    let recurringRuleString: string | null = null;
+    if (dto.isRecurring && dto.recurringRule) {
+      // Calculate next date if not provided
+      if (!dto.recurringRule.nextDate) {
+        const currentDate = new Date(dto.date);
+        const nextDate = this.calculateNextRecurringDate(currentDate, dto.recurringRule);
+        dto.recurringRule.nextDate = nextDate.toISOString();
+      }
+      recurringRuleString = JSON.stringify(dto.recurringRule);
+    }
+
     const transaction = await this.prisma.transaction.create({
       data: {
         userId,
@@ -45,7 +59,7 @@ export class TransactionsService {
         location: dto.location,
         tags,
         isRecurring: dto.isRecurring || false,
-        recurringRule: dto.recurringRule,
+        recurringRule: recurringRuleString,
         attachments,
         metadata: dto.metadata,
       },
@@ -72,6 +86,27 @@ export class TransactionsService {
     await this.clearUserCache(userId);
 
     return this.formatTransaction(transaction);
+  }
+
+  private calculateNextRecurringDate(currentDate: Date, rule: any): Date {
+    const nextDate = new Date(currentDate);
+
+    switch (rule.frequency) {
+      case 'daily':
+        nextDate.setDate(nextDate.getDate() + rule.interval);
+        break;
+      case 'weekly':
+        nextDate.setDate(nextDate.getDate() + (rule.interval * 7));
+        break;
+      case 'monthly':
+        nextDate.setMonth(nextDate.getMonth() + rule.interval);
+        break;
+      case 'yearly':
+        nextDate.setFullYear(nextDate.getFullYear() + rule.interval);
+        break;
+    }
+
+    return nextDate;
   }
 
   async findAll(userId: string, filters: TransactionFiltersDto): Promise<PaginatedTransactions> {
@@ -383,5 +418,53 @@ export class TransactionsService {
     for (const key of keys) {
       await this.cacheManager.del(key);
     }
+  }
+
+  /**
+   * Create transaction with duplicate detection
+   */
+  async createWithDuplicateDetection(
+    dto: CreateTransactionDto, 
+    userId: string,
+    checkDuplicates: boolean = true
+  ): Promise<{ transaction: Transaction; duplicates?: any[] }> {
+    let duplicates: any[] = [];
+
+    // Check for duplicates before creating if requested
+    if (checkDuplicates) {
+      // Create a temporary transaction object for duplicate detection
+      const tempTransaction = {
+        id: 'temp-' + Date.now(),
+        userId,
+        accountId: dto.accountId,
+        type: dto.type,
+        amount: dto.amount,
+        description: dto.description,
+        date: new Date(dto.date),
+        location: dto.location,
+        tags: dto.tags ? JSON.stringify(dto.tags) : null,
+        attachments: dto.attachments ? JSON.stringify(dto.attachments) : null,
+        createdAt: new Date(),
+      };
+
+      // Find potential duplicates using the deduplication service
+      try {
+        duplicates = await this.deduplicationService.findDuplicatesForTransaction(
+          tempTransaction,
+          userId
+        );
+      } catch (error) {
+        // Log error but don't fail transaction creation
+        console.warn('Duplicate detection failed:', error.message);
+      }
+    }
+
+    // Create the transaction
+    const transaction = await this.create(dto, userId);
+
+    return {
+      transaction,
+      duplicates: duplicates.length > 0 ? duplicates : undefined
+    };
   }
 }

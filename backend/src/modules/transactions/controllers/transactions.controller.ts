@@ -23,7 +23,17 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { TransactionsService } from '../services/transactions.service';
 import { CategoryService } from '../services/category.service';
 import { MLCategorizationService } from '../services/ml-categorization.service';
-import { CreateTransactionDto, UpdateTransactionDto, TransactionFiltersDto } from '../dto';
+import { RecurringTransactionsService } from '../services/recurring-transactions.service';
+import { RecurringSchedulerService } from '../services/recurring-scheduler.service';
+import { 
+  CreateTransactionDto, 
+  UpdateTransactionDto, 
+  TransactionFiltersDto,
+  CreateCategoryDto,
+  UpdateCategoryDto,
+  BulkCategorizeDto,
+  SuggestCategoryDto
+} from '../dto';
 
 @ApiTags('transactions')
 @ApiBearerAuth()
@@ -34,6 +44,8 @@ export class TransactionsController {
     private readonly transactionsService: TransactionsService,
     private readonly categoryService: CategoryService,
     private readonly mlCategorizationService: MLCategorizationService,
+    private readonly recurringTransactionsService: RecurringTransactionsService,
+    private readonly recurringSchedulerService: RecurringSchedulerService,
   ) {}
 
   @Post()
@@ -119,14 +131,52 @@ export class TransactionsController {
     description: 'Category suggestion retrieved successfully',
   })
   async suggestCategory(
-    @Body() body: { description: string; amount: number },
+    @Body() suggestCategoryDto: SuggestCategoryDto,
     @Request() req,
   ) {
     return this.mlCategorizationService.suggestCategory(
-      body.description,
-      body.amount,
+      suggestCategoryDto.description,
+      suggestCategoryDto.amount,
       req.user.id,
     );
+  }
+
+  @Post('categories/suggest-multiple')
+  @ApiOperation({ summary: 'Get multiple category suggestions for transaction' })
+  @ApiResponse({
+    status: 200,
+    description: 'Multiple category suggestions retrieved successfully',
+  })
+  async suggestMultipleCategories(
+    @Body() suggestCategoryDto: SuggestCategoryDto,
+    @Request() req,
+  ) {
+    return this.mlCategorizationService.getPersonalizedSuggestions(
+      req.user.id,
+      suggestCategoryDto.description,
+      suggestCategoryDto.amount,
+    );
+  }
+
+  @Post('categories/initialize-defaults')
+  @ApiOperation({ summary: 'Initialize default system categories' })
+  @ApiResponse({
+    status: 200,
+    description: 'Default categories initialized successfully',
+  })
+  async initializeDefaultCategories() {
+    await this.categoryService.createDefaultCategories();
+    return { message: 'Default categories initialized successfully' };
+  }
+
+  @Post('ml/improve-model')
+  @ApiOperation({ summary: 'Improve ML categorization model based on user corrections' })
+  @ApiResponse({
+    status: 200,
+    description: 'Model improvement analysis completed',
+  })
+  async improveCategorizationModel(@Request() req) {
+    return this.mlCategorizationService.improveCategorizationModel(req.user.id);
   }
 
   @Get('categorization/stats')
@@ -137,6 +187,129 @@ export class TransactionsController {
   })
   async getCategorizationStats(@Request() req) {
     return this.mlCategorizationService.getCategorizationStats(req.user.id);
+  }
+
+  @Post('categories')
+  @ApiOperation({ summary: 'Create a new category' })
+  @ApiResponse({
+    status: 201,
+    description: 'Category created successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input data or category already exists',
+  })
+  async createCategory(@Body() createCategoryDto: CreateCategoryDto, @Request() req) {
+    return this.categoryService.create(createCategoryDto, req.user.id);
+  }
+
+  @Patch('categories/:id')
+  @ApiOperation({ summary: 'Update a category' })
+  @ApiResponse({
+    status: 200,
+    description: 'Category updated successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Category not found',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Cannot update system category or invalid data',
+  })
+  async updateCategory(
+    @Param('id') id: string,
+    @Body() updateCategoryDto: UpdateCategoryDto,
+  ) {
+    return this.categoryService.update(id, updateCategoryDto);
+  }
+
+  @Delete('categories/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a category' })
+  @ApiResponse({
+    status: 204,
+    description: 'Category deleted successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Category not found',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Cannot delete system category or category with transactions',
+  })
+  async deleteCategory(@Param('id') id: string) {
+    return this.categoryService.delete(id);
+  }
+
+  @Get('categories/stats')
+  @ApiOperation({ summary: 'Get categories with usage statistics' })
+  @ApiQuery({ name: 'startDate', required: false, type: String })
+  @ApiQuery({ name: 'endDate', required: false, type: String })
+  @ApiResponse({
+    status: 200,
+    description: 'Categories with statistics retrieved successfully',
+  })
+  async getCategoriesWithStats(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Request() req?,
+  ) {
+    const start = startDate ? new Date(startDate) : undefined;
+    const end = endDate ? new Date(endDate) : undefined;
+    return this.categoryService.getCategoriesWithStats(req.user.id, start, end);
+  }
+
+  @Get('categories/most-used')
+  @ApiOperation({ summary: 'Get most used categories' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Maximum results' })
+  @ApiResponse({
+    status: 200,
+    description: 'Most used categories retrieved successfully',
+  })
+  async getMostUsedCategories(
+    @Query('limit') limit?: number,
+    @Request() req?,
+  ) {
+    return this.categoryService.getMostUsedCategories(req.user.id, limit);
+  }
+
+  @Get('categories/search')
+  @ApiOperation({ summary: 'Search categories' })
+  @ApiQuery({ name: 'q', required: true, type: String, description: 'Search query' })
+  @ApiResponse({
+    status: 200,
+    description: 'Search results retrieved successfully',
+  })
+  async searchCategories(@Query('q') query: string) {
+    return this.categoryService.searchCategories(query);
+  }
+
+  @Post('bulk-categorize')
+  @ApiOperation({ summary: 'Bulk categorize uncategorized transactions' })
+  @ApiResponse({
+    status: 200,
+    description: 'Bulk categorization completed',
+  })
+  async bulkCategorizeTransactions(
+    @Body() bulkCategorizeDto: BulkCategorizeDto,
+    @Request() req,
+  ) {
+    return this.mlCategorizationService.bulkCategorizeTransactions(
+      req.user.id,
+      bulkCategorizeDto.limit
+    );
+  }
+
+  @Get('ml/accuracy')
+  @ApiOperation({ summary: 'Get ML categorization accuracy metrics' })
+  @ApiResponse({
+    status: 200,
+    description: 'Accuracy metrics retrieved successfully',
+  })
+  async getCategoryPredictionAccuracy(@Request() req) {
+    return this.mlCategorizationService.getCategoryPredictionAccuracy(req.user.id);
   }
 
   @Get(':id')
@@ -208,5 +381,77 @@ export class TransactionsController {
     await this.mlCategorizationService.learnFromUserFeedback(id, body.categoryId);
 
     return { message: 'Transaction categorized successfully' };
+  }
+
+  // Recurring Transactions Endpoints
+
+  @Get('recurring')
+  @ApiOperation({ summary: 'Get all recurring transactions for the user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Recurring transactions retrieved successfully',
+  })
+  async getRecurringTransactions(@Request() req) {
+    return this.recurringTransactionsService.getUserRecurringTransactions(req.user.id);
+  }
+
+  @Post('recurring/process')
+  @ApiOperation({ summary: 'Manually trigger processing of all due recurring transactions' })
+  @ApiResponse({
+    status: 200,
+    description: 'Recurring transactions processing triggered',
+  })
+  async triggerRecurringProcessing() {
+    await this.recurringSchedulerService.triggerRecurringTransactionsProcessing();
+    return { message: 'Recurring transactions processing triggered' };
+  }
+
+  @Get('recurring/queue-stats')
+  @ApiOperation({ summary: 'Get recurring transactions queue statistics' })
+  @ApiResponse({
+    status: 200,
+    description: 'Queue statistics retrieved successfully',
+  })
+  async getQueueStats() {
+    return this.recurringSchedulerService.getQueueStats();
+  }
+
+  @Patch('recurring/:id')
+  @ApiOperation({ summary: 'Update a recurring transaction' })
+  @ApiResponse({
+    status: 200,
+    description: 'Recurring transaction updated successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Recurring transaction not found',
+  })
+  async updateRecurringTransaction(
+    @Param('id') id: string,
+    @Body() updateTransactionDto: UpdateTransactionDto,
+    @Request() req,
+  ) {
+    await this.recurringTransactionsService.updateRecurringTransaction(
+      id,
+      req.user.id,
+      updateTransactionDto,
+    );
+    return { message: 'Recurring transaction updated successfully' };
+  }
+
+  @Delete('recurring/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Cancel a recurring transaction' })
+  @ApiResponse({
+    status: 204,
+    description: 'Recurring transaction canceled successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Recurring transaction not found',
+  })
+  async cancelRecurringTransaction(@Param('id') id: string, @Request() req) {
+    await this.recurringTransactionsService.cancelRecurringTransaction(id, req.user.id);
+    return { message: 'Recurring transaction canceled successfully' };
   }
 }

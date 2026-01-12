@@ -16,6 +16,7 @@ export async function seedCategories() {
     { name: 'Compras', icon: '🛍️', color: '#06b6d4' },
     { name: 'Serviços', icon: '🔧', color: '#84cc16' },
     { name: 'Investimentos', icon: '📈', color: '#6366f1' },
+    { name: 'Receitas', icon: '💰', color: '#059669' },
     { name: 'Outros', icon: '📦', color: '#6b7280' },
   ];
 
@@ -90,6 +91,13 @@ export async function seedCategories() {
     { name: 'Limpeza', parent: 'Serviços', icon: '🧹' },
     { name: 'Advocacia', parent: 'Serviços', icon: '⚖️' },
     { name: 'Contabilidade', parent: 'Serviços', icon: '📊' },
+    
+    // Receitas
+    { name: 'Salário', parent: 'Receitas', icon: '💼' },
+    { name: 'Freelance', parent: 'Receitas', icon: '💻' },
+    { name: 'Investimentos', parent: 'Receitas', icon: '📈' },
+    { name: 'Vendas', parent: 'Receitas', icon: '🛒' },
+    { name: 'Outros', parent: 'Receitas', icon: '💰' },
   ];
 
   for (const subcategory of subcategories) {
