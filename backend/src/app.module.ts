@@ -7,10 +7,15 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './common/prisma/prisma.module';
+import { SecurityModule as CommonSecurityModule } from './common/security/security.module';
+import { SecurityModule } from './modules/security/security.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { TransactionsModule } from './modules/transactions/transactions.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { AccountsModule } from './modules/accounts/accounts.module';
+import { InvestmentsModule } from './modules/investments/investments.module';
+import { GoalsModule } from './modules/goals/goals.module';
+import { AnomalyDetectionModule } from './modules/anomaly-detection/anomaly-detection.module';
 
 @Module({
   imports: [
@@ -18,40 +23,61 @@ import { AccountsModule } from './modules/accounts/accounts.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      expandVariables: true,
     }),
 
     // Schedule module for cron jobs
     ScheduleModule.forRoot(),
 
-    // Rate limiting
+    // Enhanced rate limiting with Redis
     ThrottlerModule.forRoot({
       ttl: 60000, // 1 minute
       limit: 100, // 100 requests per minute
-    }),
-
-    // Cache
-    CacheModule.register({
-      isGlobal: true,
-      ttl: 300, // 5 minutes default
-    }),
-
-    // Queue system
-    BullModule.forRoot({
-      redis: {
+      storage: {
         host: process.env.REDIS_HOST || 'localhost',
         port: parseInt(process.env.REDIS_PORT) || 6379,
         password: process.env.REDIS_PASSWORD || 'redis123',
       },
     }),
 
+    // Cache with Redis
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 300, // 5 minutes default
+      store: 'redis',
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT) || 6379,
+      password: process.env.REDIS_PASSWORD || 'redis123',
+    }),
+
+    // Queue system with Redis
+    BullModule.forRoot({
+      redis: {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: parseInt(process.env.REDIS_PORT) || 6379,
+        password: process.env.REDIS_PASSWORD || 'redis123',
+        maxRetriesPerRequest: 3,
+        retryDelayOnFailover: 100,
+        enableReadyCheck: false,
+        maxLoadingTimeout: 0,
+      },
+    }),
+
     // Database
     PrismaModule,
 
+    // Security (Global)
+    CommonSecurityModule,
+
     // Feature modules
+    SecurityModule,
     AuthModule,
     TransactionsModule,
     ReportsModule,
     AccountsModule,
+    InvestmentsModule,
+    GoalsModule,
+    AnomalyDetectionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

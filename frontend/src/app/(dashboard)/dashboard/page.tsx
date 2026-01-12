@@ -318,10 +318,7 @@ function DashboardContent() {
           transactions={transactions}
           isLoading={isLoading}
         />
-        <GoalsProgress
-          goals={goals}
-          isLoading={isLoading}
-        />
+        <GoalsProgress />
       </div>
 
       {/* AI Forecasting Section */}

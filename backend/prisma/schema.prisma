@@ -34,6 +34,10 @@ model User {
   oauthAccounts     OAuthAccount[]
   refreshTokens     RefreshToken[]
   loginAttempts     LoginAttempt[]
+  anomalyAlerts     AnomalyAlert[]
+  behaviorProfile   UserBehaviorProfile?
+  mlModels          MLModel[]
+  fcmTokens         FCMToken[]
 
   @@map("users")
 }
@@ -106,6 +110,7 @@ model Transaction {
   category        Category? @relation(fields: [categoryId], references: [id])
   parentTransaction Transaction? @relation("RecurringTransactions", fields: [parentTransactionId], references: [id])
   childTransactions Transaction[] @relation("RecurringTransactions")
+  anomalyAlerts   AnomalyAlert[]
 
   @@map("transactions")
 }
@@ -250,4 +255,86 @@ model LoginAttempt {
   user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("login_attempts")
+}
+
+model AnomalyAlert {
+  id              String    @id @default(cuid())
+  userId          String
+  transactionId   String?
+  type            String    // 'fraud_detection', 'unusual_spending', 'goal_risk', 'account_security'
+  severity        String    // 'low', 'medium', 'high', 'critical'
+  title           String
+  message         String
+  details         String?   // JSON
+  isAcknowledged  Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  acknowledgedAt  DateTime?
+
+  // Relacionamentos
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transaction     Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([type])
+  @@index([severity])
+  @@index([createdAt])
+  @@map("anomaly_alerts")
+}
+
+model UserBehaviorProfile {
+  id                      String   @id @default(cuid())
+  userId                  String   @unique
+  averageTransactionAmount Float
+  medianTransactionAmount Float
+  standardDeviation       Float
+  commonMerchants         String?  // JSON array
+  commonLocations         String?  // JSON array
+  commonCategories        String?  // JSON array
+  typicalTransactionTimes String?  // JSON array
+  weeklyPattern           String?  // JSON array
+  monthlySpendingPattern  String?  // JSON array
+  lastUpdated             DateTime
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  // Relacionamentos
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_behavior_profiles")
+}
+
+model MLModel {
+  id          String   @id @default(cuid())
+  userId      String
+  modelType   String   // 'statistical', 'neural_network', 'ensemble'
+  parameters  String   // JSON
+  accuracy    Float?
+  trainedAt   DateTime
+  dataPoints  Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  // Relacionamentos
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isActive])
+  @@map("ml_models")
+}
+
+model FCMToken {
+  id          String   @id @default(cuid())
+  userId      String
+  token       String   @unique
+  deviceInfo  String?  // JSON
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relacionamentos
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isActive])
+  @@map("fcm_tokens")
 }

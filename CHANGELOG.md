@@ -13,6 +13,74 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Aplicativo mobile React Native
 - Sistema de metas financeiras avançadas
 
+## [1.1.0] - 2026-01-12
+
+### Adicionado
+- 🔒 **Segurança Avançada Implementada**
+  - **TLS 1.3** com cipher suites seguros (AES-256-GCM, ChaCha20-Poly1305)
+  - **Certificate Pinning** para produção com validação SHA-256
+  - **HSTS** com preload e includeSubDomains
+  - **Criptografia AES-256-GCM** para dados financeiros
+  - **Criptografia ChaCha20-Poly1305** para PII e tokens
+  - **HSM Integration** com AWS KMS e HashiCorp Vault
+  - **Auditoria Completa** com logs estruturados e rotação diária
+  - **Rate Limiting Avançado** com Redis e proteção brute force
+  - **Security Headers** completos (CSP, X-Frame-Options, etc.)
+  - **Input Validation** com detecção de padrões maliciosos
+  - **IP Whitelisting** e validação de User-Agent
+  - **Monitoramento de Segurança** em tempo real
+
+- 🛡️ **Serviços de Segurança**
+  - `EncryptionService` - Criptografia AES-256 e ChaCha20
+  - `HSMService` - Integração com Hardware Security Modules
+  - `AuditService` - Sistema de auditoria e logs de segurança
+  - `TLSService` - Configuração TLS 1.3 e certificate pinning
+  - `SecurityMiddleware` - Middleware de segurança avançado
+  - `SecurityGuard` - Guard para validação de requisições
+  - `SecurityController` - API para gerenciamento de segurança
+
+- 📋 **Documentação de Segurança**
+  - Guia completo de implementação de segurança
+  - Scripts de validação de segurança
+  - Configurações de produção
+  - Checklist de compliance
+  - Procedimentos de incident response
+
+### Melhorado
+- 🔧 **Configuração de Segurança**
+  - Variáveis de ambiente expandidas para segurança
+  - Configuração modular de segurança
+  - Validação automática de configurações
+  - Health checks para componentes de segurança
+
+- 🚀 **Bootstrap da Aplicação**
+  - Inicialização com segurança avançada
+  - Validação de certificados TLS
+  - Configuração automática de headers de segurança
+  - Monitoramento de status de segurança
+
+### Segurança
+- 🔐 **Criptografia de Dados**
+  - Dados financeiros criptografados com AES-256-GCM
+  - PII criptografado com ChaCha20-Poly1305
+  - Tokens seguros com HSM quando disponível
+  - Derivação de chaves com PBKDF2 (100k iterações)
+  - Geração de chaves criptograficamente seguras
+
+- 🛡️ **Proteção de Rede**
+  - TLS 1.3 obrigatório em produção
+  - Certificate pinning para prevenir MITM
+  - HSTS com preload para forçar HTTPS
+  - Rate limiting inteligente por IP
+  - Proteção contra ataques DDoS
+
+- 📊 **Auditoria e Compliance**
+  - Log de todas as ações de usuário
+  - Classificação automática de risco
+  - Detecção de atividades suspeitas
+  - Retenção configurável de logs (365 dias)
+  - Sanitização automática de dados sensíveis
+
 ## [1.0.0] - 2024-01-11
 
 ### Adicionado

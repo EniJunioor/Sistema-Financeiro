@@ -3,6 +3,9 @@
 import React from 'react'
 import { Sidebar } from './sidebar'
 import { Header } from './header'
+import { NotificationProvider } from '@/components/providers/notification-provider'
+import { ToastContainer } from '@/components/ui/toast'
+import { useNotifications } from '@/hooks/use-notifications'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -10,7 +13,9 @@ interface DashboardLayoutProps {
   subtitle?: string
 }
 
-export function DashboardLayout({ children, title, subtitle }: DashboardLayoutProps) {
+function DashboardLayoutContent({ children, title, subtitle }: DashboardLayoutProps) {
+  const { toasts, dismissToast, settings } = useNotifications();
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
@@ -20,6 +25,23 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
           {children}
         </main>
       </div>
+      
+      {/* Toast Container */}
+      <ToastContainer
+        toasts={toasts}
+        onDismiss={dismissToast}
+        position={settings.position}
+      />
     </div>
+  )
+}
+
+export function DashboardLayout({ children, title, subtitle }: DashboardLayoutProps) {
+  return (
+    <NotificationProvider>
+      <DashboardLayoutContent title={title} subtitle={subtitle}>
+        {children}
+      </DashboardLayoutContent>
+    </NotificationProvider>
   )
 }

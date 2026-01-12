@@ -104,12 +104,20 @@ backend/src/
 │   ├── guards/                # JwtAuthGuard, RolesGuard
 │   ├── interceptors/          # TransformInterceptor
 │   ├── pipes/                 # ValidationPipe
+│   ├── security/              # 🔒 Módulos de segurança avançada
+│   │   ├── encryption.service.ts    # AES-256 + ChaCha20 encryption
+│   │   ├── hsm.service.ts          # Hardware Security Module
+│   │   ├── audit.service.ts        # Sistema de auditoria
+│   │   ├── tls.service.ts          # TLS 1.3 + Certificate Pinning
+│   │   ├── security.middleware.ts  # Rate limiting + Headers
+│   │   └── security.guard.ts       # Validação de requisições
 │   └── prisma/                # PrismaService
 │
 ├── config/                    # Configurações
 │   ├── database.config.ts     # Config do PostgreSQL
 │   ├── redis.config.ts        # Config do Redis
 │   ├── jwt.config.ts          # Config JWT
+│   ├── security.config.ts     # 🔒 Config de segurança avançada
 │   └── app.config.ts          # Config geral
 │
 └── jobs/                      # Background jobs
@@ -423,11 +431,95 @@ test: adiciona testes para TransactionService
 
 ### Backend
 
+#### 🔒 Segurança Avançada Implementada
+
+- **Criptografia de Dados**
+  - AES-256-GCM para dados financeiros
+  - ChaCha20-Poly1305 para PII e tokens
+  - PBKDF2 para derivação de chaves (100k iterações)
+  - HSM integration (AWS KMS/Vault) para chaves críticas
+
+- **Comunicação Segura**
+  - TLS 1.3 obrigatório em produção
+  - Certificate pinning SHA-256
+  - HSTS com preload
+  - Cipher suites seguros priorizados
+
+- **Auditoria e Monitoramento**
+  - Log estruturado de todas as ações
+  - Classificação automática de risco
+  - Detecção de atividades suspeitas
+  - Retenção configurável (365 dias)
+
+- **Proteção de Rede**
+  - Rate limiting inteligente com Redis
+  - Proteção contra brute force
+  - IP whitelisting configurável
+  - Validação de User-Agent
+
+#### Configuração de Segurança
+
+```typescript
+// Variáveis de ambiente de segurança
+ENCRYPTION_SECRET="your-32-char-encryption-key"
+TLS_CERT_PATH="./certs/server.crt"
+TLS_KEY_PATH="./certs/server.key"
+HSM_ENABLED=true
+HSM_PROVIDER="aws-kms"
+AUDIT_LOG_LEVEL="info"
+AUDIT_RETENTION_DAYS=365
+```
+
+#### Usando os Serviços de Segurança
+
+```typescript
+// Criptografia de dados
+@Injectable()
+export class ExemploService {
+  constructor(
+    private encryptionService: EncryptionService,
+    private auditService: AuditService,
+  ) {}
+
+  async createSensitiveData(data: string, userId: string, req: Request) {
+    // Criptografar dados sensíveis
+    const encrypted = await this.encryptionService.encryptPII(data);
+    
+    // Log da ação para auditoria
+    await this.auditService.logDataAccess(
+      userId,
+      'sensitive_data',
+      'create',
+      req,
+      true,
+      { dataType: 'PII' }
+    );
+    
+    return encrypted;
+  }
+}
+```
+
+#### Validação de Segurança
+
+```bash
+# Executar validação de segurança
+npm run validate-security
+
+# Ou diretamente
+npx ts-node src/scripts/validate-security.ts
+```
+
+### Práticas de Segurança Gerais
+
 - Valide **todas as entradas**
 - Use **JWT** com refresh tokens
 - Implemente **rate limiting**
 - Use **HTTPS** em produção
 - Sanitize **SQL queries** (Prisma faz isso)
+- **Criptografe dados sensíveis** em repouso
+- **Monitore atividades suspeitas**
+- **Mantenha logs de auditoria** completos
 
 ### Frontend
 

@@ -13,22 +13,22 @@ export interface AnalyticsQuery {
 
 export class DashboardAPI {
   static async getDashboardData(query: AnalyticsQuery = {}): Promise<DashboardData> {
-    const response = await apiClient.get('/reports/dashboard', { params: query });
+    const response = await apiClient.get<DashboardData>('/reports/dashboard', { params: query });
     return response.data;
   }
 
   static async getFinancialSummary(query: AnalyticsQuery = {}): Promise<FinancialSummary> {
-    const response = await apiClient.get('/reports/financial-summary', { params: query });
+    const response = await apiClient.get<FinancialSummary>('/reports/financial-summary', { params: query });
     return response.data;
   }
 
   static async getTrendAnalysis(query: AnalyticsQuery = {}): Promise<TrendAnalysis> {
-    const response = await apiClient.get('/reports/trends', { params: query });
+    const response = await apiClient.get<TrendAnalysis>('/reports/trends', { params: query });
     return response.data;
   }
 
   static async getPeriodComparison(query: AnalyticsQuery = {}): Promise<PeriodComparison> {
-    const response = await apiClient.get('/reports/period-comparison', { params: query });
+    const response = await apiClient.get<PeriodComparison>('/reports/period-comparison', { params: query });
     return response.data;
   }
 

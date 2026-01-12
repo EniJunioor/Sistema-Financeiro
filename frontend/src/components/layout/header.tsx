@@ -1,8 +1,9 @@
 "use client"
 
 import React from 'react'
-import { Bell, Search, Menu } from 'lucide-react'
+import { Search, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { NotificationCenter } from '@/components/notifications/notification-center'
 
 interface HeaderProps {
   title?: string
@@ -37,9 +38,7 @@ export function Header({ title, subtitle }: HeaderProps) {
             />
           </div>
           
-          <Button variant="ghost" size="icon">
-            <Bell className="h-5 w-5" />
-          </Button>
+          <NotificationCenter />
           
           <div className="w-8 h-8 bg-green-200 rounded-full flex items-center justify-center">
             <span className="text-sm font-medium text-green-700">EJ</span>

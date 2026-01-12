@@ -9,7 +9,12 @@ Uma plataforma moderna e segura para gestão financeira pessoal e de pequenos ne
 - ✅ OAuth2 (Google, Apple, Microsoft, Facebook)
 - ✅ Autenticação de dois fatores (2FA/TOTP)
 - ✅ Rate limiting e proteção contra ataques
-- ✅ Criptografia de dados sensíveis
+- ✅ Criptografia avançada (AES-256-GCM + ChaCha20-Poly1305)
+- ✅ TLS 1.3 com certificate pinning e HSTS
+- ✅ HSM (Hardware Security Module) integration
+- ✅ Auditoria completa e logs de segurança
+- ✅ Proteção contra brute force e DDoS
+- ✅ Headers de segurança avançados
 
 ### 💳 Gestão de Transações
 - ✅ CRUD completo de transações
@@ -273,23 +278,28 @@ frontend/src/
 
 ### Criptografia e Proteção de Dados
 - **TLS 1.3** com certificate pinning e HSTS
-- **AES-256** para dados em repouso
-- **ChaCha20** para streaming de dados
-- **HSM** para gerenciamento de chaves críticas
+- **AES-256-GCM** para dados financeiros em repouso
+- **ChaCha20-Poly1305** para PII e tokens
+- **HSM** para gerenciamento de chaves críticas (AWS KMS/Vault)
+- **PBKDF2** para derivação de chaves (100k iterações)
 - **Bcrypt** para hash de senhas
-- **Argon2** para dados sensíveis
+- **HMAC-SHA256** para assinaturas digitais
+- **Rotação automática** de chaves de criptografia
 
 ### Compliance e Auditoria
 - **LGPD** - Portabilidade e exclusão de dados
 - **PCI-DSS** - Processamento seguro de dados de cartão
-- **Auditoria completa** - Log de todas as ações
-- **Backup criptografado** - Retenção configurável
+- **Auditoria completa** - Log estruturado de todas as ações
+- **Backup criptografado** - Retenção configurável (365 dias)
 - **Disaster recovery** - RTO < 4h, RPO < 1h
+- **Logs rotativos** - Armazenamento seguro com hash de integridade
 
 ### Monitoramento de Segurança
 - **Detecção de intrusão** em tempo real
-- **Análise de comportamento** com ML
+- **Análise de comportamento** com ML para fraudes
 - **Alertas automáticos** para atividades suspeitas
+- **Rate limiting** inteligente com Redis
+- **Proteção DDoS** com múltiplas camadas
 - **Penetration testing** regular
 - **Zero-trust architecture** com verificação contínua
 

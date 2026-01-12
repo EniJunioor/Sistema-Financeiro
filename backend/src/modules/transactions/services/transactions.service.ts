@@ -6,6 +6,7 @@ import { CreateTransactionDto, UpdateTransactionDto, TransactionFiltersDto } fro
 import { PaginatedTransactions, Transaction, TransactionStats } from '../interfaces/transaction.interface';
 import { MLCategorizationService } from './ml-categorization.service';
 import { DeduplicationService } from './deduplication.service';
+import { AnomalyDetectionService } from '../../anomaly-detection/services/anomaly-detection.service';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class TransactionsService {
     private prisma: PrismaService,
     private mlCategorizationService: MLCategorizationService,
     @Inject(forwardRef(() => DeduplicationService)) private deduplicationService: DeduplicationService,
+    @Inject(forwardRef(() => AnomalyDetectionService)) private anomalyDetectionService: AnomalyDetectionService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
@@ -81,6 +83,22 @@ export class TransactionsService {
         }
       }
     });
+
+    // Run anomaly detection on the new transaction
+    try {
+      await this.anomalyDetectionService.analyzeTransaction(userId, {
+        type: dto.type,
+        amount: dto.amount,
+        description: dto.description,
+        date: dto.date,
+        accountId: dto.accountId,
+        categoryId,
+        location: dto.location,
+      });
+    } catch (error) {
+      // Log error but don't fail transaction creation
+      console.warn('Anomaly detection failed for transaction:', error.message);
+    }
 
     // Clear cache for user's transactions
     await this.clearUserCache(userId);

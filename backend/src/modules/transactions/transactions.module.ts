@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
 import { BullModule } from '@nestjs/bull';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PrismaModule } from '../../common/prisma/prisma.module';
+import { AnomalyDetectionModule } from '../anomaly-detection/anomaly-detection.module';
 import { TransactionsController } from './controllers/transactions.controller';
 import { DeduplicationController } from './controllers/deduplication.controller';
 import { TransactionsService } from './services/transactions.service';
@@ -16,6 +17,7 @@ import { RecurringTransactionsProcessor } from './processors/recurring-transacti
 @Module({
   imports: [
     PrismaModule,
+    forwardRef(() => AnomalyDetectionModule),
     CacheModule.register({
       ttl: 300, // 5 minutes
     }),

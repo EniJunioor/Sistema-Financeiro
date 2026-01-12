@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Calendar, Filter, Download, Search } from 'lucide-react';
+import { DateRange } from 'react-day-picker';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,7 +76,7 @@ export function TransactionsList({
     return colors[type as keyof typeof colors] || 'text-gray-600';
   };
 
-  const handleDateRangeChange = (range: { from: Date; to: Date } | undefined) => {
+  const handleDateRangeChange = (range: DateRange | undefined) => {
     if (range?.from && range?.to) {
       onDateRangeChange({
         startDate: range.from.toISOString().split('T')[0],

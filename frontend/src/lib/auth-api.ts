@@ -37,13 +37,13 @@ export interface TwoFactorSetupResponse {
 export const authApi = {
   // Login with email and password
   async login(data: LoginFormData): Promise<AuthResponse> {
-    const response = await apiClient.post('/auth/login', data)
+    const response = await apiClient.post<AuthResponse>('/auth/login', data)
     return response.data
   },
 
   // Register new user
   async register(data: RegisterFormData): Promise<AuthResponse> {
-    const response = await apiClient.post('/auth/register', {
+    const response = await apiClient.post<AuthResponse>('/auth/register', {
       name: data.name,
       email: data.email,
       password: data.password,
@@ -53,73 +53,73 @@ export const authApi = {
 
   // Forgot password - send reset email
   async forgotPassword(data: ForgotPasswordFormData): Promise<{ success: boolean; message: string }> {
-    const response = await apiClient.post('/auth/forgot-password', data)
+    const response = await apiClient.post<{ success: boolean; message: string }>('/auth/forgot-password', data)
     return response.data
   },
 
   // Reset password with token
   async resetPassword(data: ResetPasswordFormData): Promise<{ success: boolean; message: string }> {
-    const response = await apiClient.post('/auth/reset-password', data)
+    const response = await apiClient.post<{ success: boolean; message: string }>('/auth/reset-password', data)
     return response.data
   },
 
   // Verify email with token
   async verifyEmail(token: string): Promise<{ success: boolean; message: string }> {
-    const response = await apiClient.post('/auth/verify-email', { token })
+    const response = await apiClient.post<{ success: boolean; message: string }>('/auth/verify-email', { token })
     return response.data
   },
 
   // Resend verification email
   async resendVerification(email: string): Promise<{ success: boolean; message: string }> {
-    const response = await apiClient.post('/auth/resend-verification', { email })
+    const response = await apiClient.post<{ success: boolean; message: string }>('/auth/resend-verification', { email })
     return response.data
   },
 
   // Setup 2FA
   async setupTwoFactor(data: TwoFactorSetupFormData): Promise<TwoFactorSetupResponse> {
-    const response = await apiClient.post('/auth/2fa/setup', data)
+    const response = await apiClient.post<TwoFactorSetupResponse>('/auth/2fa/setup', data)
     return response.data
   },
 
   // Verify 2FA during login
   async verifyTwoFactor(data: TwoFactorVerifyFormData): Promise<AuthResponse> {
-    const response = await apiClient.post('/auth/2fa/verify', data)
+    const response = await apiClient.post<AuthResponse>('/auth/2fa/verify', data)
     return response.data
   },
 
   // Disable 2FA
   async disableTwoFactor(password: string): Promise<{ success: boolean; message: string }> {
-    const response = await apiClient.post('/auth/2fa/disable', { password })
+    const response = await apiClient.post<{ success: boolean; message: string }>('/auth/2fa/disable', { password })
     return response.data
   },
 
   // Get 2FA backup codes
   async getBackupCodes(): Promise<{ success: boolean; backupCodes: string[] }> {
-    const response = await apiClient.get('/auth/2fa/backup-codes')
+    const response = await apiClient.get<{ success: boolean; backupCodes: string[] }>('/auth/2fa/backup-codes')
     return response.data
   },
 
   // Regenerate 2FA backup codes
   async regenerateBackupCodes(): Promise<{ success: boolean; backupCodes: string[] }> {
-    const response = await apiClient.post('/auth/2fa/backup-codes/regenerate')
+    const response = await apiClient.post<{ success: boolean; backupCodes: string[] }>('/auth/2fa/backup-codes/regenerate')
     return response.data
   },
 
   // Logout
   async logout(): Promise<{ success: boolean }> {
-    const response = await apiClient.post('/auth/logout')
+    const response = await apiClient.post<{ success: boolean }>('/auth/logout')
     return response.data
   },
 
   // Refresh token
   async refreshToken(refreshToken: string): Promise<AuthResponse> {
-    const response = await apiClient.post('/auth/refresh', { refreshToken })
+    const response = await apiClient.post<AuthResponse>('/auth/refresh', { refreshToken })
     return response.data
   },
 
   // Get current user profile
   async getProfile(): Promise<AuthResponse['user']> {
-    const response = await apiClient.get('/auth/profile')
+    const response = await apiClient.get<AuthResponse['user']>('/auth/profile')
     return response.data
   },
 }

@@ -221,7 +221,7 @@ export function AccountCard({ account }: AccountCardProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Desconectar Conta</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja desconectar a conta "{account.name}"? 
+              Tem certeza que deseja desconectar a conta &quot;{account.name}&quot;? 
               Todas as transações importadas serão mantidas, mas a sincronização automática será interrompida.
             </AlertDialogDescription>
           </AlertDialogHeader>

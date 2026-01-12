@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { CheckCircle, XCircle, AlertTriangle, Calendar, DollarSign, MapPin, Tag } from 'lucide-react';
+import { formatCurrency, formatDate } from '@/lib/utils';
 
 interface Transaction {
   id: string;

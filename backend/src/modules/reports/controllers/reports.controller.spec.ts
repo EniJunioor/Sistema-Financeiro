@@ -4,6 +4,9 @@ import { ReportsController } from './reports.controller';
 import { ReportsService } from '../services/reports.service';
 import { AnalyticsService } from '../services/analytics.service';
 import { TrendsService } from '../services/trends.service';
+import { AIForecastingService } from '../services/ai-forecasting.service';
+import { ReportGeneratorService } from '../services/report-generator.service';
+import { ReportSchedulerService } from '../services/report-scheduler.service';
 import { PrismaService } from '../../../common/prisma/prisma.service';
 import { AnalyticsQueryDto, PeriodPreset } from '../dto';
 
@@ -49,6 +52,23 @@ describe('ReportsController', () => {
     getPeriodComparison: jest.fn(),
   };
 
+  const mockAIForecastingService = {
+    generateAIForecast: jest.fn(),
+  };
+
+  const mockReportGeneratorService = {
+    generateReport: jest.fn(),
+  };
+
+  const mockReportSchedulerService = {
+    scheduleReport: jest.fn(),
+    getScheduledReports: jest.fn(),
+    getScheduledReport: jest.fn(),
+    updateScheduledReport: jest.fn(),
+    toggleScheduledReport: jest.fn(),
+    deleteScheduledReport: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ReportsController],
@@ -64,6 +84,18 @@ describe('ReportsController', () => {
         {
           provide: TrendsService,
           useValue: mockTrendsService,
+        },
+        {
+          provide: AIForecastingService,
+          useValue: mockAIForecastingService,
+        },
+        {
+          provide: ReportGeneratorService,
+          useValue: mockReportGeneratorService,
+        },
+        {
+          provide: ReportSchedulerService,
+          useValue: mockReportSchedulerService,
         },
         {
           provide: PrismaService,

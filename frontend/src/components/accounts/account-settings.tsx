@@ -239,7 +239,7 @@ export function AccountSettings({ account }: AccountSettingsProps) {
               Desconectar Conta
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja desconectar a conta "{account.name}"?
+              Tem certeza que deseja desconectar a conta &quot;{account.name}&quot;?
               <br /><br />
               <strong>Esta ação irá:</strong>
               <ul className="list-disc list-inside mt-2 space-y-1">

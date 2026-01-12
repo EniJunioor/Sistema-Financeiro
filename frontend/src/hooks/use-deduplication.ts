@@ -47,7 +47,7 @@ export function useDeduplication() {
     setError(null);
 
     try {
-      const response = await api.post('/transactions/deduplication/detect-range', {
+      const response = await api.post<DeduplicationResult>('/transactions/deduplication/detect-range', {
         startDate,
         endDate,
         settings
@@ -71,7 +71,7 @@ export function useDeduplication() {
     setError(null);
 
     try {
-      const response = await api.post('/transactions/deduplication/detect-transaction', {
+      const response = await api.post<DuplicateMatch[]>('/transactions/deduplication/detect-transaction', {
         transactionId,
         settings
       });

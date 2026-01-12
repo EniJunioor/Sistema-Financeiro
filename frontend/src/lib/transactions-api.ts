@@ -28,23 +28,23 @@ export class TransactionsAPI {
       }
     });
 
-    const response = await apiClient.get(`/transactions?${params.toString()}`);
+    const response = await apiClient.get<PaginatedTransactions>(`/transactions?${params.toString()}`);
     return response.data;
   }
 
   static async getTransaction(id: string): Promise<Transaction> {
-    const response = await apiClient.get(`/transactions/${id}`);
+    const response = await apiClient.get<Transaction>(`/transactions/${id}`);
     return response.data;
   }
 
   static async createTransaction(data: CreateTransactionData): Promise<Transaction> {
-    const response = await apiClient.post('/transactions', data);
+    const response = await apiClient.post<Transaction>('/transactions', data);
     return response.data;
   }
 
   static async updateTransaction(data: UpdateTransactionData): Promise<Transaction> {
     const { id, ...updateData } = data;
-    const response = await apiClient.put(`/transactions/${id}`, updateData);
+    const response = await apiClient.put<Transaction>(`/transactions/${id}`, updateData);
     return response.data;
   }
 
@@ -54,17 +54,17 @@ export class TransactionsAPI {
 
   // Category operations
   static async getCategories(): Promise<Category[]> {
-    const response = await apiClient.get('/categories');
+    const response = await apiClient.get<Category[]>('/categories');
     return response.data;
   }
 
   static async createCategory(data: { name: string; icon?: string; color?: string; parentId?: string }): Promise<Category> {
-    const response = await apiClient.post('/categories', data);
+    const response = await apiClient.post<Category>('/categories', data);
     return response.data;
   }
 
   static async suggestCategory(description: string, amount: number): Promise<CategorySuggestion[]> {
-    const response = await apiClient.post('/transactions/suggest-category', {
+    const response = await apiClient.post<CategorySuggestion[]>('/transactions/suggest-category', {
       description,
       amount,
     });
@@ -73,7 +73,7 @@ export class TransactionsAPI {
 
   // Account operations
   static async getAccounts(): Promise<Account[]> {
-    const response = await apiClient.get('/accounts');
+    const response = await apiClient.get<Account[]>('/accounts');
     return response.data;
   }
 
@@ -82,7 +82,7 @@ export class TransactionsAPI {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await apiClient.post('/transactions/upload', formData, {
+    const response = await apiClient.post<{ url: string; filename: string }>('/transactions/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -100,7 +100,13 @@ export class TransactionsAPI {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await apiClient.post('/transactions/ocr', formData, {
+    const response = await apiClient.post<{
+      amount?: number;
+      description?: string;
+      date?: string;
+      merchant?: string;
+      confidence: number;
+    }>('/transactions/ocr', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -113,7 +119,7 @@ export class TransactionsAPI {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await apiClient.post('/transactions/import', formData, {
+    const response = await apiClient.post<ImportResult>('/transactions/import', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -137,7 +143,7 @@ export class TransactionsAPI {
 
   // Recurring transactions operations
   static async getRecurringTransactions(): Promise<RecurringTransaction[]> {
-    const response = await apiClient.get('/transactions/recurring');
+    const response = await apiClient.get<RecurringTransaction[]>('/transactions/recurring');
     return response.data;
   }
 
@@ -154,7 +160,7 @@ export class TransactionsAPI {
   }
 
   static async getQueueStats(): Promise<QueueStats> {
-    const response = await apiClient.get('/transactions/recurring/queue-stats');
+    const response = await apiClient.get<QueueStats>('/transactions/recurring/queue-stats');
     return response.data;
   }
 }

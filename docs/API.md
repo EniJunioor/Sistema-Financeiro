@@ -316,6 +316,89 @@ Content-Type: application/json
 }
 ```
 
+### 🔒 Segurança (`/security`)
+
+#### Status de Segurança
+```http
+GET /api/v1/security/status
+Authorization: Bearer <token>
+```
+
+#### Logs de Auditoria (Admin)
+```http
+GET /api/v1/security/audit/logs
+Authorization: Bearer <admin_token>
+Query Parameters:
+  - userId: uuid
+  - action: login | logout | data_access
+  - startDate: 2024-01-01
+  - endDate: 2024-12-31
+  - riskLevel: LOW | MEDIUM | HIGH | CRITICAL
+```
+
+#### Criptografar Dados
+```http
+POST /api/v1/security/encrypt
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "data": "dados sensíveis para criptografar",
+  "useChaCha20": false
+}
+```
+
+#### Descriptografar Dados
+```http
+POST /api/v1/security/decrypt
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "encrypted": "dados_criptografados_hex",
+  "iv": "initialization_vector_hex",
+  "tag": "auth_tag_hex",
+  "algorithm": "aes-256-gcm"
+}
+```
+
+#### HSM - Criptografia com Hardware
+```http
+POST /api/v1/security/hsm/encrypt
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "data": "dados para criptografar no HSM",
+  "keyId": "hsm-key-id-optional"
+}
+```
+
+#### HSM - Assinatura Digital
+```http
+POST /api/v1/security/hsm/sign
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "data": "dados para assinar",
+  "keyId": "hsm-key-id-optional",
+  "algorithm": "RSASSA_PSS_SHA_256"
+}
+```
+
+#### Informações do Certificado TLS
+```http
+GET /api/v1/security/certificate/info
+Authorization: Bearer <token>
+```
+
+#### Health Check de Segurança
+```http
+GET /api/v1/security/health
+Authorization: Bearer <token>
+```
+
 ## 📊 Códigos de Status HTTP
 
 | Código | Significado | Uso |
@@ -407,6 +490,7 @@ Formato padrão de erro:
 | `/auth/register` | 3 tentativas | 1 hora |
 | `/transactions` | 100 req | 1 minuto |
 | `/accounts/sync` | 10 req | 1 minuto |
+| `/security/*` | 50 req | 1 minuto |
 | Geral | 1000 req | 1 hora |
 
 ## 📝 Webhooks

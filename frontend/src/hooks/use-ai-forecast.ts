@@ -70,7 +70,7 @@ export function useAIForecast(params: AIForecastParams = {}): UseAIForecastRetur
   } = useQuery({
     queryKey: ['ai-forecast', params],
     queryFn: async (): Promise<AIForecast> => {
-      const response = await api.get(`/reports/ai-forecast?${queryParams.toString()}`);
+      const response = await api.get<AIForecast>(`/reports/ai-forecast?${queryParams.toString()}`);
       return response.data;
     },
     staleTime: 30 * 60 * 1000, // 30 minutes

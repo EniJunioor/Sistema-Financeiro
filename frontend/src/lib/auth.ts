@@ -60,29 +60,21 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/login",
-    // signUp is not a valid NextAuth page option
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
-        token.accessToken = user.accessToken
-        token.refreshToken = user.refreshToken
+        token.accessToken = (user as any).accessToken
+        token.refreshToken = (user as any).refreshToken
       }
       return token
     },
     async session({ session, token }) {
-      session.user.id = token.id as string
-      session.accessToken = token.accessToken as string
-      session.refreshToken = token.refreshToken as string
-      return session
-    },
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (token) {
+      if (token && session.user) {
         session.user.id = token.id as string
+        session.accessToken = token.accessToken as string
+        session.refreshToken = token.refreshToken as string
       }
       return session
     },

@@ -1,4 +1,5 @@
 import { apiClient } from './api';
+import { Account } from '@/types/account';
 
 export interface OpenBankingProvider {
   id: string;
@@ -70,19 +71,19 @@ export interface PaginatedAccountTransactions {
 
 export class AccountsAPI {
   // Get all user accounts
-  static async getAccounts(filters?: AccountFilters) {
+  static async getAccounts(filters?: AccountFilters): Promise<Account[]> {
     const params = new URLSearchParams();
     if (filters?.type) params.append('type', filters.type);
     if (filters?.provider) params.append('provider', filters.provider);
     if (filters?.isActive !== undefined) params.append('isActive', filters.isActive.toString());
 
-    const response = await apiClient.get(`/accounts?${params.toString()}`);
+    const response = await apiClient.get<Account[]>(`/accounts?${params.toString()}`);
     return response.data;
   }
 
   // Get account by ID
-  static async getAccount(accountId: string) {
-    const response = await apiClient.get(`/accounts/${accountId}`);
+  static async getAccount(accountId: string): Promise<Account> {
+    const response = await apiClient.get<Account>(`/accounts/${accountId}`);
     return response.data;
   }
 
@@ -119,25 +120,25 @@ export class AccountsAPI {
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
 
-    const response = await apiClient.get(`/accounts/${accountId}/transactions?${params.toString()}`);
+    const response = await apiClient.get<PaginatedAccountTransactions>(`/accounts/${accountId}/transactions?${params.toString()}`);
     return response.data;
   }
 
   // Get supported providers
   static async getSupportedProviders(): Promise<OpenBankingProvider[]> {
-    const response = await apiClient.get('/accounts/providers/supported');
+    const response = await apiClient.get<OpenBankingProvider[]>('/accounts/providers/supported');
     return response.data;
   }
 
   // Get auth URL for provider
   static async getAuthUrl(provider: string, data: AuthUrlRequest): Promise<AuthUrlResponse> {
-    const response = await apiClient.post(`/accounts/providers/${provider}/auth-url`, data);
+    const response = await apiClient.post<AuthUrlResponse>(`/accounts/providers/${provider}/auth-url`, data);
     return response.data;
   }
 
   // Get sync status
   static async getSyncStatus(): Promise<SyncStatus> {
-    const response = await apiClient.get('/accounts/sync/status');
+    const response = await apiClient.get<SyncStatus>('/accounts/sync/status');
     return response.data;
   }
 

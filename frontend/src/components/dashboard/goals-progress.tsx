@@ -5,14 +5,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import type { Goal } from '@/types/dashboard';
+import { useActiveGoals, useAllGoalsProgress } from '@/hooks/use-goals';
+import type { Goal } from '@/lib/goals-api';
 
 interface GoalsProgressProps {
-  goals: Goal[];
-  isLoading?: boolean;
+  onCreateGoal?: () => void;
 }
 
-export function GoalsProgress({ goals, isLoading }: GoalsProgressProps) {
+export function GoalsProgress({ onCreateGoal }: GoalsProgressProps) {
+  const { data: goals, isLoading: goalsLoading } = useActiveGoals();
+  const { data: goalsProgress, isLoading: progressLoading } = useAllGoalsProgress();
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -39,6 +42,8 @@ export function GoalsProgress({ goals, isLoading }: GoalsProgressProps) {
         return 'Limite de Gastos';
       case 'investment':
         return 'Investimento';
+      case 'debt_payoff':
+        return 'Quitação de Dívida';
       default:
         return 'Meta';
     }
@@ -52,6 +57,8 @@ export function GoalsProgress({ goals, isLoading }: GoalsProgressProps) {
         return 'bg-red-100 text-red-800';
       case 'investment':
         return 'bg-blue-100 text-blue-800';
+      case 'debt_payoff':
+        return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -89,7 +96,11 @@ export function GoalsProgress({ goals, isLoading }: GoalsProgressProps) {
     return `${months} meses`;
   };
 
-  if (isLoading) {
+  const getGoalProgress = (goalId: string) => {
+    return goalsProgress?.find(p => p.id === goalId);
+  };
+
+  if (goalsLoading || progressLoading) {
     return (
       <Card>
         <CardHeader>
@@ -124,7 +135,7 @@ export function GoalsProgress({ goals, isLoading }: GoalsProgressProps) {
             <CardTitle>Metas Financeiras</CardTitle>
             <CardDescription>Progresso das suas metas</CardDescription>
           </div>
-          <Button size="sm" className="flex items-center space-x-1">
+          <Button size="sm" className="flex items-center space-x-1" onClick={onCreateGoal}>
             <Plus className="h-4 w-4" />
             <span>Nova Meta</span>
           </Button>
@@ -136,7 +147,7 @@ export function GoalsProgress({ goals, isLoading }: GoalsProgressProps) {
             <p className="text-sm text-gray-400 mb-4">
               Defina metas financeiras para acompanhar seu progresso.
             </p>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={onCreateGoal}>
               Criar primeira meta
             </Button>
           </div>
@@ -152,7 +163,7 @@ export function GoalsProgress({ goals, isLoading }: GoalsProgressProps) {
           <CardTitle>Metas Financeiras</CardTitle>
           <CardDescription>Progresso das suas metas</CardDescription>
         </div>
-        <Button size="sm" variant="outline" className="flex items-center space-x-1">
+        <Button size="sm" variant="outline" className="flex items-center space-x-1" onClick={onCreateGoal}>
           <Plus className="h-4 w-4" />
           <span>Nova Meta</span>
         </Button>
@@ -160,7 +171,9 @@ export function GoalsProgress({ goals, isLoading }: GoalsProgressProps) {
       <CardContent>
         <div className="space-y-6">
           {activeGoals.slice(0, 4).map((goal) => {
-            const progress = Math.min(goal.progress, 100);
+            const goalProgress = getGoalProgress(goal.id);
+            const progress = goalProgress?.progressPercentage ?? 
+              Math.min((goal.currentAmount / goal.targetAmount) * 100, 100);
             const daysRemaining = getDaysRemaining(goal.targetDate);
             const progressColor = getProgressColor(progress, goal.type);
             
@@ -199,7 +212,6 @@ export function GoalsProgress({ goals, isLoading }: GoalsProgressProps) {
                   <Progress 
                     value={progress} 
                     className="h-2"
-                    // Note: You might need to add custom styling for different colors
                   />
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     <span>
@@ -231,6 +243,29 @@ export function GoalsProgress({ goals, isLoading }: GoalsProgressProps) {
                   <div className="flex items-center space-x-1 text-xs text-gray-500">
                     <Target className="h-3 w-3" />
                     <span>Começando a jornada. Você consegue!</span>
+                  </div>
+                )}
+
+                {/* Gamification elements */}
+                {goalProgress && (goalProgress.badges.length > 0 || goalProgress.currentStreak > 0) && (
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                    {goalProgress.badges.length > 0 && (
+                      <div className="flex items-center space-x-1">
+                        <TrendingUp className="h-4 w-4 text-yellow-500" />
+                        <span className="text-xs text-gray-600">
+                          {goalProgress.badges.length} badge{goalProgress.badges.length > 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {goalProgress.currentStreak > 0 && (
+                      <div className="flex items-center space-x-1">
+                        <Target className="h-4 w-4 text-orange-500" />
+                        <span className="text-xs text-gray-600">
+                          {goalProgress.currentStreak} dias
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

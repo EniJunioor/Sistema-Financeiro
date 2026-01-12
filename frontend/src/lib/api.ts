@@ -12,10 +12,13 @@ export const apiClient = axios.create({
 
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
-  async (config) => {
+  async (config: any) => {
     try {
       const session = await getSession()
       if (session?.accessToken) {
+        if (!config.headers) {
+          config.headers = {}
+        }
         config.headers.Authorization = `Bearer ${session.accessToken}`
       }
     } catch (error) {
@@ -42,7 +45,6 @@ apiClient.interceptors.response.use(
     return Promise.reject(error)
   }
 )
-  }
-)
 
+export const api = apiClient
 export default apiClient
