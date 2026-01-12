@@ -18,19 +18,25 @@
 - ✅ API clients para todas as funcionalidades
 - ✅ Testes unitários e de integração
 - ✅ Documentação completa
+- ✅ Sistema de segurança avançado (TLS 1.3, criptografia, HSM)
+- ✅ Sistema de auditoria e logs
+- ✅ Módulo de investimentos
+- ✅ Módulo de metas financeiras
+- ✅ Sistema de relatórios
+- ✅ Detecção de anomalias
 
 ### 🔄 Em Desenvolvimento
-- 🔄 Sistema de investimentos
-- 🔄 Metas financeiras com gamificação
-- 🔄 Notificações inteligentes
-- 🔄 Relatórios avançados
+- 🔄 Sistema de notificações inteligentes
+- 🔄 Integração com mais provedores Open Banking
 - 🔄 Aplicativo mobile React Native
+- 🔄 Melhorias de performance e otimizações
 
 ### ⏳ Planejado
 - ⏳ Integrações externas (e-commerce, cashback)
 - ⏳ API pública para desenvolvedores
 - ⏳ Sistema de compliance avançado
 - ⏳ Deploy em produção (AWS)
+- ⏳ Sistema de gamificação completo
 
 #### 1. Instalar Docker (Obrigatório)
 

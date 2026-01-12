@@ -67,10 +67,11 @@ src/
 ### ✅ Autenticação e Usuários
 - **Registro e Login**: Email/senha com validação
 - **JWT Authentication**: Tokens seguros com refresh
-- **OAuth Integration**: Google, Facebook, Apple
-- **Two-Factor Authentication**: TOTP com Google Authenticator
+- **OAuth Integration**: Google, Facebook, Apple, Microsoft
+- **Two-Factor Authentication**: TOTP com Google Authenticator, SMS, Email
 - **Password Recovery**: Reset seguro via email
 - **Profile Management**: Gestão completa de perfil
+- **Rate Limiting**: Proteção contra brute force
 
 ### ✅ Contas Bancárias (Open Banking)
 - **Account Connection**: Conexão com bancos via Open Banking
@@ -101,9 +102,11 @@ src/
 - **Portfolio Management**: Gestão completa de portfolio
 - **Asset Tracking**: Acompanhamento de ativos
 - **Performance Analytics**: Análise de performance
-- **Price Updates**: Atualização automática de preços
+- **Price Updates**: Atualização automática de preços (Yahoo Finance, Alpha Vantage)
 - **Dividend Tracking**: Acompanhamento de dividendos
-- **Asset Types**: Ações, fundos, ETFs, criptomoedas
+- **Asset Types**: Ações, fundos, ETFs, criptomoedas, títulos
+- **Real-time Quotes**: Cotações em tempo real
+- **Risk Analysis**: Análise de risco e diversificação
 
 ### ✅ Metas Financeiras
 - **Goal Creation**: Criação de metas personalizadas
@@ -123,11 +126,28 @@ src/
 - **Export Functionality**: Exportação de dados
 
 ### ✅ Sistema de Notificações
-- **Email Notifications**: Notificações por email
-- **Push Notifications**: Notificações push (mobile)
+- **Email Notifications**: Notificações por email (Nodemailer)
+- **Push Notifications**: Notificações push (mobile - planejado)
 - **In-App Notifications**: Notificações internas
-- **Smart Alerts**: Alertas inteligentes
+- **Smart Alerts**: Alertas inteligentes baseados em padrões
 - **Customizable Settings**: Configurações personalizáveis
+- **Notification Templates**: Templates personalizáveis
+
+### ✅ Segurança Avançada
+- **Criptografia AES-256-GCM**: Para dados financeiros
+- **Criptografia ChaCha20-Poly1305**: Para PII e tokens
+- **HSM Integration**: AWS KMS e HashiCorp Vault
+- **TLS 1.3**: Comunicação segura com certificate pinning
+- **Auditoria Completa**: Logs estruturados de todas as ações
+- **Rate Limiting Avançado**: Proteção contra ataques DDoS
+- **Security Headers**: Headers de segurança completos
+- **Input Validation**: Validação e sanitização de entrada
+
+### ✅ Detecção de Anomalias
+- **Anomaly Detection**: Detecção de transações anômalas
+- **Pattern Recognition**: Reconhecimento de padrões suspeitos
+- **Risk Scoring**: Pontuação de risco para transações
+- **Alert System**: Sistema de alertas para atividades suspeitas
 
 ## 📊 Banco de Dados
 

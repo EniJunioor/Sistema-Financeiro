@@ -1,6 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { ChartJSNodeCanvas } from 'chartjs-node-canvas';
-import { ChartConfiguration, ChartType as ChartJSType } from 'chart.js';
+import { Injectable, Logger } from '@nestjs/common';
 
 export interface ChartData {
   labels: string[];
@@ -27,7 +25,10 @@ export interface ChartOptions {
 
 @Injectable()
 export class ChartGeneratorService {
-  private chartJSNodeCanvas: ChartJSNodeCanvas;
+  private readonly logger = new Logger(ChartGeneratorService.name);
+  private canvasAvailable = false;
+  private ChartJSNodeCanvas: any;
+  
   private defaultColors = [
     '#10B981', // Green
     '#3B82F6', // Blue
@@ -42,29 +43,47 @@ export class ChartGeneratorService {
   ];
 
   constructor() {
-    this.chartJSNodeCanvas = new ChartJSNodeCanvas({
-      width: 800,
-      height: 600,
-      backgroundColour: 'white',
-      chartCallback: (ChartJS) => {
-        // Register any additional plugins if needed
-        ChartJS.defaults.font.family = 'Arial, sans-serif';
-        ChartJS.defaults.font.size = 12;
-      },
-    });
+    this.initializeCanvas();
+  }
+
+  private async initializeCanvas() {
+    try {
+      // Try to dynamically import chartjs-node-canvas
+      const { ChartJSNodeCanvas } = await import('chartjs-node-canvas');
+      this.ChartJSNodeCanvas = ChartJSNodeCanvas;
+      this.canvasAvailable = true;
+      this.logger.log('Canvas support enabled for chart generation');
+    } catch (error) {
+      this.logger.warn('Canvas not available - chart generation will return placeholder data');
+      this.logger.warn('To enable chart generation, install canvas: npm install canvas');
+      this.canvasAvailable = false;
+    }
   }
 
   async generateChart(data: ChartData, options: ChartOptions): Promise<Buffer> {
-    const chartConfig = this.buildChartConfig(data, options);
-    
-    // Create a new canvas instance with the specified dimensions
-    const canvas = new ChartJSNodeCanvas({
-      width: options.width,
-      height: options.height,
-      backgroundColour: 'white',
-    });
+    if (!this.canvasAvailable) {
+      return this.generatePlaceholderChart(options);
+    }
 
-    return await canvas.renderToBuffer(chartConfig);
+    try {
+      const chartConfig = this.buildChartConfig(data, options);
+      
+      // Create a new canvas instance with the specified dimensions
+      const canvas = new this.ChartJSNodeCanvas({
+        width: options.width,
+        height: options.height,
+        backgroundColour: 'white',
+        chartCallback: (ChartJS: any) => {
+          ChartJS.defaults.font.family = 'Arial, sans-serif';
+          ChartJS.defaults.font.size = 12;
+        },
+      });
+
+      return await canvas.renderToBuffer(chartConfig);
+    } catch (error) {
+      this.logger.error('Error generating chart:', error);
+      return this.generatePlaceholderChart(options);
+    }
   }
 
   async generateBase64Chart(data: ChartData, options: ChartOptions): Promise<string> {
@@ -72,7 +91,24 @@ export class ChartGeneratorService {
     return `data:image/png;base64,${buffer.toString('base64')}`;
   }
 
-  private buildChartConfig(data: ChartData, options: ChartOptions): ChartConfiguration {
+  private generatePlaceholderChart(options: ChartOptions): Buffer {
+    // Generate a simple SVG placeholder
+    const svg = `
+      <svg width="${options.width}" height="${options.height}" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>
+        <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-family="Arial, sans-serif" font-size="16" fill="#6c757d">
+          ${options.title}
+        </text>
+        <text x="50%" y="60%" text-anchor="middle" dy=".3em" font-family="Arial, sans-serif" font-size="12" fill="#adb5bd">
+          Chart generation unavailable - install canvas module
+        </text>
+      </svg>
+    `;
+    
+    return Buffer.from(svg, 'utf-8');
+  }
+
+  private buildChartConfig(data: ChartData, options: ChartOptions): any {
     const chartType = this.mapChartType(options.type);
     const colors = options.colors || this.defaultColors;
 
@@ -85,7 +121,7 @@ export class ChartGeneratorService {
       fill: dataset.fill !== undefined ? dataset.fill : options.type === 'area',
     }));
 
-    const config: ChartConfiguration = {
+    const config: any = {
       type: chartType,
       data: {
         labels: data.labels,
@@ -113,7 +149,7 @@ export class ChartGeneratorService {
           },
           tooltip: {
             callbacks: {
-              label: (context) => {
+              label: (context: any) => {
                 let label = context.dataset.label || '';
                 if (label) {
                   label += ': ';
@@ -147,7 +183,7 @@ export class ChartGeneratorService {
     return config;
   }
 
-  private mapChartType(type: string): ChartJSType {
+  private mapChartType(type: string): string {
     switch (type) {
       case 'line':
       case 'area':

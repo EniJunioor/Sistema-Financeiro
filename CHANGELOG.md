@@ -13,6 +13,34 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Aplicativo mobile React Native
 - Sistema de metas financeiras avançadas
 
+## [1.1.1] - 2025-01-27
+
+### Adicionado
+- 📚 **Atualização Completa da Documentação**
+  - Atualização de todos os arquivos README.md do projeto
+  - Revisão e atualização do CHANGELOG.md
+  - Atualização do SETUP.md com instruções mais claras
+  - Melhorias na documentação da API (docs/API.md)
+  - Atualização do guia de desenvolvimento (docs/DEVELOPMENT.md)
+  - Revisão do guia de deploy (docs/DEPLOYMENT.md)
+  - Documentação atualizada dos módulos backend
+  - Documentação atualizada do frontend
+  - Documentação do módulo mobile atualizada
+
+### Melhorado
+- 📝 **Documentação**
+  - README principal com informações mais detalhadas sobre funcionalidades
+  - Documentação de segurança expandida
+  - Exemplos de código atualizados
+  - Instruções de setup mais claras e passo a passo
+  - Guias de contribuição aprimorados
+
+### Mudanças Técnicas
+- 🔧 **Configuração do Projeto**
+  - Verificação e atualização do .gitignore
+  - Preparação para versionamento Git
+  - Organização da estrutura de documentação
+
 ## [1.1.0] - 2026-01-12
 
 ### Adicionado

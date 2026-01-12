@@ -33,6 +33,9 @@ Aplicação web moderna construída com Next.js 14, TypeScript, TailwindCSS e Sh
 - ✅ Cards de resumo financeiro
 - ✅ Seletor de período
 - ✅ Atualização em tempo real
+- ✅ Análise de tendências
+- ✅ Comparação entre períodos
+- ✅ Previsões com IA
 
 ### 🎨 Interface e UX
 - ✅ Design system completo (Shadcn/ui)
@@ -46,10 +49,13 @@ Aplicação web moderna construída com Next.js 14, TypeScript, TailwindCSS e Sh
 ### 🔧 Arquitetura Técnica
 - ✅ Next.js 14 com App Router
 - ✅ TypeScript rigoroso
-- ✅ React Query para cache
+- ✅ React Query (TanStack Query) para cache
 - ✅ Zustand para estado global
 - ✅ React Hook Form + Zod
 - ✅ Testes unitários (Jest + Testing Library)
+- ✅ Shadcn/ui para componentes base
+- ✅ TailwindCSS para estilização
+- ✅ NextAuth.js v5 para autenticação
 
 ## 🏗️ Estrutura do Projeto
 
