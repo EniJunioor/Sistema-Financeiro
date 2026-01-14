@@ -190,15 +190,17 @@ export function ConnectAccountDialog({ open, onOpenChange }: ConnectAccountDialo
                           <div>
                             <h4 className="font-medium">{provider.name}</h4>
                             <p className="text-sm text-muted-foreground">
-                              {provider.countries.join(', ')}
+                              {provider.countries?.join(', ') || ''}
                             </p>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {provider.features.slice(0, 3).map((feature) => (
-                                <Badge key={feature} variant="secondary" className="text-xs">
-                                  {feature}
-                                </Badge>
-                              ))}
-                            </div>
+                            {provider.features && provider.features.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {provider.features.slice(0, 3).map((feature) => (
+                                  <Badge key={feature} variant="secondary" className="text-xs">
+                                    {feature}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </div>
                         <ExternalLink className="h-4 w-4 text-muted-foreground" />

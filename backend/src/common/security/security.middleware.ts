@@ -3,7 +3,6 @@ import { Request, Response, NextFunction } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuditService } from './audit.service';
 import rateLimit from 'express-rate-limit';
-import slowDown from 'express-slow-down';
 
 interface RequestWithUser extends Request {
   user?: {
@@ -32,6 +31,7 @@ export class SecurityMiddleware implements NestMiddleware {
 
   private initializeRateLimiting() {
     const rateLimitConfig = this.configService.get('security.rateLimit');
+    const slowDown = require('express-slow-down');
     
     // General rate limiting
     this.rateLimiter = rateLimit({

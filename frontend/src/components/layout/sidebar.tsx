@@ -25,7 +25,8 @@ import {
   ArrowLeftRight,
   BarChart,
   Calendar,
-  Settings
+  Settings,
+  X
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { authApi } from '@/lib/auth-api'
@@ -101,12 +102,14 @@ interface SidebarItemComponentProps {
   item: SidebarItem
   isExpanded: boolean
   onToggle: () => void
+  onItemClick?: () => void
 }
 
 function SidebarItemComponent({ 
   item, 
   isExpanded, 
-  onToggle
+  onToggle,
+  onItemClick
 }: SidebarItemComponentProps) {
   const pathname = usePathname()
   const hasChildren = item.children && item.children.length > 0
@@ -118,6 +121,8 @@ function SidebarItemComponent({
       e.preventDefault()
       e.stopPropagation()
       onToggle()
+    } else {
+      onItemClick?.()
     }
   }
 
@@ -127,19 +132,23 @@ function SidebarItemComponent({
     onToggle()
   }
 
+  const handleLinkClick = () => {
+    onItemClick?.()
+  }
+
   return (
     <div>
       {item.href && !hasChildren ? (
-        <Link href={item.href}>
+        <Link href={item.href} onClick={handleLinkClick}>
           <div
             className={cn(
               "flex items-center w-full px-4 py-3 text-left transition-all duration-300 cursor-pointer rounded-r-lg relative group",
-              isActive && "bg-emerald-50 border-l-4 border-emerald-600 text-emerald-700",
+              isActive && "bg-emerald-50 border-l-2 rounded border-emerald-600 text-emerald-700",
               !isActive && "hover:bg-emerald-100 text-gray-700 hover:text-emerald-700"
             )}
           >
             {isActive && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-600 rounded-r-full" />
+              <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-emerald-600 rounded-r-full" />
             )}
             <item.icon className={cn(
               "w-5 h-5 mr-3 flex-shrink-0 transition-colors duration-300",
@@ -159,12 +168,12 @@ function SidebarItemComponent({
             onClick={handleClick}
             className={cn(
               "flex items-center justify-between w-full px-4 py-3 text-left transition-all duration-300 cursor-pointer rounded-r-lg relative group",
-              hasActiveChild && "bg-emerald-50 border-l-4 border-emerald-600 text-emerald-700",
+              hasActiveChild && "bg-emerald-50 border-l-4 rounded border-emerald-600 text-emerald-700",
               !hasActiveChild && "hover:bg-emerald-100 text-gray-700 hover:text-emerald-700"
             )}
           >
             {hasActiveChild && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-600 rounded-r-full" />
+              <div className="absolute left-0 top-0 bottom-0 w-0.6 bg-emerald-600 rounded-r-full" />
             )}
             <div className="flex items-center flex-1">
               <item.icon className={cn(
@@ -214,11 +223,11 @@ function SidebarItemComponent({
                   const ChildIcon = child.icon
                   
                   return (
-                    <Link key={child.id} href={child.href || '#'}>
+                    <Link key={child.id} href={child.href || '#'} onClick={onItemClick}>
                       <div
                         className={cn(
                           "relative flex items-center px-4 py-2.5 text-sm transition-all duration-300 rounded-r-lg group ml-4",
-                          isChildActive && "bg-emerald-50 border-l-2 border-emerald-600 text-emerald-700 font-medium",
+                          isChildActive && "bg-emerald-50 border-l-0 rounded border-emerald-600 text-emerald-700 font-medium",
                           !isChildActive && "border-l-2 border-transparent text-gray-700 hover:bg-emerald-100 hover:text-emerald-700 hover:border-emerald-300"
                         )}
                       >
@@ -245,7 +254,7 @@ function SidebarItemComponent({
 
 function SidebarLogo() {
   return (
-    <div className="flex items-center px-4 py-4 border-b border-gray-200 bg-white">
+    <div className="hidden md:flex items-center px-4 py-4 border-b border-gray-200 bg-white">
       <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-emerald-600 rounded-md flex items-center justify-center flex-shrink-0">
         <TrendingUp className="w-6 h-6 text-white" />
       </div>
@@ -258,6 +267,14 @@ function SidebarLogo() {
 
 function UserProfile({ onLogout }: { onLogout: () => void }) {
   const [showMenu, setShowMenu] = useState(false)
+  const router = useRouter()
+  const pathname = usePathname()
+  const isSettingsActive = pathname?.startsWith('/settings')
+
+  const handleSettingsClick = () => {
+    router.push('/settings')
+    setShowMenu(false)
+  }
 
   return (
     <div className="p-4 border-t border-gray-200 bg-white relative">
@@ -280,6 +297,18 @@ function UserProfile({ onLogout }: { onLogout: () => void }) {
       {showMenu && (
         <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg py-1 animate-fade-in z-10">
           <button
+            onClick={handleSettingsClick}
+            className={cn(
+              "flex items-center w-full px-4 py-2 text-sm transition-colors duration-200",
+              isSettingsActive 
+                ? "text-emerald-700 bg-emerald-50" 
+                : "text-gray-700 hover:bg-gray-50"
+            )}
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            <span>Configurações</span>
+          </button>
+          <button
             onClick={() => {
               onLogout()
               setShowMenu(false)
@@ -295,7 +324,12 @@ function UserProfile({ onLogout }: { onLogout: () => void }) {
   )
 }
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean
+  onClose?: () => void
+}
+
+export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
   const [expandedItems, setExpandedItems] = useState<string[]>([])
   const pathname = usePathname()
   const router = useRouter()
@@ -341,22 +375,63 @@ export function Sidebar() {
     }
   }
 
+  const handleItemClick = () => {
+    // Fechar sidebar em mobile quando um item for clicado
+    if (onClose && typeof window !== 'undefined' && window.innerWidth < 768) {
+      onClose()
+    }
+  }
+
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 overflow-y-auto flex flex-col h-screen">
-      <SidebarLogo />
+    <>
+      {/* Overlay para mobile */}
+      {isOpen && onClose && (
+        <div
+          onClick={onClose}
+          className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-300"
+        />
+      )}
       
-      <nav className="flex-1 mt-2 px-2">
-        {sidebarItems.map(item => (
-          <SidebarItemComponent 
-            key={item.id}
-            item={item}
-            isExpanded={expandedItems.includes(item.id)}
-            onToggle={() => toggleExpanded(item.id)}
-          />
-        ))}
-      </nav>
-      
-      <UserProfile onLogout={handleLogout} />
-    </aside>
+      <aside
+        className={cn(
+          "fixed md:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 overflow-y-auto flex flex-col h-screen transition-transform duration-300 ease-in-out",
+          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        )}
+      >
+        {/* Botão de fechar para mobile */}
+        <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 md:hidden">
+          <div className="flex items-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-emerald-600 rounded-md flex items-center justify-center flex-shrink-0">
+              <TrendingUp className="w-6 h-6 text-white" />
+            </div>
+            <span className="ml-3 font-semibold text-lg bg-gradient-to-r from-blue-600 via-emerald-600 to-blue-600 bg-clip-text text-transparent">
+              FinanceApp
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-600" />
+          </button>
+        </div>
+        
+        <SidebarLogo />
+        
+        <nav className="flex-1 mt-2 px-2">
+          {sidebarItems.map(item => (
+            <SidebarItemComponent 
+              key={item.id}
+              item={item}
+              isExpanded={expandedItems.includes(item.id)}
+              onToggle={() => toggleExpanded(item.id)}
+              onItemClick={handleItemClick}
+            />
+          ))}
+        </nav>
+        
+        <UserProfile onLogout={handleLogout} />
+      </aside>
+    </>
   )
 }

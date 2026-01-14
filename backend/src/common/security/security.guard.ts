@@ -21,6 +21,13 @@ export class SecurityGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<RequestWithUser>();
+    const path = request.url;
+    
+    // Skip security checks for Swagger documentation and health checks
+    const skipPaths = ['/docs', '/health', '/api/docs'];
+    if (skipPaths.some(skipPath => path.startsWith(skipPath))) {
+      return true;
+    }
     
     // Perform security checks
     const checks = [

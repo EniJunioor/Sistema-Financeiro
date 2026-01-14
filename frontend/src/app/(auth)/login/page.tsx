@@ -71,26 +71,46 @@ export default function LoginPage() {
     setSuccess(null)
 
     try {
+      console.log('[Login] Iniciando login com email:', data.email)
       const response = await authApi.login(data)
+      console.log('[Login] Resposta do login:', response)
       
       if (response.success) {
         if (response.requiresTwoFactor) {
+          console.log('[Login] Requer autenticação de dois fatores')
           setRequiresTwoFactor(true)
           setTwoFactorMethods(response.twoFactorMethods || [])
           setLoginData(data)
         } else {
-          // Store tokens and redirect
+          // Store tokens
           if (response.tokens) {
+            console.log('[Login] Salvando tokens no localStorage')
             localStorage.setItem('accessToken', response.tokens.accessToken)
             localStorage.setItem('refreshToken', response.tokens.refreshToken)
+            console.log('[Login] Tokens salvos com sucesso')
+            console.log('[Login] AccessToken (primeiros 20 chars):', response.tokens.accessToken.substring(0, 20))
+          } else {
+            console.warn('[Login] Nenhum token na resposta')
           }
           
+          // Show success message before redirecting
+          setSuccess('Login realizado com sucesso! Redirecionando...')
+          
+          // Redirect after a short delay to show success message
           const redirectTo = searchParams.get('redirect') || '/dashboard'
-          router.push(redirectTo)
+          console.log('[Login] Redirecionando para:', redirectTo)
+          setTimeout(() => {
+            console.log('[Login] Executando redirecionamento para:', redirectTo)
+            router.push(redirectTo)
+          }, 1500)
         }
+      } else {
+        console.warn('[Login] Login não foi bem-sucedido:', response)
       }
     } catch (err) {
+      console.error('[Login] Erro no login:', err)
       const authError = handleAuthError(err)
+      console.error('[Login] Erro tratado:', authError)
       setError(authError.message)
     } finally {
       setIsLoading(false)
@@ -152,14 +172,16 @@ export default function LoginPage() {
   }
 
   return (
-    <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl text-center">Entrar</CardTitle>
-        <CardDescription className="text-center">
+    <Card className="shadow-2xl border-0 backdrop-blur-sm bg-white/95">
+      <CardHeader className="space-y-1 pb-6">
+        <CardTitle className="text-2xl text-center bg-gradient-to-r from-blue-700 to-emerald-600 bg-clip-text text-transparent font-bold">
+          Entrar
+        </CardTitle>
+        <CardDescription className="text-center text-gray-600">
           Entre com sua conta para acessar a plataforma
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-5">
         {error && (
           <Alert variant="destructive">
             <AlertIcon variant="destructive" />
@@ -258,7 +280,7 @@ export default function LoginPage() {
 
               <Link
                 href="/forgot-password"
-                className="text-sm text-green-600 hover:underline"
+                className="text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors font-medium"
               >
                 Esqueceu a senha?
               </Link>
@@ -266,7 +288,7 @@ export default function LoginPage() {
 
             <LoadingButton
               type="submit"
-              className="w-full"
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
               loading={isLoading}
               loadingText="Entrando..."
             >
@@ -275,37 +297,25 @@ export default function LoginPage() {
           </form>
         </Form>
 
-        <div className="text-center">
-          <Link href="/register" className="text-sm text-green-600 hover:underline">
+        <div className="text-center pt-2">
+          <Link href="/register" className="text-sm text-emerald-600 hover:text-emerald-700 hover:underline transition-colors font-medium">
             Não tem uma conta? Cadastre-se
           </Link>
         </div>
 
-        <div className="relative">
+        <div className="relative py-4">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
+            <span className="w-full border-t border-gray-200" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-2 text-gray-500">Ou continue com</span>
+            <span className="bg-white px-3 text-gray-500 font-medium">Ou continue com</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <OAuthButton provider="google" disabled={isLoading}>
-            Google
-          </OAuthButton>
-          <OAuthButton provider="microsoft" disabled={isLoading}>
-            Microsoft
-          </OAuthButton>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <OAuthButton provider="facebook" disabled={isLoading}>
-            Facebook
-          </OAuthButton>
-          <OAuthButton provider="apple" disabled={isLoading}>
-            Apple
-          </OAuthButton>
+        <div className="flex justify-center gap-4">
+          <OAuthButton provider="google" disabled={isLoading} />
+          <OAuthButton provider="facebook" disabled={isLoading} />
+          <OAuthButton provider="apple" disabled={isLoading} />
         </div>
       </CardContent>
     </Card>

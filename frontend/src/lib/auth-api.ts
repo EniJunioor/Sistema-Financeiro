@@ -37,8 +37,20 @@ export interface TwoFactorSetupResponse {
 export const authApi = {
   // Login with email and password
   async login(data: LoginFormData): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>('/auth/login', data)
-    return response.data
+    const response = await apiClient.post<any>('/auth/login', {
+      email: data.email,
+      password: data.password,
+    })
+    // Transform backend response format to frontend format
+    const backendResponse = response.data
+    return {
+      success: true,
+      user: backendResponse.user,
+      tokens: {
+        accessToken: backendResponse.access_token,
+        refreshToken: backendResponse.refresh_token || '',
+      },
+    }
   },
 
   // Register new user
@@ -146,6 +158,16 @@ export class AuthError extends Error {
 
 // Helper function to handle auth API errors
 export function handleAuthError(error: any): AuthError {
+  // NestJS formats errors as { statusCode, message, error }
+  if (error.response?.data?.message) {
+    return new AuthError(
+      error.response.data.error || 'ERROR',
+      error.response.data.message,
+      error.response.status
+    )
+  }
+  
+  // Alternative format: { error: { code, message } }
   if (error.response?.data?.error) {
     return new AuthError(
       error.response.data.error.code || 'UNKNOWN_ERROR',

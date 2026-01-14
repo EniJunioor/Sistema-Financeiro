@@ -3,7 +3,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthController } from './controllers/auth.controller';
 import { ProfileController } from './controllers/profile.controller';
 import { AuthService } from './services/auth.service';
@@ -25,10 +24,6 @@ import { PrismaModule } from '../../common/prisma/prisma.module';
   imports: [
     PrismaModule,
     PassportModule,
-    ThrottlerModule.forRoot({
-      ttl: 60000, // 1 minute
-      limit: 10, // 10 requests per minute
-    }),
     JwtModule.registerAsync({
       useFactory: (configService: ConfigService) => ({
         secret: configService.get('JWT_SECRET'),

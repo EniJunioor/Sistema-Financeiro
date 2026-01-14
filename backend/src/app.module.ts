@@ -29,15 +29,10 @@ import { AnomalyDetectionModule } from './modules/anomaly-detection/anomaly-dete
     // Schedule module for cron jobs
     ScheduleModule.forRoot(),
 
-    // Enhanced rate limiting with Redis
+    // Enhanced rate limiting
     ThrottlerModule.forRoot({
       ttl: 60000, // 1 minute
       limit: 100, // 100 requests per minute
-      storage: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT) || 6379,
-        password: process.env.REDIS_PASSWORD || 'redis123',
-      },
     }),
 
     // Cache with Redis

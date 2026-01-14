@@ -116,16 +116,10 @@ async function bootstrap() {
     }),
   );
 
-  // Global security guard
-  app.useGlobalGuards(app.get(SecurityGuard));
-
-  // Security middleware
-  app.use(app.get(SecurityMiddleware).use.bind(app.get(SecurityMiddleware)));
-
   // API prefix
   app.setGlobalPrefix('api/v1');
 
-  // Swagger documentation (only in development)
+  // Swagger documentation (only in development) - Must be AFTER setGlobalPrefix
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
       .setTitle('Plataforma Financeira API')
@@ -142,7 +136,7 @@ async function bootstrap() {
       .build();
     
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api/docs', app, document, {
+    SwaggerModule.setup('docs', app, document, {
       swaggerOptions: {
         persistAuthorization: true,
         displayRequestDuration: true,
@@ -150,8 +144,17 @@ async function bootstrap() {
         showExtensions: true,
         showCommonExtensions: true,
       },
+      customSiteTitle: 'Plataforma Financeira API',
+      customfavIcon: '/favicon.ico',
+      customCss: '.swagger-ui .topbar { display: none }',
     });
   }
+
+  // Global security guard (after Swagger to avoid blocking docs)
+  app.useGlobalGuards(app.get(SecurityGuard));
+
+  // Security middleware (after Swagger to avoid blocking docs)
+  app.use(app.get(SecurityMiddleware).use.bind(app.get(SecurityMiddleware)));
 
   // Health check endpoint
   app.getHttpAdapter().get('/health', (req, res) => {
@@ -193,7 +196,7 @@ async function bootstrap() {
     await new Promise<void>((resolve) => {
       httpsServer.listen(port, () => {
         logger.log(`🔒 Secure backend running on https://localhost:${port}`);
-        logger.log(`📚 API Documentation: https://localhost:${port}/api/docs`);
+        logger.log(`📚 API Documentation: https://localhost:${port}/docs`);
         resolve();
       });
     });
@@ -201,7 +204,7 @@ async function bootstrap() {
     // Development: Use HTTP
     await app.listen(port);
     logger.log(`🚀 Backend running on http://localhost:${port}`);
-    logger.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
+    logger.log(`📚 API Documentation: http://localhost:${port}/docs`);
   }
 
   // Log startup security status

@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowUpRight, ArrowDownRight, ArrowRightLeft, MoreHorizontal } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, ArrowRightLeft, MoreHorizontal, Building2, CreditCard, Wallet, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,17 +42,22 @@ export function RecentTransactions({ transactions, isLoading }: RecentTransactio
     }
   };
 
-  const getTransactionIcon = (type: Transaction['type']) => {
-    switch (type) {
-      case 'income':
-        return <ArrowUpRight className="h-4 w-4 text-green-600" />;
-      case 'expense':
-        return <ArrowDownRight className="h-4 w-4 text-red-600" />;
-      case 'transfer':
-        return <ArrowRightLeft className="h-4 w-4 text-blue-600" />;
-      default:
-        return <MoreHorizontal className="h-4 w-4 text-gray-600" />;
+  // Ícones por tipo de conta
+  const accountTypeIcons = {
+    checking: Building2,
+    savings: Wallet,
+    credit_card: CreditCard,
+    investment: TrendingUp,
+  };
+
+  // Função para obter ícone baseado no tipo de conta ou usar ícone padrão da empresa
+  const getAccountIcon = (accountType?: Transaction['accountType']) => {
+    if (accountType && accountType in accountTypeIcons) {
+      const Icon = accountTypeIcons[accountType as keyof typeof accountTypeIcons];
+      return <Icon className="h-4 w-4 text-gray-700" />;
     }
+    // Ícone padrão da empresa (Building2)
+    return <Building2 className="h-4 w-4 text-gray-700" />;
   };
 
   const getAmountColor = (type: Transaction['type']) => {
@@ -144,7 +149,7 @@ export function RecentTransactions({ transactions, isLoading }: RecentTransactio
             <div key={transaction.id} className="flex items-center justify-between group hover:bg-gray-50 -mx-2 px-2 py-2 rounded-lg transition-colors">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                  {getTransactionIcon(transaction.type)}
+                  {getAccountIcon(transaction.accountType)}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-gray-900 truncate">

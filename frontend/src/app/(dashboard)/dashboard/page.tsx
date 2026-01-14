@@ -32,15 +32,6 @@ function DashboardContent() {
   if (error) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600 mt-2">
-              Visão geral das suas finanças
-            </p>
-          </div>
-        </div>
-        
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <div className="flex items-center">
             <div className="text-yellow-600 mr-3">⚠️</div>
@@ -142,6 +133,7 @@ function DashboardContent() {
       date: new Date().toISOString(),
       categoryName: 'Alimentação',
       accountName: 'Conta Corrente',
+      accountType: 'checking' as const,
       categoryColor: '#ef4444',
     },
     {
@@ -152,6 +144,7 @@ function DashboardContent() {
       date: new Date(Date.now() - 86400000).toISOString(),
       categoryName: 'Salário',
       accountName: 'Conta Corrente',
+      accountType: 'checking' as const,
       categoryColor: '#10b981',
     },
     {
@@ -162,6 +155,7 @@ function DashboardContent() {
       date: new Date(Date.now() - 172800000).toISOString(),
       categoryName: 'Moradia',
       accountName: 'Conta Corrente',
+      accountType: 'checking' as const,
       categoryColor: '#3b82f6',
     },
     {
@@ -172,6 +166,7 @@ function DashboardContent() {
       date: new Date(Date.now() - 259200000).toISOString(),
       categoryName: 'Transporte',
       accountName: 'Cartão de Crédito',
+      accountType: 'credit_card' as const,
       categoryColor: '#f59e0b',
     },
     {
@@ -182,6 +177,7 @@ function DashboardContent() {
       date: new Date(Date.now() - 345600000).toISOString(),
       categoryName: 'Saúde',
       accountName: 'Conta Corrente',
+      accountType: 'checking' as const,
       categoryColor: '#8b5cf6',
     },
   ];
@@ -234,14 +230,8 @@ function DashboardContent() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-2">
-            Visão geral das suas finanças
-          </p>
-        </div>
+      {/* Actions */}
+      {/* <div className="flex items-center justify-end">
         <div className="flex items-center space-x-4">
           <RealtimeStatus />
           <Button
@@ -252,27 +242,11 @@ function DashboardContent() {
             className="flex items-center space-x-2"
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>Atualizar</span>
+            
           </Button>
         </div>
-      </div>
+      </div> */}
 
-      {/* Demo Data Notice */}
-      {isUsingMockData && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <div className="text-blue-600 mr-3">ℹ️</div>
-            <div>
-              <h3 className="text-sm font-medium text-blue-800">
-                Dados de Demonstração
-              </h3>
-              <p className="text-sm text-blue-700 mt-1">
-                Você está visualizando dados de exemplo. Para ver seus dados reais, faça login ou conecte suas contas bancárias.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Period Selector */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">

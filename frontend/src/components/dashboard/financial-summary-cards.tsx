@@ -65,6 +65,10 @@ export function FinancialSummaryCards({ summary, comparison, isLoading }: Financ
       change: comparison?.changes.balanceChangePercent,
       icon: DollarSign,
       description: 'Saldo atual em todas as contas',
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-600',
+      gradientFrom: 'from-blue-500',
+      gradientTo: 'to-blue-600',
     },
     {
       title: 'Receitas',
@@ -72,6 +76,10 @@ export function FinancialSummaryCards({ summary, comparison, isLoading }: Financ
       change: comparison?.changes.incomeChangePercent,
       icon: TrendingUp,
       description: 'Total de receitas no período',
+      iconBg: 'bg-emerald-100',
+      iconColor: 'text-emerald-600',
+      gradientFrom: 'from-emerald-500',
+      gradientTo: 'to-emerald-600',
     },
     {
       title: 'Despesas',
@@ -80,6 +88,10 @@ export function FinancialSummaryCards({ summary, comparison, isLoading }: Financ
       icon: CreditCard,
       description: 'Total de despesas no período',
       invertChange: true, // For expenses, negative change is good
+      iconBg: 'bg-red-100',
+      iconColor: 'text-red-600',
+      gradientFrom: 'from-red-500',
+      gradientTo: 'to-red-600',
     },
     {
       title: 'Saldo Líquido',
@@ -87,6 +99,10 @@ export function FinancialSummaryCards({ summary, comparison, isLoading }: Financ
       change: comparison?.changes.netIncomeChangePercent,
       icon: PiggyBank,
       description: 'Receitas menos despesas',
+      iconBg: 'bg-amber-100',
+      iconColor: 'text-amber-600',
+      gradientFrom: 'from-amber-500',
+      gradientTo: 'to-amber-600',
     },
   ];
 
@@ -99,25 +115,30 @@ export function FinancialSummaryCards({ summary, comparison, isLoading }: Financ
         const displayChange = card.invertChange ? -changeValue : changeValue;
         
         return (
-          <Card key={card.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
+          <Card key={card.title} className="relative overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow">
+            {/* Gradient accent line */}
+            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${card.gradientFrom} ${card.gradientTo}`} />
+            
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 pt-4">
+              <CardTitle className="text-sm font-medium text-gray-700">
                 {card.title}
               </CardTitle>
-              <Icon className="h-4 w-4 text-gray-400" />
+              <div className={`${card.iconBg} p-2 rounded-lg`}>
+                <Icon className={`h-5 w-5 ${card.iconColor}`} />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-2xl font-bold text-gray-900 mb-2">
                 {formatCurrency(card.value)}
               </div>
               {hasChange && (
-                <div className={`flex items-center space-x-1 text-xs ${getChangeColor(displayChange)}`}>
+                <div className={`flex items-center space-x-1 text-xs font-medium ${getChangeColor(displayChange)}`}>
                   {getChangeIcon(displayChange)}
                   <span>{formatPercentage(displayChange)} em relação ao período anterior</span>
                 </div>
               )}
               {!hasChange && (
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500">
                   {card.description}
                 </p>
               )}

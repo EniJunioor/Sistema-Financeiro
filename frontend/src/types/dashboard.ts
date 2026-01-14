@@ -117,6 +117,7 @@ export interface Transaction {
   date: string;
   categoryName?: string;
   accountName?: string;
+  accountType?: 'checking' | 'savings' | 'credit_card' | 'investment';
   categoryColor?: string;
 }
 

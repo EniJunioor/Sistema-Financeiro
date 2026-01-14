@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../common/prisma/prisma.service';
 import {
   AnalyticsQueryDto,
@@ -304,6 +305,32 @@ export class AIForecastingService {
     const twentyFourMonthsAgo = new Date();
     twentyFourMonthsAgo.setFullYear(twentyFourMonthsAgo.getFullYear() - 2);
 
+    // Build dynamic WHERE clauses
+    const conditions: Prisma.Sql[] = [
+      Prisma.sql`userId = ${userId}`,
+      Prisma.sql`date >= ${twentyFourMonthsAgo.toISOString()}`,
+    ];
+
+    if (query.accountIds && query.accountIds.length > 0) {
+      const accountIds = query.accountIds.map(id => Prisma.sql`${id}`);
+      conditions.push(
+        Prisma.sql`accountId IN (${Prisma.join(accountIds)})`
+      );
+    }
+
+    if (query.categoryIds && query.categoryIds.length > 0) {
+      const categoryIds = query.categoryIds.map(id => Prisma.sql`${id}`);
+      conditions.push(
+        Prisma.sql`categoryId IN (${Prisma.join(categoryIds)})`
+      );
+    }
+
+    // Build WHERE clause
+    let whereClause = conditions[0];
+    for (let i = 1; i < conditions.length; i++) {
+      whereClause = Prisma.sql`${whereClause} AND ${conditions[i]}`;
+    }
+
     const result = await this.prisma.$queryRaw`
       SELECT 
         strftime('%Y-%m', date) as month,
@@ -311,10 +338,7 @@ export class AIForecastingService {
         SUM(CASE WHEN type = 'expense' THEN CAST(amount as REAL) ELSE 0 END) as expenses,
         COUNT(*) as transaction_count
       FROM transactions 
-      WHERE userId = ${userId}
-        AND date >= ${twentyFourMonthsAgo.toISOString()}
-        ${query.accountIds ? `AND accountId IN (${query.accountIds.map(id => `'${id}'`).join(',')})` : ''}
-        ${query.categoryIds ? `AND categoryId IN (${query.categoryIds.map(id => `'${id}'`).join(',')})` : ''}
+      WHERE ${whereClause}
       GROUP BY month
       ORDER BY month ASC
     ` as any[];
