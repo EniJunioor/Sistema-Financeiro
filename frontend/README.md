@@ -18,6 +18,8 @@ Aplicação web moderna construída com Next.js 14, TypeScript, TailwindCSS e Sh
 - ✅ Aprovação de transações pendentes
 - ✅ Sincronização manual e automática
 - ✅ Gestão de múltiplas contas
+- ✅ Ícones e logos reais dos bancos
+- ✅ Suporte para múltiplos bancos brasileiros
 
 ### 💰 Transações
 - ✅ CRUD completo de transações
@@ -100,6 +102,7 @@ src/
 │   │
 │   ├── accounts/                # Componentes de contas
 │   │   ├── account-card.tsx     # Card de conta
+│   │   ├── bank-icon.tsx        # Ícone de banco
 │   │   ├── connect-account-dialog.tsx # Dialog de conexão
 │   │   ├── account-settings.tsx # Configurações
 │   │   ├── transactions-list.tsx # Lista de transações
@@ -124,6 +127,8 @@ src/
 ├── lib/                         # Utilitários e configurações
 │   ├── api.ts                   # Cliente API base
 │   ├── accounts-api.ts          # API de contas
+│   ├── bank-colors.ts           # Cores e estilos de bancos
+│   ├── bank-icons.ts            # Utilitários de ícones de bancos
 │   ├── transactions-api.ts      # API de transações
 │   ├── dashboard-api.ts         # API do dashboard
 │   ├── auth.ts                  # Configuração NextAuth
