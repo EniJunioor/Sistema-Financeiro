@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ConnectAccountDialog } from '@/components/accounts/connect-account-dialog';
 import { BankIcon } from '@/components/accounts/bank-icon';
+import { WalletCreditCard } from '@/components/accounts/wallet-credit-card';
 import { getBankConfig } from '@/lib/bank-colors';
 import type { Account } from '@/types/transaction';
 
@@ -355,48 +356,12 @@ export default function AccountsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {creditCards.map((card) => {
-                const bankConfig = getBankConfig(card.name);
-                const currentBill = Math.abs(Number(card.balance));
-                const creditLimit = currentBill * 3; // Mock
-                const availableLimit = creditLimit - currentBill;
-                const lastDigits = card.providerAccountId?.slice(-4) || '0000';
-                
                 return (
-                  <div
+                  <WalletCreditCard
                     key={card.id}
-                    className="p-4 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-10 h-10 rounded-lg flex items-center justify-center p-2"
-                          style={{ backgroundColor: `${bankConfig.primaryColor}20` }}
-                        >
-                          <BankIcon 
-                            bankName={card.name}
-                            size={20}
-                            className="object-contain"
-                          />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900">{card.name}</h3>
-                          <p className="text-sm text-gray-500">**** {lastDigits}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="h-px bg-gray-200 mb-4" />
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-gray-500">Fatura atual</p>
-                        <p className="text-lg font-bold text-gray-900">{formatCurrency(currentBill)}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500">Limite disponível</p>
-                        <p className="text-sm font-semibold text-gray-700">{formatCurrency(availableLimit)}</p>
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">Vencimento: 15/02/2025</p>
-                  </div>
+                    account={card}
+                    cardholderName="USUÁRIO"
+                  />
                 );
               })}
             </CardContent>

@@ -13,6 +13,30 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Aplicativo mobile React Native
 - Sistema de metas financeiras avançadas
 
+## [1.1.3] - 2026-01-14
+
+### Adicionado
+- 🔗 **Integração Brandfetch API**
+  - Serviço para busca automática de logos e cores de bancos
+  - Hooks React (`useBankBrand`, `useBankLogo`, `useBankColors`) para integração com React Query
+  - Mapeamento automático de bancos brasileiros para domínios
+  - Suporte para múltiplos formatos de logo (SVG, PNG)
+  - Cache de 24 horas para melhor performance
+  - Documentação completa em `docs/BRANDFETCH_INTEGRATION.md`
+
+### Melhorado
+- 🎨 **Sistema de Ícones de Bancos**
+  - Possibilidade de usar logos dinâmicos via Brandfetch API
+  - Fallback inteligente (API → ícones locais → ícone padrão)
+  - Suporte para cores oficiais das marcas
+
+### Mudanças Técnicas
+- 📁 **Estrutura de Arquivos**
+  - Criado serviço `frontend/src/lib/brandfetch-api.ts`
+  - Criado hook `frontend/src/hooks/use-brandfetch.ts`
+  - Criada documentação `frontend/docs/BRANDFETCH_INTEGRATION.md`
+  - Variável de ambiente `NEXT_PUBLIC_BRANDFETCH_API_KEY` para configuração
+
 ## [1.1.2] - 2026-01-13
 
 ### Adicionado

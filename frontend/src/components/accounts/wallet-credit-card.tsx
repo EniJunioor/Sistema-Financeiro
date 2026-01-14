@@ -1,15 +1,16 @@
 'use client'
 
 import React from 'react'
-import { CreditCard } from 'lucide-react'
 import { getBankConfig } from '@/lib/bank-colors'
+import { BankIcon } from './bank-icon'
 import type { Account } from '@/types/transaction'
 
 interface WalletCreditCardProps {
   account: Account
+  cardholderName?: string
 }
 
-export function WalletCreditCard({ account }: WalletCreditCardProps) {
+export function WalletCreditCard({ account, cardholderName = 'USUÁRIO' }: WalletCreditCardProps) {
   const bankConfig = getBankConfig(account.name)
   
   const formatCurrency = (value: number) => {
@@ -23,65 +24,97 @@ export function WalletCreditCard({ account }: WalletCreditCardProps) {
   const lastDigits = account.providerAccountId?.slice(-4) || account.id.slice(-4) || '0000'
   
   // Para cartões de crédito, o balance negativo representa a fatura atual
-  // e precisamos calcular o limite disponível (precisa de dados adicionais que não temos)
-  // Por enquanto, vamos usar valores mockados ou do balance
   const currentBill = Math.abs(Number(account.balance))
   const creditLimit = currentBill * 3 // Mock - assumindo limite 3x a fatura
   const availableLimit = creditLimit - currentBill
+  const usedPercentage = (currentBill / creditLimit) * 100
+
+  // Determinar a cor principal do banco (usar cor mais escura/saturada para o cartão)
+  const cardColor = bankConfig.primaryColor || '#820AD1'
 
   return (
     <div
-      className="relative rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
+      className="relative rounded-2xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1"
       style={{
-        background: bankConfig.gradient || `linear-gradient(135deg, ${bankConfig.primaryColor} 0%, ${bankConfig.secondaryColor || bankConfig.primaryColor} 100%)`,
+        backgroundColor: cardColor,
+        opacity: 0.75
+        , // Opacidade suave (opacity-5 equivalente)
         width: '100%',
-        aspectRatio: '1.6', // Proporção de cartão de crédito
+        aspectRatio: '2.2', // Proporção mais compacta
+        maxHeight: '180px',
       }}
     >
-      {/* Padrão de fundo sutil */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -mr-16 -mt-16" />
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full -ml-12 -mb-12" />
+      {/* Textura sutil do cartão */}
+      <div className="absolute inset-0 opacity-5">
+        <div 
+          className="absolute inset-0" 
+          style={{
+            backgroundImage: `radial-gradient(circle at 20% 50%, white 1px, transparent 1px)`,
+            backgroundSize: '20px 20px',
+          }}
+        />
       </div>
 
-      <div className="relative p-6 h-full flex flex-col justify-between text-white">
-        {/* Topo do cartão */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-              <CreditCard className="w-5 h-5" />
-            </div>
-            <span className="font-semibold text-lg">{bankConfig.name}</span>
+      {/* Conteúdo do cartão */}
+      <div className="relative p-4 h-full flex flex-col text-white z-10">
+        {/* Topo do cartão - Ícone do banco e símbolos */}
+        <div className="flex items-center justify-between mb-4">
+          {/* Logo do banco */}
+          <div className="w-10 h-10 flex items-center justify-center bg-white/20 rounded-lg p-1.5">
+            <BankIcon 
+              bankName={account.name}
+              size={24}
+              className="object-contain"
+            />
           </div>
           
-          {/* Logo da bandeira - usando ícone genérico por enquanto */}
-          <div className="w-12 h-8 bg-white/20 rounded flex items-center justify-center">
-            <span className="text-xs font-bold">CC</span>
+          {/* Logo Mastercard/Visa (simplificado) */}
+          <div className="flex items-center">
+            <div 
+              className="w-6 h-6 rounded-full border-2 border-white"
+              style={{ backgroundColor: '#EB001B' }}
+            />
+            <div 
+              className="w-6 h-6 rounded-full border-2 border-white -ml-3"
+              style={{ backgroundColor: '#F79E1B' }}
+            />
           </div>
         </div>
 
         {/* Número do cartão */}
-        <div className="mt-4">
-          <div className="text-xs text-white/70 mb-1">Número do Cartão</div>
-          <div className="text-xl font-mono tracking-wider">**** {lastDigits}</div>
+        <div>
+          <div className="text-base font-mono tracking-wider text-white/95 font-light">
+            •••• •••• •••• {lastDigits}
+          </div>
         </div>
 
-        {/* Informações do cartão */}
-        <div className="mt-auto space-y-3">
+        {/* Informações do limite - Base do cartão */}
+        <div className="flex flex-col gap-1.5">
+          {/* Barra de progresso do limite */}
           <div>
-            <div className="text-xs text-white/70">Fatura atual</div>
-            <div className="text-2xl font-bold">{formatCurrency(currentBill)}</div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] text-white/90 font-medium">Limite utilizado</span>
+              <span className="text-[11px] font-semibold text-white">{usedPercentage.toFixed(0)}%</span>
+            </div>
+            <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-white/70 rounded-full transition-all duration-500"
+                style={{ width: `${usedPercentage}%` }}
+              />
+            </div>
           </div>
           
-          <div className="flex justify-between text-sm">
-            <div>
-              <div className="text-white/70">Limite disponível</div>
-              <div className="font-semibold">{formatCurrency(availableLimit)}</div>
+          {/* Informações financeiras - Completamente visíveis */}
+          <div className="space-y-0.5 pt-0.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-white/80">Usado</span>
+              <span className="text-[11px] font-semibold text-white">{formatCurrency(currentBill)}</span>
             </div>
-            <div>
-              <div className="text-white/70">Vencimento</div>
-              <div className="font-semibold">15/02/2025</div>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-white/80">Restante</span>
+              <span className="text-[11px] font-semibold text-white">{formatCurrency(availableLimit)}</span>
             </div>
+            
           </div>
         </div>
       </div>

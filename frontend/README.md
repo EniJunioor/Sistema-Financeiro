@@ -20,6 +20,7 @@ Aplicação web moderna construída com Next.js 14, TypeScript, TailwindCSS e Sh
 - ✅ Gestão de múltiplas contas
 - ✅ Ícones e logos reais dos bancos
 - ✅ Suporte para múltiplos bancos brasileiros
+- ✅ Integração Brandfetch API para logos e cores dinâmicas
 
 ### 💰 Transações
 - ✅ CRUD completo de transações
@@ -129,6 +130,7 @@ src/
 │   ├── accounts-api.ts          # API de contas
 │   ├── bank-colors.ts           # Cores e estilos de bancos
 │   ├── bank-icons.ts            # Utilitários de ícones de bancos
+│   ├── brandfetch-api.ts        # Integração Brandfetch API
 │   ├── transactions-api.ts      # API de transações
 │   ├── dashboard-api.ts         # API do dashboard
 │   ├── auth.ts                  # Configuração NextAuth
@@ -140,7 +142,8 @@ src/
 │   ├── use-accounts.ts          # Hook de contas
 │   ├── use-transactions.ts      # Hook de transações
 │   ├── use-dashboard.ts         # Hook do dashboard
-│   └── use-deduplication.ts     # Hook de deduplicação
+│   ├── use-deduplication.ts     # Hook de deduplicação
+│   └── use-brandfetch.ts        # Hook Brandfetch API
 │
 ├── store/                       # Estado global (Zustand)
 │   ├── auth-store.ts            # Store de autenticação
@@ -182,6 +185,9 @@ src/
    # OAuth Providers
    GOOGLE_CLIENT_ID=your-google-client-id
    GOOGLE_CLIENT_SECRET=your-google-client-secret
+   
+   # Brandfetch API (Opcional - para logos dinâmicos)
+   NEXT_PUBLIC_BRANDFETCH_API_KEY=your-brandfetch-api-key
    ```
 
 3. **Iniciar servidor de desenvolvimento:**
