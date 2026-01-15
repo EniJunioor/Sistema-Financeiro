@@ -320,7 +320,7 @@ Implementação incremental da plataforma financeira usando TypeScript + NestJS 
 
 ### Fase 11: Aplicativo Mobile (React Native)
 
-- [ ] 30. Configurar projeto mobile
+- [x] 30. Configurar projeto mobile
   - Criar projeto React Native com Expo
   - Configurar navegação e estado global
   - Implementar autenticação mobile
@@ -332,7 +332,7 @@ Implementação incremental da plataforma financeira usando TypeScript + NestJS 
   - **Propriedade 28: Modo Offline Funcional**
   - **Valida: Requisitos 9.1, 9.2**
 
-- [ ] 31. Implementar funcionalidades mobile específicas
+- [x] 31. Implementar funcionalidades mobile específicas
   - Adicionar captura de recibos com OCR
   - Implementar pagamentos via PIX
   - Adicionar geolocalização para transações

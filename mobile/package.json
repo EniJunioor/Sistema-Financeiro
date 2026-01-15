@@ -1,25 +1,57 @@
 {
   "name": "@plataforma-financeira/mobile",
   "version": "1.0.0",
-  "description": "Aplicativo mobile da Plataforma Financeira",
-  "main": "index.js",
-  "private": true,
+  "main": "expo-router",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "build": "echo 'Mobile app build - to be implemented'",
-    "test": "echo 'Mobile app tests - to be implemented'"
+    "build:android": "eas build --platform android",
+    "build:ios": "eas build --platform ios",
+    "test": "jest",
+    "lint": "eslint . --ext .ts,.tsx"
   },
   "dependencies": {
-    "expo": "~49.0.0",
+    "expo": "~50.0.0",
+    "expo-router": "~3.0.0",
+    "expo-status-bar": "~1.11.1",
     "react": "18.2.0",
-    "react-native": "0.72.0"
+    "react-native": "0.73.0",
+    "react-native-safe-area-context": "4.8.2",
+    "react-native-screens": "~3.29.0",
+    "@react-navigation/native": "^6.1.9",
+    "@react-navigation/native-stack": "^6.9.17",
+    "@react-navigation/bottom-tabs": "^6.5.11",
+    "@tanstack/react-query": "^5.17.0",
+    "zustand": "^4.4.7",
+    "@react-native-async-storage/async-storage": "1.21.0",
+    "expo-secure-store": "~12.8.1",
+    "expo-camera": "~14.0.4",
+    "expo-image-picker": "~14.7.1",
+    "expo-location": "~16.5.5",
+    "expo-document-picker": "~11.9.2",
+    "expo-notifications": "~0.27.6",
+    "expo-local-authentication": "~13.8.0",
+    "react-native-ml-kit": "^0.9.0",
+    "react-native-vision-camera": "^3.6.17",
+    "axios": "^1.6.2",
+    "zod": "^3.22.4",
+    "date-fns": "^3.0.0",
+    "react-native-qrcode-scanner": "^1.5.5",
+    "react-native-qrcode-generator": "^1.4.2",
+    "@react-native-community/netinfo": "^11.1.0"
   },
   "devDependencies": {
-    "@types/react": "~18.2.0",
-    "typescript": "^5.1.3"
+    "@babel/core": "^7.23.5",
+    "@types/react": "~18.2.45",
+    "@typescript-eslint/eslint-plugin": "^6.13.1",
+    "@typescript-eslint/parser": "^6.13.1",
+    "eslint": "^8.54.0",
+    "eslint-config-expo": "^7.0.0",
+    "typescript": "^5.3.2",
+    "jest": "^29.7.0",
+    "@testing-library/react-native": "^12.4.2"
   },
-  "note": "Este é um placeholder para o futuro aplicativo mobile React Native"
+  "private": true
 }

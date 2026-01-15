@@ -36,18 +36,32 @@ Uma plataforma moderna e segura para gestão financeira pessoal e de pequenos ne
 - ✅ Gráficos interativos (Recharts + D3.js)
 - ✅ Previsões com IA (time series forecasting)
 - ✅ Comparações entre períodos
+- ✅ Transações recentes com ícones de estabelecimentos
+- ✅ Card de metas financeiras funcional
+- ✅ Integração com Brandfetch para logos de estabelecimentos
 - ✅ Atualização em tempo real (WebSockets)
 
 ### 📈 Investimentos
-- 🔄 Gestão de carteira multi-ativo
-- 🔄 Cotações em tempo real
-- 🔄 Análise de performance e risco
-- 🔄 Rebalanceamento automático
+- ✅ Gestão de carteira multi-ativo
+- ✅ Páginas específicas (Carteira, Fundos, Ações)
+- ✅ Atualização de cotações
+- ✅ Exportação de dados (CSV)
+- ✅ Cards de resumo com métricas
+- ✅ Análise de alocação de ativos
+- ✅ Performance e rentabilidade
+- ✅ Integração com formulário de investimentos
+- ✅ Menu de ações para cada investimento
+- 🔄 Cotações em tempo real (em desenvolvimento)
+- 🔄 Rebalanceamento automático (planejado)
 
 ### 🎯 Metas Financeiras
-- 🔄 Múltiplos tipos de meta
-- 🔄 Gamificação (badges, streaks)
-- 🔄 Planejamento automático com IA
+- ✅ Criação de metas personalizadas
+- ✅ Acompanhamento visual de progresso
+- ✅ Dialog funcional para criação de metas
+- ✅ Integração com dashboard
+- 🔄 Múltiplos tipos de meta (em desenvolvimento)
+- 🔄 Gamificação (badges, streaks) (planejado)
+- 🔄 Planejamento automático com IA (planejado)
 
 ### 📱 Mobile
 - 🔄 App React Native
@@ -56,10 +70,18 @@ Uma plataforma moderna e segura para gestão financeira pessoal e de pequenos ne
 - 🔄 Pagamentos via PIX
 
 ### 📋 Relatórios
-- 🔄 Geração de PDF/Excel
-- 🔄 Templates personalizáveis
-- 🔄 Agendamento automático
-- 🔄 Compliance fiscal
+- ✅ Sistema completo de relatórios financeiros
+- ✅ Relatórios Mensais com modal funcional
+- ✅ Relatórios Anuais com breakdown mensal
+- ✅ Relatórios Personalizados com período customizado
+- ✅ Múltiplos formatos (PDF, Excel, CSV)
+- ✅ Integração completa com backend
+- ✅ Histórico de relatórios gerados
+- ✅ Download de relatórios
+- ✅ Agendamento de relatórios
+- ✅ Compartilhamento de relatórios
+- ✅ Templates pré-configurados
+- ✅ Cards visuais com cores e ícones
 
 **Legenda:** ✅ Implementado | 🔄 Em desenvolvimento | ⏳ Planejado
 
@@ -154,7 +176,15 @@ plataforma-financeira/
 
 6. **Inicie o desenvolvimento**
    ```bash
+   # Opção 1: Usando NPM (recomendado - funciona em todos os sistemas)
    npm run dev
+   
+   # Opção 2: Usando scripts específicos do sistema
+   # Windows (PowerShell)
+   .\scripts\dev.ps1
+   
+   # Linux/Mac (Bash)
+   ./scripts/dev.sh
    ```
 
 ### Acessos
@@ -162,14 +192,16 @@ plataforma-financeira/
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:3001
 - **Documentação API**: http://localhost:3001/api/docs
+- **Mobile**: Expo DevTools será aberto automaticamente
 - **Prisma Studio**: `npm run prisma:studio`
 
 ## 📝 Scripts Disponíveis
 
 ### Desenvolvimento
-- `npm run dev` - Inicia backend e frontend em modo desenvolvimento
+- `npm run dev` ou `npm run dev:all` - Inicia backend, frontend e mobile simultaneamente
 - `npm run dev:backend` - Inicia apenas o backend
 - `npm run dev:frontend` - Inicia apenas o frontend
+- `npm run dev:mobile` - Inicia apenas o mobile (Expo)
 
 ### Build
 - `npm run build` - Build completo (shared + backend + frontend)

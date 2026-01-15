@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Upload, Download } from 'lucide-react';
+import { Plus, Upload, Download, List, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -167,7 +167,7 @@ export default function TransactionsPage() {
             <Upload className="w-4 h-4 mr-2" />
             Importar CSV
           </Button>
-          <Button onClick={openNewTransactionForm}>
+          <Button onClick={openNewTransactionForm} className="bg-emerald-600 hover:bg-emerald-700 text-white">
             <Plus className="w-4 h-4 mr-2" />
             Nova Transação
           </Button>
@@ -176,21 +176,27 @@ export default function TransactionsPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
+        <Card className="border border-gray-200 hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Transações</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-700">Total de Transações</CardTitle>
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <List className="h-5 w-5 text-blue-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pagination?.total || 0}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-gray-900">{pagination?.total || 0}</div>
+            <p className="text-xs text-gray-500 mt-2">
               {transactions.length} exibidas nesta página
             </p>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="border border-gray-200 hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Receitas</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-700">Receitas</CardTitle>
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <TrendingUp className="h-5 w-5 text-green-600" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
@@ -203,15 +209,18 @@ export default function TransactionsPage() {
                   .reduce((sum, t) => sum + t.amount, 0)
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-gray-500 mt-2">
               {transactions.filter(t => t.type === 'income').length} transações
             </p>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="border border-gray-200 hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Despesas</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-700">Despesas</CardTitle>
+            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+              <TrendingDown className="h-5 w-5 text-red-600" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
@@ -221,10 +230,10 @@ export default function TransactionsPage() {
               }).format(
                 transactions
                   .filter(t => t.type === 'expense')
-                  .reduce((sum, t) => sum + t.amount, 0)
+                  .reduce((sum, t) => sum + Math.abs(t.amount), 0)
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-gray-500 mt-2">
               {transactions.filter(t => t.type === 'expense').length} transações
             </p>
           </CardContent>

@@ -1,9 +1,12 @@
 'use client';
 
 import { ArrowUpRight, ArrowDownRight, ArrowRightLeft, MoreHorizontal, Building2, CreditCard, Wallet, TrendingUp } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { MerchantIcon } from './merchant-icon';
 import type { Transaction } from '@/types/dashboard';
 
 interface RecentTransactionsProps {
@@ -12,6 +15,8 @@ interface RecentTransactionsProps {
 }
 
 export function RecentTransactions({ transactions, isLoading }: RecentTransactionsProps) {
+  const router = useRouter();
+  
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -19,6 +24,19 @@ export function RecentTransactions({ transactions, isLoading }: RecentTransactio
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(value);
+  };
+  
+  const handleTransactionClick = (transaction: Transaction) => {
+    // Navegar para a página de transações baseado no tipo
+    if (transaction.type === 'income') {
+      router.push('/transactions/income');
+    } else if (transaction.type === 'expense') {
+      router.push('/transactions/expenses');
+    } else if (transaction.type === 'transfer') {
+      router.push('/transactions/transfers');
+    } else {
+      router.push('/transactions/dashboard');
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -134,29 +152,39 @@ export function RecentTransactions({ transactions, isLoading }: RecentTransactio
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
         <div>
-          <CardTitle>Transações Recentes</CardTitle>
-          <CardDescription>Suas últimas movimentações financeiras</CardDescription>
+          <CardTitle className="text-lg sm:text-xl">Transações Recentes</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">Suas últimas movimentações financeiras</CardDescription>
         </div>
-        <Button variant="outline" size="sm">
-          Ver todas
-        </Button>
+        <Link href="/transactions/dashboard" className="w-full sm:w-auto">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto text-xs sm:text-sm">
+            Ver todas
+          </Button>
+        </Link>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-2">
           {transactions.slice(0, 8).map((transaction) => (
-            <div key={transaction.id} className="flex items-center justify-between group hover:bg-gray-50 -mx-2 px-2 py-2 rounded-lg transition-colors">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                  {getAccountIcon(transaction.accountType)}
+            <div
+              key={transaction.id}
+              onClick={() => handleTransactionClick(transaction)}
+              className="flex items-center justify-between group hover:bg-emerald-50 cursor-pointer -mx-2 px-2 sm:px-3 py-2.5 rounded-lg transition-all duration-200 border border-transparent hover:border-emerald-200 hover:shadow-sm"
+            >
+              <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-50 rounded-full flex items-center justify-center flex-shrink-0 border border-gray-200">
+                  <MerchantIcon 
+                    merchantName={transaction.description}
+                    size={18}
+                    className="text-gray-700 sm:w-5 sm:h-5"
+                  />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-xs sm:text-sm font-medium text-gray-900 truncate group-hover:text-emerald-700 transition-colors">
                     {transaction.description}
                   </p>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <p className="text-xs text-gray-500">
+                  <div className="flex items-center space-x-1.5 sm:space-x-2 mt-1 flex-wrap">
+                    <p className="text-[10px] sm:text-xs text-gray-500">
                       {formatDate(transaction.date)}
                     </p>
                     {transaction.categoryName && (
@@ -164,7 +192,7 @@ export function RecentTransactions({ transactions, isLoading }: RecentTransactio
                         <span className="text-xs text-gray-300">•</span>
                         <Badge 
                           variant="secondary" 
-                          className="text-xs px-1.5 py-0.5"
+                          className="text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5"
                           style={{ 
                             backgroundColor: transaction.categoryColor ? `${transaction.categoryColor}20` : undefined,
                             color: transaction.categoryColor || undefined 
@@ -176,8 +204,8 @@ export function RecentTransactions({ transactions, isLoading }: RecentTransactio
                     )}
                     {transaction.accountName && (
                       <>
-                        <span className="text-xs text-gray-300">•</span>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-300 hidden sm:inline">•</span>
+                        <span className="text-[10px] sm:text-xs text-gray-500 hidden sm:inline">
                           {transaction.accountName}
                         </span>
                       </>
@@ -185,8 +213,8 @@ export function RecentTransactions({ transactions, isLoading }: RecentTransactio
                   </div>
                 </div>
               </div>
-              <div className="text-right">
-                <span className={`text-sm font-medium ${getAmountColor(transaction.type)}`}>
+              <div className="text-right ml-2 sm:ml-4 flex-shrink-0">
+                <span className={`text-xs sm:text-sm font-semibold ${getAmountColor(transaction.type)}`}>
                   {getAmountPrefix(transaction.type)}{formatCurrency(Math.abs(transaction.amount))}
                 </span>
               </div>
@@ -196,9 +224,11 @@ export function RecentTransactions({ transactions, isLoading }: RecentTransactio
         
         {transactions.length > 8 && (
           <div className="mt-4 pt-4 border-t border-gray-100">
-            <Button variant="ghost" className="w-full text-sm">
-              Ver mais {transactions.length - 8} transações
-            </Button>
+            <Link href="/transactions/dashboard">
+              <Button variant="ghost" className="w-full text-sm hover:bg-emerald-50 hover:text-emerald-700">
+                Ver mais {transactions.length - 8} transações
+              </Button>
+            </Link>
           </div>
         )}
       </CardContent>

@@ -31,15 +31,15 @@ function DashboardContent() {
 
   if (error) {
     return (
-      <div className="space-y-6">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <div className="text-yellow-600 mr-3">⚠️</div>
-            <div>
-              <h3 className="text-sm font-medium text-yellow-800">
+      <div className="space-y-4 md:space-y-6">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 md:p-4">
+          <div className="flex items-start sm:items-center">
+            <div className="text-yellow-600 mr-2 sm:mr-3 text-lg sm:text-xl flex-shrink-0">⚠️</div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-xs sm:text-sm font-medium text-yellow-800">
                 API não disponível
               </h3>
-              <p className="text-sm text-yellow-700 mt-1">
+              <p className="text-xs sm:text-sm text-yellow-700 mt-1">
                 Usando dados de demonstração. Para dados reais, faça login ou verifique se o backend está rodando.
               </p>
             </div>
@@ -229,28 +229,25 @@ function DashboardContent() {
   const isUsingMockData = !dashboardData;
 
   return (
-    <div className="space-y-6">
-      {/* Actions */}
-      {/* <div className="flex items-center justify-end">
-        <div className="flex items-center space-x-4">
-          <RealtimeStatus />
-          <Button
-            onClick={handleRefresh}
-            variant="outline"
-            size="sm"
-            disabled={isLoading}
-            className="flex items-center space-x-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            
-          </Button>
+    <div className="space-y-6 md:space-y-8 pb-6 md:pb-8">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-sm sm:text-base text-gray-500 mt-1">Visão geral das suas finanças</p>
         </div>
-      </div> */}
+        {isUsingMockData && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 sm:px-4">
+            <p className="text-xs sm:text-sm text-amber-800">
+              📊 Dados de demonstração
+            </p>
+          </div>
+        )}
+      </div>
 
-
-      {/* Period Selector */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-1">
+      {/* Period Selector and Summary Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
+        <div className="lg:col-span-1 order-2 lg:order-1">
           <PeriodSelector
             currentPeriod={query.period}
             startDate={query.startDate}
@@ -261,7 +258,7 @@ function DashboardContent() {
         </div>
         
         {/* Summary Cards */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 order-1 lg:order-2">
           <FinancialSummaryCards
             summary={summary}
             comparison={comparison}
@@ -271,7 +268,7 @@ function DashboardContent() {
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <FinancialOverviewChart
           data={trends.monthlyTrends}
           isLoading={isLoading}
@@ -283,7 +280,7 @@ function DashboardContent() {
       </div>
 
       {/* Category Breakdown and Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <CategoryBreakdownChart
           data={summary.categoryBreakdown}
           isLoading={isLoading}
@@ -296,7 +293,7 @@ function DashboardContent() {
       </div>
 
       {/* AI Forecasting Section */}
-      <div className="mt-8">
+      <div className="mt-6">
         <AIForecastDashboard 
           historicalData={trends.monthlyTrends}
         />

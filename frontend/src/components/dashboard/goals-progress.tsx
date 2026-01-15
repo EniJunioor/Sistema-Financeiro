@@ -1,11 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import { Target, TrendingUp, Calendar, Plus } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useActiveGoals, useAllGoalsProgress } from '@/hooks/use-goals';
+import { CreateGoalDialog } from './create-goal-dialog';
 import type { Goal } from '@/lib/goals-api';
 
 interface GoalsProgressProps {
@@ -13,8 +15,14 @@ interface GoalsProgressProps {
 }
 
 export function GoalsProgress({ onCreateGoal }: GoalsProgressProps) {
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { data: goals, isLoading: goalsLoading } = useActiveGoals();
   const { data: goalsProgress, isLoading: progressLoading } = useAllGoalsProgress();
+
+  const handleCreateGoal = () => {
+    setIsCreateDialogOpen(true);
+    onCreateGoal?.();
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -135,7 +143,7 @@ export function GoalsProgress({ onCreateGoal }: GoalsProgressProps) {
             <CardTitle>Metas Financeiras</CardTitle>
             <CardDescription>Progresso das suas metas</CardDescription>
           </div>
-          <Button size="sm" className="flex items-center space-x-1" onClick={onCreateGoal}>
+          <Button size="sm" className="flex items-center space-x-1" onClick={handleCreateGoal}>
             <Plus className="h-4 w-4" />
             <span>Nova Meta</span>
           </Button>
@@ -147,7 +155,7 @@ export function GoalsProgress({ onCreateGoal }: GoalsProgressProps) {
             <p className="text-sm text-gray-400 mb-4">
               Defina metas financeiras para acompanhar seu progresso.
             </p>
-            <Button variant="outline" size="sm" onClick={onCreateGoal}>
+            <Button variant="outline" size="sm" onClick={handleCreateGoal}>
               Criar primeira meta
             </Button>
           </div>
@@ -163,7 +171,7 @@ export function GoalsProgress({ onCreateGoal }: GoalsProgressProps) {
           <CardTitle>Metas Financeiras</CardTitle>
           <CardDescription>Progresso das suas metas</CardDescription>
         </div>
-        <Button size="sm" variant="outline" className="flex items-center space-x-1" onClick={onCreateGoal}>
+        <Button size="sm" variant="outline" className="flex items-center space-x-1" onClick={handleCreateGoal}>
           <Plus className="h-4 w-4" />
           <span>Nova Meta</span>
         </Button>
@@ -281,6 +289,11 @@ export function GoalsProgress({ onCreateGoal }: GoalsProgressProps) {
           )}
         </div>
       </CardContent>
+      
+      <CreateGoalDialog 
+        open={isCreateDialogOpen} 
+        onOpenChange={setIsCreateDialogOpen} 
+      />
     </Card>
   );
 }

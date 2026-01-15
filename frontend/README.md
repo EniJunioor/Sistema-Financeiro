@@ -29,6 +29,33 @@ Aplicação web moderna construída com Next.js 14, TypeScript, TailwindCSS e Sh
 - ✅ Transações recorrentes
 - ✅ Deduplicação inteligente
 - ✅ Paginação e ordenação
+- ✅ Navegação para páginas específicas (receitas, despesas, transferências)
+- ✅ Ícones de estabelecimentos via Brandfetch API
+
+### 📊 Relatórios
+- ✅ Sistema completo de relatórios financeiros
+- ✅ Relatórios Mensais com modal funcional
+- ✅ Relatórios Anuais com breakdown mensal
+- ✅ Relatórios Personalizados com período customizado
+- ✅ Múltiplos formatos (PDF, Excel, CSV)
+- ✅ Integração completa com backend
+- ✅ Histórico de relatórios gerados
+- ✅ Download de relatórios
+- ✅ Agendamento de relatórios
+- ✅ Compartilhamento de relatórios
+- ✅ Templates pré-configurados
+- ✅ Cards visuais com cores e ícones
+
+### 💼 Investimentos
+- ✅ Gestão completa de portfolio
+- ✅ Páginas específicas (Carteira, Fundos, Ações)
+- ✅ Atualização de cotações
+- ✅ Exportação de dados (CSV)
+- ✅ Cards de resumo com métricas
+- ✅ Análise de alocação de ativos
+- ✅ Performance e rentabilidade
+- ✅ Integração com formulário de investimentos
+- ✅ Menu de ações para cada investimento
 
 ### 📊 Dashboard
 - ✅ Dashboard principal com métricas
@@ -39,15 +66,21 @@ Aplicação web moderna construída com Next.js 14, TypeScript, TailwindCSS e Sh
 - ✅ Análise de tendências
 - ✅ Comparação entre períodos
 - ✅ Previsões com IA
+- ✅ Transações recentes com ícones de estabelecimentos
+- ✅ Card de metas financeiras funcional
+- ✅ Integração com Brandfetch para logos de estabelecimentos
 
 ### 🎨 Interface e UX
 - ✅ Design system completo (Shadcn/ui)
-- ✅ Sidebar navegação expansível
-- ✅ Layout responsivo
+- ✅ Sidebar navegação expansível com animações fluidas
+- ✅ Header fixo com auto-detecção de informações da página
+- ✅ Layout responsivo completo (mobile, tablet, desktop)
 - ✅ Dark/Light mode
 - ✅ Loading states e skeletons
 - ✅ Error boundaries
 - ✅ Toast notifications
+- ✅ Cards com cores e ícones por categoria
+- ✅ Hover effects e transições suaves
 
 ### 🔧 Arquitetura Técnica
 - ✅ Next.js 14 com App Router
@@ -77,7 +110,18 @@ src/
 │   │   │   ├── page.tsx         # Lista de contas
 │   │   │   └── [id]/page.tsx    # Detalhes da conta
 │   │   ├── transactions/        # Transações
+│   │   │   ├── dashboard/       # Dashboard de transações
+│   │   │   ├── income/           # Receitas
+│   │   │   ├── expenses/        # Despesas
+│   │   │   └── transfers/       # Transferências
 │   │   ├── investments/         # Investimentos
+│   │   │   ├── portfolio/       # Carteira
+│   │   │   ├── funds/           # Fundos
+│   │   │   └── stocks/          # Ações
+│   │   ├── reports/             # Relatórios
+│   │   │   ├── monthly/         # Relatórios mensais
+│   │   │   ├── annual/          # Relatórios anuais
+│   │   │   └── custom/          # Relatórios personalizados
 │   │   ├── goals/               # Metas
 │   │   └── layout.tsx           # Layout do dashboard
 │   │
@@ -118,7 +162,22 @@ src/
 │   ├── dashboard/               # Componentes do dashboard
 │   │   ├── financial-summary-cards.tsx # Cards de resumo
 │   │   ├── recent-transactions.tsx # Transações recentes
-│   │   └── period-selector.tsx  # Seletor de período
+│   │   ├── period-selector.tsx  # Seletor de período
+│   │   ├── goals-progress.tsx   # Progresso de metas
+│   │   ├── create-goal-dialog.tsx # Dialog de criação de meta
+│   │   └── merchant-icon.tsx    # Ícone de estabelecimentos
+│   │
+│   ├── reports/                 # Componentes de relatórios
+│   │   ├── monthly-report-dialog.tsx # Dialog de relatório mensal
+│   │   ├── annual-report-dialog.tsx # Dialog de relatório anual
+│   │   ├── custom-report-dialog.tsx # Dialog de relatório personalizado
+│   │   ├── report-generator.tsx # Gerador de relatórios
+│   │   ├── report-history.tsx   # Histórico de relatórios
+│   │   └── scheduled-reports-list.tsx # Lista de relatórios agendados
+│   │
+│   ├── investments/             # Componentes de investimentos
+│   │   ├── investment-form.tsx  # Formulário de investimentos
+│   │   └── investment-actions-menu.tsx # Menu de ações
 │   │
 │   └── charts/                  # Gráficos e visualizações
 │       ├── expense-trend-chart.tsx # Gráfico de tendências
@@ -133,6 +192,8 @@ src/
 │   ├── brandfetch-api.ts        # Integração Brandfetch API
 │   ├── transactions-api.ts      # API de transações
 │   ├── dashboard-api.ts         # API do dashboard
+│   ├── reports-api.ts           # API de relatórios
+│   ├── brandfetch-api.ts        # Integração Brandfetch API
 │   ├── auth.ts                  # Configuração NextAuth
 │   ├── utils.ts                 # Utilitários gerais
 │   └── validations.ts           # Schemas Zod
@@ -143,6 +204,9 @@ src/
 │   ├── use-transactions.ts      # Hook de transações
 │   ├── use-dashboard.ts         # Hook do dashboard
 │   ├── use-deduplication.ts     # Hook de deduplicação
+│   ├── use-reports.ts           # Hook de relatórios
+│   ├── use-investments.ts       # Hook de investimentos
+│   ├── use-goals.ts             # Hook de metas
 │   └── use-brandfetch.ts        # Hook Brandfetch API
 │
 ├── store/                       # Estado global (Zustand)

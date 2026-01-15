@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { reportsApi } from '@/lib/reports-api';
@@ -14,7 +14,6 @@ import type {
 
 export function useReports() {
   const queryClient = useQueryClient();
-  const [isGenerating, setIsGenerating] = useState(false);
 
   // Get report templates
   const {
@@ -38,6 +37,17 @@ export function useReports() {
     queryFn: () => reportsApi.getScheduledReports()
   });
 
+  // Get report history
+  const {
+    data: reportHistory,
+    isLoading: historyLoading,
+    refetch: refetchHistory
+  } = useQuery({
+    queryKey: ['report-history'],
+    queryFn: () => reportsApi.getReportHistory(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
   // Generate report mutation
   const generateReportMutation = useMutation({
     mutationFn: (config: ReportConfig) => reportsApi.generateReport(config),
@@ -53,18 +63,14 @@ export function useReports() {
   // Download report mutation
   const downloadReportMutation = useMutation({
     mutationFn: async (config: ReportConfig) => {
-      setIsGenerating(true);
       try {
         const blob = await reportsApi.downloadReport(config);
-        
-        // Create download link
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
         
-        // Generate filename
+        const extension = config.format === 'pdf' ? 'pdf' : config.format === 'excel' ? 'xlsx' : 'csv';
         const timestamp = new Date().toISOString().split('T')[0];
-        const extension = config.format === 'excel' ? 'xlsx' : config.format;
         link.download = `${config.title || 'relatorio'}_${timestamp}.${extension}`;
         
         document.body.appendChild(link);
@@ -74,14 +80,11 @@ export function useReports() {
         
         toast.success('Relatório baixado com sucesso!');
         return blob;
-      } finally {
-        setIsGenerating(false);
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || 'Erro ao baixar relatório');
+        throw error;
       }
     },
-    onError: (error: any) => {
-      setIsGenerating(false);
-      toast.error(error.response?.data?.message || 'Erro ao baixar relatório');
-    }
   });
 
   // Schedule report mutation
@@ -135,30 +138,16 @@ export function useReports() {
     }
   });
 
-  // Helper functions
-  const generateReport = useCallback((config: ReportConfig) => {
-    return generateReportMutation.mutateAsync(config);
-  }, [generateReportMutation]);
+  // Helper functions - return objects with mutateAsync and isPending for compatibility
+  const generateReport = {
+    mutateAsync: generateReportMutation.mutateAsync.bind(generateReportMutation),
+    isPending: generateReportMutation.isPending,
+  };
 
-  const downloadReport = useCallback((config: ReportConfig) => {
-    return downloadReportMutation.mutateAsync(config);
-  }, [downloadReportMutation]);
-
-  const scheduleReport = useCallback((config: ReportConfig, schedule: ScheduleConfig) => {
-    return scheduleReportMutation.mutateAsync({ config, schedule });
-  }, [scheduleReportMutation]);
-
-  const updateScheduledReport = useCallback((id: string, updates: Partial<ReportConfig & ScheduleConfig>) => {
-    return updateScheduledReportMutation.mutateAsync({ id, updates });
-  }, [updateScheduledReportMutation]);
-
-  const toggleScheduledReport = useCallback((id: string, isActive: boolean) => {
-    return toggleScheduledReportMutation.mutateAsync({ id, isActive });
-  }, [toggleScheduledReportMutation]);
-
-  const deleteScheduledReport = useCallback((id: string) => {
-    return deleteScheduledReportMutation.mutateAsync(id);
-  }, [deleteScheduledReportMutation]);
+  const downloadReport = {
+    mutateAsync: downloadReportMutation.mutateAsync.bind(downloadReportMutation),
+    isPending: downloadReportMutation.isPending,
+  };
 
   // Preview report (mock implementation)
   const previewReport = useCallback(async (config: ReportConfig) => {
@@ -181,11 +170,14 @@ export function useReports() {
     // Data
     templates: templates || [],
     scheduledReports: scheduledReports || [],
+    reportHistory: reportHistory || [],
     
     // Loading states
     templatesLoading,
     scheduledLoading,
-    isGenerating,
+    historyLoading,
+    isGenerating: generateReportMutation.isPending,
+    isDownloading: downloadReportMutation.isPending,
     isScheduling: scheduleReportMutation.isPending,
     isUpdating: updateScheduledReportMutation.isPending,
     isDeleting: deleteScheduledReportMutation.isPending,
@@ -197,13 +189,20 @@ export function useReports() {
     // Actions
     generateReport,
     downloadReport,
-    scheduleReport,
-    updateScheduledReport,
-    toggleScheduledReport,
-    deleteScheduledReport,
+    scheduleReport: (config: ReportConfig, schedule: ScheduleConfig) => 
+      scheduleReportMutation.mutateAsync({ config, schedule }),
+    updateScheduledReport: (id: string, updates: Partial<ReportConfig & ScheduleConfig>) =>
+      updateScheduledReportMutation.mutateAsync({ id, updates }),
+    toggleScheduledReport: (id: string, isActive: boolean) =>
+      toggleScheduledReportMutation.mutateAsync({ id, isActive }),
+    deleteScheduledReport: (id: string) =>
+      deleteScheduledReportMutation.mutateAsync(id),
+    getReportHistory: (filters?: { startDate?: string; endDate?: string; type?: string }) =>
+      reportsApi.getReportHistory(filters),
     previewReport,
     
     // Refetch functions
-    refetchScheduled
+    refetchScheduled,
+    refetchHistory
   };
 }

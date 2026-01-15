@@ -43,6 +43,55 @@ const bankDomainMap: Record<string, string> = {
   'santander': 'santander.com.br',
 };
 
+// Mapeamento de estabelecimentos para domínios
+const merchantDomainMap: Record<string, string> = {
+  'extra': 'extra.com.br',
+  'carrefour': 'carrefour.com.br',
+  'walmart': 'walmart.com.br',
+  'atacadão': 'atacadao.com.br',
+  'atacadao': 'atacadao.com.br',
+  'assai': 'assai.com.br',
+  'pao de acucar': 'paodeacucar.com.br',
+  'pão de açúcar': 'paodeacucar.com.br',
+  'drogasil': 'drogasil.com.br',
+  'raia': 'raia.com.br',
+  'pague menos': 'paguemenos.com.br',
+  'uber': 'uber.com',
+  '99': '99app.com',
+  'ifood': 'ifood.com.br',
+  'rappi': 'rappi.com.br',
+  'amazon': 'amazon.com.br',
+  'magazine luiza': 'magazineluiza.com.br',
+  'magalu': 'magazineluiza.com.br',
+  'americanas': 'americanas.com.br',
+  'casas bahia': 'casasbahia.com.br',
+  'submarino': 'submarino.com.br',
+  'shoptime': 'shoptime.com.br',
+  'nike': 'nike.com.br',
+  'adidas': 'adidas.com.br',
+  'zara': 'zara.com',
+  'renner': 'lojasrenner.com.br',
+  'riachuelo': 'riachuelo.com.br',
+  'c&a': 'cea.com.br',
+  'cea': 'cea.com.br',
+  'mcdonalds': 'mcdonalds.com.br',
+  'burger king': 'bk.com.br',
+  'bk': 'bk.com.br',
+  'starbucks': 'starbucks.com.br',
+  'netflix': 'netflix.com',
+  'spotify': 'spotify.com',
+  'disney': 'disney.com.br',
+  'disney+': 'disney.com.br',
+  'disney plus': 'disney.com.br',
+  'cpfl': 'cpfl.com.br',
+  'cemig': 'cemig.com.br',
+  'sabesp': 'sabesp.com.br',
+  'claro': 'claro.com.br',
+  'vivo': 'vivo.com.br',
+  'tim': 'tim.com.br',
+  'oi': 'oi.com.br',
+};
+
 /**
  * Obtém o domínio de um banco baseado no nome
  */
@@ -59,6 +108,29 @@ export function getBankDomain(bankName: string): string | null {
   // Busca parcial
   for (const [key, domain] of Object.entries(bankDomainMap)) {
     if (normalizedName.includes(key)) {
+      return domain;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Obtém o domínio de um estabelecimento baseado no nome
+ */
+export function getMerchantDomain(merchantName: string): string | null {
+  if (!merchantName) return null;
+  
+  const normalizedName = merchantName.toLowerCase().trim();
+  
+  // Busca exata
+  if (merchantDomainMap[normalizedName]) {
+    return merchantDomainMap[normalizedName];
+  }
+  
+  // Busca parcial
+  for (const [key, domain] of Object.entries(merchantDomainMap)) {
+    if (normalizedName.includes(key) || key.includes(normalizedName)) {
       return domain;
     }
   }
@@ -108,6 +180,33 @@ export async function fetchBrandData(domain: string): Promise<BrandfetchBrand | 
  */
 export async function fetchBankLogo(bankName: string): Promise<string | null> {
   const domain = getBankDomain(bankName);
+  if (!domain) return null;
+  
+  const brandData = await fetchBrandData(domain);
+  if (!brandData || !brandData.logos || brandData.logos.length === 0) {
+    return null;
+  }
+  
+  // Preferir logo do tipo 'icon' ou 'logo'
+  const logo = brandData.logos.find(l => l.type === 'icon' || l.type === 'logo') || brandData.logos[0];
+  
+  // Preferir formato SVG, depois PNG
+  const svgFormat = logo.formats.find(f => f.format === 'svg');
+  if (svgFormat) return svgFormat.src;
+  
+  const pngFormat = logo.formats.find(f => f.format === 'png');
+  if (pngFormat) return pngFormat.src;
+  
+  // Retornar o primeiro formato disponível
+  return logo.formats[0]?.src || null;
+}
+
+/**
+ * Busca logo de um estabelecimento via Brandfetch API
+ * Retorna a URL do logo em formato SVG ou PNG
+ */
+export async function fetchMerchantLogo(merchantName: string): Promise<string | null> {
+  const domain = getMerchantDomain(merchantName);
   if (!domain) return null;
   
   const brandData = await fetchBrandData(domain);

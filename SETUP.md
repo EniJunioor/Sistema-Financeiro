@@ -22,8 +22,15 @@
 - ✅ Sistema de auditoria e logs
 - ✅ Módulo de investimentos
 - ✅ Módulo de metas financeiras
-- ✅ Sistema de relatórios
+- ✅ Sistema de relatórios completo
+  - ✅ Relatórios Mensais, Anuais e Personalizados
+  - ✅ Modais funcionais para geração
+  - ✅ Integração completa com backend
+  - ✅ Download e histórico de relatórios
 - ✅ Detecção de anomalias
+- ✅ Páginas de investimentos (Carteira, Fundos, Ações)
+- ✅ Sistema de metas financeiras funcional
+- ✅ Integração Brandfetch para logos dinâmicos
 
 ### 🔄 Em Desenvolvimento
 - 🔄 Sistema de notificações inteligentes
@@ -93,10 +100,28 @@ npm run dev
 
 ### Desenvolvimento
 ```bash
-npm run dev              # Inicia backend + frontend
+# Rodar todos os projetos simultaneamente (recomendado)
+npm run dev              # Inicia backend + frontend + mobile
+npm run dev:all          # Alias para npm run dev
+
+# Rodar projetos individualmente
 npm run dev:backend      # Apenas backend (porta 3001)
 npm run dev:frontend     # Apenas frontend (porta 3000)
 npm run dev:mobile       # Apenas mobile (Expo)
+
+# Usando scripts do sistema (alternativa)
+# Windows (PowerShell)
+.\scripts\dev.ps1
+
+# Linux/Mac (Bash)
+./scripts/dev.sh
+
+# Parar todos os serviços
+# Windows
+.\scripts\stop.ps1
+
+# Linux/Mac
+./scripts/stop.sh
 ```
 
 ### Build e Produção

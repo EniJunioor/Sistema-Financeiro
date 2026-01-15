@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -107,17 +106,7 @@ export function GoalForm({ goal, onSubmit, onCancel, isLoading }: GoalFormProps)
   const selectedGoalType = goalTypes.find(type => type.value === selectedType);
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Target className="h-5 w-5" />
-          <span>{goal ? 'Editar Meta' : 'Nova Meta Financeira'}</span>
-        </CardTitle>
-        <CardDescription>
-          {goal ? 'Atualize os detalhes da sua meta' : 'Defina uma nova meta para alcançar seus objetivos financeiros'}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <div className="w-full">
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           {/* Goal Type Selection */}
           <div className="space-y-3">
@@ -254,7 +243,11 @@ export function GoalForm({ goal, onSubmit, onCancel, isLoading }: GoalFormProps)
                     form.setValue('targetDate', date);
                     setIsCalendarOpen(false);
                   }}
-                  disabled={(date) => date < new Date()}
+                  disabled={(date) => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return date < today;
+                  }}
                   initialFocus
                 />
               </PopoverContent>
@@ -277,21 +270,21 @@ export function GoalForm({ goal, onSubmit, onCancel, isLoading }: GoalFormProps)
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end space-x-3 pt-6 border-t">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-6 border-t">
             <Button
               type="button"
               variant="outline"
               onClick={onCancel}
               disabled={isLoading}
+              className="w-full sm:w-auto"
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
               {isLoading ? 'Salvando...' : goal ? 'Atualizar Meta' : 'Criar Meta'}
             </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+    </div>
   );
 }

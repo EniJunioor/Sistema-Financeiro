@@ -1,32 +1,31 @@
 'use client';
 
 import React from 'react';
-import { Bell, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Bell } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { NotificationPreferencesComponent } from '@/components/notifications/notification-preferences';
-import Link from 'next/link';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 
 export default function NotificationSettingsPage() {
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="space-y-6">
+      {/* Breadcrumb */}
+      <Breadcrumb
+        items={[
+          { label: 'Settings', href: '/settings' },
+          { label: 'Notificações' },
+        ]}
+      />
+
       {/* Header */}
-      <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/settings">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold flex items-center">
-            <Bell className="h-8 w-8 mr-3 text-blue-600" />
-            Configurações de Notificação
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Gerencie como e quando você recebe notificações da plataforma
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+          <Bell className="h-8 w-8 mr-3 text-blue-600" />
+          Configurações de Notificação
+        </h1>
+        <p className="text-gray-600 mt-2">
+          Gerencie como e quando você recebe notificações da plataforma
+        </p>
       </div>
 
       {/* Overview Card */}

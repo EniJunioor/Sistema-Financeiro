@@ -13,6 +13,105 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Aplicativo mobile React Native
 - Sistema de metas financeiras avançadas
 
+## [1.2.0] - 2026-01-15
+
+### Adicionado
+- 📊 **Sistema de Relatórios Completo**
+  - Página de Relatórios Mensais (`/reports/monthly`)
+    - Modal funcional para geração de relatórios mensais
+    - Seleção de mês e ano
+    - Opções de formato (PDF, Excel, CSV)
+    - Integração completa com backend
+    - Cards de resumo com cores e ícones
+    - Lista de relatórios gerados com download funcional
+    - Loading states e fallback para dados mock
+  
+  - Página de Relatórios Anuais (`/reports/annual`)
+    - Modal funcional para geração de relatórios anuais
+    - Seleção de ano
+    - Opções de formato e configurações avançadas
+    - Breakdown mensal opcional
+    - Integração completa com backend
+    - Cards de resumo com cores e ícones
+    - Lista de relatórios gerados com download funcional
+  
+  - Página de Relatórios Personalizados (`/reports/custom`)
+    - Modal funcional com seleção de período personalizado
+    - Calendário para escolher datas inicial e final
+    - Validação de período (data final >= data inicial)
+    - Título personalizado para o relatório
+    - Opções de formato e configurações
+    - Integração completa com backend
+    - Cards de resumo e lista de relatórios
+
+- 🎨 **Melhorias Visuais na Página de Relatórios**
+  - Cards de tipo de relatório com cores e ícones:
+    - Mensal: verde (emerald) com ícone Calendar
+    - Anual: azul com ícone BarChart3
+    - Personalizado: roxo com ícone FileText
+  - Cards de estatísticas melhorados:
+    - Templates: verde com ícone FileText
+    - Agendados: azul com ícone Calendar
+    - Este Mês: roxo com ícone History
+    - Compartilhados: laranja com ícone Share2
+  - Cards de templates com gradientes e cores por categoria
+  - Navegação funcional para páginas específicas
+  - Hover effects e transições suaves
+
+- 🔧 **Componentes de Relatórios**
+  - `MonthlyReportDialog` - Modal para relatórios mensais
+  - `AnnualReportDialog` - Modal para relatórios anuais
+  - `CustomReportDialog` - Modal para relatórios personalizados
+  - Validação de formulários com Zod
+  - Feedback visual (loading, sucesso, erro)
+
+- 💼 **Melhorias em Investimentos**
+  - Página de Fundos (`/investments/funds`) completamente refatorada
+    - Integração com hooks `useInvestments`, `usePortfolio`, `useAssetAllocation`
+    - Atualização de cotações funcional
+    - Exportação de dados em CSV
+    - Cards de resumo com ícones e cores
+    - Loading states com skeletons
+    - Integração com formulário de investimentos
+    - Menu de ações para cada investimento
+  - Páginas de Portfolio e Ações atualizadas com mesmas melhorias
+  - Suporte para múltiplos tipos de investimentos
+
+### Melhorado
+- 🔄 **Hook useReports**
+  - Refatoração completa do hook
+  - Remoção de estados desnecessários
+  - Integração com React Query para histórico de relatórios
+  - Filtragem automática de relatórios por tipo
+  - Melhor tratamento de erros
+  - Loading states aprimorados
+
+- 📡 **Integração com Backend**
+  - Busca automática de histórico de relatórios
+  - Filtragem inteligente (mensal, anual, personalizado)
+  - Fallback para dados mock quando backend não disponível
+  - Download de relatórios funcional
+  - Geração de relatórios integrada com API
+
+- 🎨 **Design System**
+  - Cores consistentes por tipo de relatório
+  - Ícones em todos os cards
+  - Hover effects e transições
+  - Responsividade completa (mobile e desktop)
+  - Loading states em todas as páginas
+
+### Mudanças Técnicas
+- 📁 **Estrutura de Arquivos**
+  - Criadas páginas: `frontend/src/app/(dashboard)/reports/monthly/page.tsx`
+  - Criadas páginas: `frontend/src/app/(dashboard)/reports/annual/page.tsx`
+  - Criadas páginas: `frontend/src/app/(dashboard)/reports/custom/page.tsx`
+  - Criados componentes: `frontend/src/components/reports/monthly-report-dialog.tsx`
+  - Criados componentes: `frontend/src/components/reports/annual-report-dialog.tsx`
+  - Criados componentes: `frontend/src/components/reports/custom-report-dialog.tsx`
+  - Atualizado hook: `frontend/src/hooks/use-reports.ts`
+  - Atualizado API: `frontend/src/lib/reports-api.ts`
+  - Atualizadas páginas de investimentos com integração completa
+
 ## [1.1.3] - 2026-01-14
 
 ### Adicionado

@@ -51,9 +51,9 @@ export function PeriodSelector({
                 variant={currentPeriod === option.value ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => handlePeriodChange(option.value)}
-                className={`text-xs ${currentPeriod === option.value ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}`}
+                className={`text-[10px] sm:text-xs ${currentPeriod === option.value ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}`}
               >
-                {option.label}
+                <span className="truncate">{option.label}</span>
               </Button>
             ))}
           </div>

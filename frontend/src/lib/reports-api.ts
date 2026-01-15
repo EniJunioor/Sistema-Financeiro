@@ -132,11 +132,23 @@ export const reportsApi = {
     await api.delete(`/reports/scheduled/${id}`);
   },
 
-  // Report History (using existing analytics endpoints)
-  async getReportHistory(): Promise<any[]> {
-    // This would be implemented when backend supports report history
-    // For now, return empty array
-    return [];
+  // Report History
+  async getReportHistory(filters?: { startDate?: string; endDate?: string; type?: string }): Promise<any[]> {
+    try {
+      const params = new URLSearchParams();
+      if (filters?.startDate) params.append('startDate', filters.startDate);
+      if (filters?.endDate) params.append('endDate', filters.endDate);
+      if (filters?.type) params.append('type', filters.type);
+      
+      const queryString = params.toString();
+      const url = queryString ? `/reports/history?${queryString}` : '/reports/history';
+      const response = await api.get<any[]>(url);
+      return response.data;
+    } catch (error) {
+      // Se o endpoint não existir, retornar array vazio
+      console.warn('Report history endpoint not available, returning empty array');
+      return [];
+    }
   },
 
   // Report Sharing (would need backend implementation)

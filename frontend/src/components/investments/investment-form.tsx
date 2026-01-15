@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -66,9 +66,10 @@ const commonBrokers = [
 
 interface InvestmentFormProps {
   trigger?: React.ReactNode;
+  defaultType?: InvestmentType;
 }
 
-export function InvestmentForm({ trigger }: InvestmentFormProps) {
+export function InvestmentForm({ trigger, defaultType = 'stock' }: InvestmentFormProps) {
   const [open, setOpen] = useState(false);
   const createInvestment = useCreateInvestment();
 
@@ -77,7 +78,7 @@ export function InvestmentForm({ trigger }: InvestmentFormProps) {
     defaultValues: {
       symbol: '',
       name: '',
-      type: 'stock',
+      type: defaultType,
       quantity: 0,
       averagePrice: 0,
       currency: 'BRL',
@@ -85,6 +86,21 @@ export function InvestmentForm({ trigger }: InvestmentFormProps) {
       sector: '',
     },
   });
+
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        symbol: '',
+        name: '',
+        type: defaultType,
+        quantity: 0,
+        averagePrice: 0,
+        currency: 'BRL',
+        broker: '',
+        sector: '',
+      });
+    }
+  }, [open, defaultType, form]);
 
   const onSubmit = async (data: InvestmentFormData) => {
     try {
