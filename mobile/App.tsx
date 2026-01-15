@@ -3,7 +3,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { StatusBar } from 'expo-status-bar';
+import { StatusBar } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AppNavigator from './src/navigation/AppNavigator';
@@ -33,7 +33,7 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <AppNavigator />
-        <StatusBar style="auto" />
+        <StatusBar barStyle="auto" />
       </QueryClientProvider>
     </GestureHandlerRootView>
   );
