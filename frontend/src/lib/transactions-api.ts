@@ -44,7 +44,7 @@ export class TransactionsAPI {
 
   static async updateTransaction(data: UpdateTransactionData): Promise<Transaction> {
     const { id, ...updateData } = data;
-    const response = await apiClient.put<Transaction>(`/transactions/${id}`, updateData);
+    const response = await apiClient.patch<Transaction>(`/transactions/${id}`, updateData);
     return response.data;
   }
 
@@ -52,29 +52,30 @@ export class TransactionsAPI {
     await apiClient.delete(`/transactions/${id}`);
   }
 
-  // Category operations
+  // Category operations - backend usa /transactions/categories
   static async getCategories(): Promise<Category[]> {
-    const response = await apiClient.get<Category[]>('/categories');
+    const response = await apiClient.get<Category[]>('/transactions/categories');
     return response.data;
   }
 
   static async createCategory(data: { name: string; icon?: string; color?: string; parentId?: string }): Promise<Category> {
-    const response = await apiClient.post<Category>('/categories', data);
+    const response = await apiClient.post<Category>('/transactions/categories', data);
     return response.data;
   }
 
   static async suggestCategory(description: string, amount: number): Promise<CategorySuggestion[]> {
-    const response = await apiClient.post<CategorySuggestion[]>('/transactions/suggest-category', {
+    const response = await apiClient.post<CategorySuggestion[]>('/transactions/categories/suggest', {
       description,
       amount,
     });
     return response.data;
   }
 
-  // Account operations
+  // Account operations - backend retorna { accounts, total }
   static async getAccounts(): Promise<Account[]> {
-    const response = await apiClient.get<Account[]>('/accounts');
-    return response.data;
+    const response = await apiClient.get<{ accounts?: Account[]; total?: number } | Account[]>('/accounts');
+    const data = response.data;
+    return Array.isArray(data) ? data : (data?.accounts ?? []);
   }
 
   // File upload operations

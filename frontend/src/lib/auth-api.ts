@@ -53,14 +53,22 @@ export const authApi = {
     }
   },
 
-  // Register new user
+  // Register new user - backend retorna { access_token, refresh_token, user }
   async register(data: RegisterFormData): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>('/auth/register', {
+    const response = await apiClient.post<any>('/auth/register', {
       name: data.name,
       email: data.email,
       password: data.password,
     })
-    return response.data
+    const d = response.data
+    return {
+      success: true,
+      user: d.user,
+      tokens: {
+        accessToken: d.access_token,
+        refreshToken: d.refresh_token || '',
+      },
+    }
   },
 
   // Forgot password - send reset email
@@ -87,40 +95,95 @@ export const authApi = {
     return response.data
   },
 
-  // Setup 2FA
+  // Setup 2FA - Step 1: get TOTP QR (backend: generate-totp)
+  async getTOTPSetup(): Promise<{ qrCodeUrl: string; secret: string }> {
+    const response = await apiClient.post<{ secret: string; qrCodeUrl: string }>('/auth/2fa/generate-totp')
+    return response.data
+  },
+
+  // Setup 2FA - Step 2: enable TOTP com código (backend: enable-totp)
+  async enableTOTP(code: string): Promise<{ backupCodes: string[] }> {
+    const response = await apiClient.post<{ backupCodes: string[] }>('/auth/2fa/enable-totp', {
+      token: code,
+      method: 'totp',
+    })
+    return response.data
+  },
+
+  // setupTwoFactor - para TOTP chama getTOTPSetup
   async setupTwoFactor(data: TwoFactorSetupFormData): Promise<TwoFactorSetupResponse> {
-    const response = await apiClient.post<TwoFactorSetupResponse>('/auth/2fa/setup', data)
-    return response.data
+    if (data.method === 'totp') {
+      const { qrCodeUrl } = await this.getTOTPSetup()
+      return { success: true, qrCode: qrCodeUrl }
+    }
+    throw new Error('Apenas TOTP é suportado no momento.')
   },
 
-  // Verify 2FA during login
-  async verifyTwoFactor(data: TwoFactorVerifyFormData): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>('/auth/2fa/verify', data)
-    return response.data
+  // Verificar 2FA durante LOGIN - reenvia login com twoFactorToken
+  async verifyTwoFactorForLogin(
+    credentials: { email: string; password: string },
+    data: TwoFactorVerifyFormData,
+  ): Promise<AuthResponse> {
+    const token = data.code || data.backupCode || ''
+    const response = await apiClient.post<any>('/auth/login', {
+      email: credentials.email,
+      password: credentials.password,
+      twoFactorToken: token,
+    })
+    const backendResponse = response.data
+    return {
+      success: true,
+      user: backendResponse.user,
+      tokens: {
+        accessToken: backendResponse.access_token,
+        refreshToken: backendResponse.refresh_token || '',
+      },
+    }
   },
 
-  // Disable 2FA
-  async disableTwoFactor(password: string): Promise<{ success: boolean; message: string }> {
-    const response = await apiClient.post<{ success: boolean; message: string }>('/auth/2fa/disable', { password })
-    return response.data
+  // Verificar 2FA durante setup - chama enable-totp
+  async verifyTwoFactorForSetup(code: string): Promise<{ success: boolean; backupCodes?: string[] }> {
+    const { backupCodes } = await this.enableTOTP(code)
+    return { success: true, backupCodes }
   },
 
-  // Get 2FA backup codes
+  // Alias para login flow
+  async verifyTwoFactor(
+    data: TwoFactorVerifyFormData,
+    loginCredentials?: { email: string; password: string },
+  ): Promise<AuthResponse> {
+    if (loginCredentials) {
+      return this.verifyTwoFactorForLogin(loginCredentials, data)
+    }
+    throw new Error('Credenciais de login necessárias para verificar 2FA')
+  },
+
+  // Disable 2FA - backend exige { password, token }
+  async disableTwoFactor(password: string, token: string): Promise<{ success: boolean; message: string }> {
+    const response = await apiClient.post<{ message: string }>('/auth/2fa/disable', { password, token })
+    return { success: true, message: response.data.message || '2FA desabilitado' }
+  },
+
+  // Backup codes - obtidos ao habilitar ou regenerar
   async getBackupCodes(): Promise<{ success: boolean; backupCodes: string[] }> {
-    const response = await apiClient.get<{ success: boolean; backupCodes: string[] }>('/auth/2fa/backup-codes')
-    return response.data
+    return { success: true, backupCodes: [] }
   },
 
-  // Regenerate 2FA backup codes
-  async regenerateBackupCodes(): Promise<{ success: boolean; backupCodes: string[] }> {
-    const response = await apiClient.post<{ success: boolean; backupCodes: string[] }>('/auth/2fa/backup-codes/regenerate')
-    return response.data
+  // Regenerar códigos de backup
+  async regenerateBackupCodes(password: string): Promise<{ success: boolean; backupCodes: string[] }> {
+    const response = await apiClient.post<{ backupCodes: string[] }>('/auth/2fa/regenerate-backup-codes', {
+      password,
+    })
+    return { success: true, backupCodes: response.data?.backupCodes ?? [] }
   },
 
-  // Logout
+  // Logout - envia refreshToken do localStorage para invalidar no backend
   async logout(): Promise<{ success: boolean }> {
-    const response = await apiClient.post<{ success: boolean }>('/auth/logout')
-    return response.data
+    const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null
+    const response = await apiClient.post<{ message?: string }>('/auth/logout', {
+      refreshToken: refreshToken || '',
+    })
+    return { success: true }
   },
 
   // Refresh token
@@ -129,19 +192,20 @@ export const authApi = {
     return response.data
   },
 
-  // Get current user profile
+  // Get current user profile - backend retorna { message, user }
   async getProfile(): Promise<AuthResponse['user']> {
-    const response = await apiClient.get<AuthResponse['user']>('/auth/profile')
-    return response.data
+    const response = await apiClient.get<{ message: string; user: AuthResponse['user'] }>('/profile')
+    return response.data.user
   },
 }
 
-// OAuth provider URLs - these will redirect to backend OAuth endpoints
+// OAuth provider URLs - backend usa api/v1/auth/google (sem /oauth no path)
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 export const oauthUrls = {
-  google: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/oauth/google`,
-  microsoft: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/oauth/microsoft`,
-  facebook: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/oauth/facebook`,
-  apple: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/oauth/apple`,
+  google: `${API_URL}/api/v1/auth/google`,
+  microsoft: `${API_URL}/api/v1/auth/microsoft`,
+  facebook: `${API_URL}/api/v1/auth/facebook`,
+  apple: `${API_URL}/api/v1/auth/apple`,
 }
 
 // Error handling for auth API calls

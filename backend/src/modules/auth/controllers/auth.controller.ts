@@ -78,6 +78,42 @@ export class AuthController {
   }
 
   @Public()
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Forgot password - send reset email (stub)' })
+  @ApiResponse({ status: 200, description: 'Stub - feature em desenvolvimento' })
+  async forgotPassword(@Body() body: { email: string }): Promise<{ success: boolean; message: string }> {
+    return { success: false, message: 'Recuperação de senha em desenvolvimento. Entre em contato com o suporte.' };
+  }
+
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reset password with token (stub)' })
+  @ApiResponse({ status: 200, description: 'Stub - feature em desenvolvimento' })
+  async resetPassword(@Body() body: { token: string; password: string }): Promise<{ success: boolean; message: string }> {
+    return { success: false, message: 'Redefinição de senha em desenvolvimento.' };
+  }
+
+  @Public()
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify email with token (stub)' })
+  @ApiResponse({ status: 200, description: 'Stub - feature em desenvolvimento' })
+  async verifyEmail(@Body() body: { token: string }): Promise<{ success: boolean; message: string }> {
+    return { success: false, message: 'Verificação de email em desenvolvimento.' };
+  }
+
+  @Public()
+  @Post('resend-verification')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Resend verification email (stub)' })
+  @ApiResponse({ status: 200, description: 'Stub - feature em desenvolvimento' })
+  async resendVerification(@Body() body: { email: string }): Promise<{ success: boolean; message: string }> {
+    return { success: false, message: 'Reenvio de verificação em desenvolvimento.' };
+  }
+
+  @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh access token' })
@@ -96,8 +132,10 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'User logout' })
   @ApiResponse({ status: 200, description: 'Logout successful' })
-  async logout(@Body() refreshTokenDto: RefreshTokenDto): Promise<{ message: string }> {
-    await this.authService.revokeRefreshToken(refreshTokenDto.refreshToken);
+  async logout(@Body() body: { refreshToken?: string }): Promise<{ message: string }> {
+    if (body?.refreshToken) {
+      await this.authService.revokeRefreshToken(body.refreshToken);
+    }
     return { message: 'Logout realizado com sucesso' };
   }
 

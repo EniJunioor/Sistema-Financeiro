@@ -1,18 +1,11 @@
 'use client';
 
 import { Suspense } from 'react';
-import { RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useDashboard } from '@/hooks/use-dashboard';
-import { FinancialSummaryCards } from '@/components/dashboard/financial-summary-cards';
-import { PeriodSelector } from '@/components/dashboard/period-selector';
-import { FinancialOverviewChart } from '@/components/charts/financial-overview-chart';
-import { CategoryBreakdownChart } from '@/components/charts/category-breakdown-chart';
-import { ExpenseTrendChart } from '@/components/charts/expense-trend-chart';
-import { RecentTransactions } from '@/components/dashboard/recent-transactions';
-import { GoalsProgress } from '@/components/dashboard/goals-progress';
-import { RealtimeStatus } from '@/components/dashboard/realtime-status';
-import { AIForecastDashboard } from '@/components/dashboard/ai-forecast-dashboard';
+import { AccountHeaderSection } from '@/components/dashboard/account-header-section';
+import { FinancialMetricsCards } from '@/components/dashboard/financial-metrics-cards';
+import { CashFlowSection } from '@/components/dashboard/cash-flow-section';
+import { SubscriptionsSection } from '@/components/dashboard/subscriptions-section';
 
 function DashboardContent() {
   const {
@@ -229,74 +222,42 @@ function DashboardContent() {
   const isUsingMockData = !dashboardData;
 
   return (
-    <div className="space-y-6 md:space-y-8 pb-6 md:pb-8">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm sm:text-base text-gray-500 mt-1">Visão geral das suas finanças</p>
-        </div>
-        {isUsingMockData && (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 sm:px-4">
-            <p className="text-xs sm:text-sm text-amber-800">
-              📊 Dados de demonstração
-            </p>
-          </div>
-        )}
-      </div>
+    <div className="space-y-6 md:space-y-8 pb-6 md:pb-8 bg-gray-900 min-h-screen -m-4 md:-m-6 p-4 md:p-6">
+      {/* Account Header Section */}
+      <AccountHeaderSection
+        selectedAccount="1"
+        onManageBalance={() => console.log('Gerenciar saldo')}
+        onNewPayment={() => console.log('Novo pagamento')}
+      />
 
-      {/* Period Selector and Summary Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
-        <div className="lg:col-span-1 order-2 lg:order-1">
-          <PeriodSelector
-            currentPeriod={query.period}
-            startDate={query.startDate}
-            endDate={query.endDate}
-            onPeriodChange={setPeriod}
-            onCustomDateChange={setCustomDateRange}
-          />
-        </div>
-        
-        {/* Summary Cards */}
-        <div className="lg:col-span-3 order-1 lg:order-2">
-          <FinancialSummaryCards
-            summary={summary}
-            comparison={comparison}
+      {/* Financial Metrics Cards */}
+      <FinancialMetricsCards
+        totalBalance={summary.totalBalance}
+        monthlyIncome={summary.totalIncome}
+        monthlyExpense={summary.totalExpenses}
+        balanceChange={comparison?.changes.balanceChangePercent}
+        incomeChange={comparison?.changes.incomeChangePercent}
+        expenseChange={comparison?.changes.expenseChangePercent}
+        isLoading={isLoading}
+      />
+
+      {/* Cash Flow and Subscriptions Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+        <div className="lg:col-span-2">
+          <CashFlowSection
+            data={trends.monthlyTrends.map((trend, index) => ({
+              name: new Date(trend.month).toLocaleDateString('pt-BR', { weekday: 'short' }),
+              value: trend.netIncome,
+            }))}
             isLoading={isLoading}
           />
         </div>
-      </div>
-
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        <FinancialOverviewChart
-          data={trends.monthlyTrends}
-          isLoading={isLoading}
-        />
-        <ExpenseTrendChart
-          data={trends.monthlyTrends}
-          isLoading={isLoading}
-        />
-      </div>
-
-      {/* Category Breakdown and Recent Activity */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        <CategoryBreakdownChart
-          data={summary.categoryBreakdown}
-          isLoading={isLoading}
-        />
-        <RecentTransactions
-          transactions={transactions}
-          isLoading={isLoading}
-        />
-        <GoalsProgress />
-      </div>
-
-      {/* AI Forecasting Section */}
-      <div className="mt-6">
-        <AIForecastDashboard 
-          historicalData={trends.monthlyTrends}
-        />
+        <div className="lg:col-span-1">
+          <SubscriptionsSection
+            isLoading={isLoading}
+            onAdd={() => console.log('Adicionar assinatura')}
+          />
+        </div>
       </div>
     </div>
   );

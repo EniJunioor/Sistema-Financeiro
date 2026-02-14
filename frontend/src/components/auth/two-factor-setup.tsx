@@ -96,7 +96,14 @@ export function TwoFactorSetup({ onComplete, onCancel }: TwoFactorSetupProps) {
       <TwoFactorVerification
         method={selectedMethod}
         qrCode={qrCode}
-        onComplete={handleVerificationComplete}
+        onComplete={(codes) => {
+          if (codes?.length) {
+            setBackupCodes(codes)
+            setStep('backup')
+          } else {
+            onComplete()
+          }
+        }}
         onBack={() => setStep('method')}
       />
     )
@@ -293,7 +300,7 @@ export function TwoFactorSetup({ onComplete, onCancel }: TwoFactorSetupProps) {
 interface TwoFactorVerificationProps {
   method: 'totp' | 'sms' | 'email'
   qrCode?: string | null
-  onComplete: () => void
+  onComplete: (backupCodes?: string[]) => void
   onBack: () => void
 }
 
@@ -312,10 +319,10 @@ function TwoFactorVerification({ method, qrCode, onComplete, onBack }: TwoFactor
     setError(null)
 
     try {
-      const response = await authApi.verifyTwoFactor({ code })
+      const response = await authApi.verifyTwoFactorForSetup(code)
       
       if (response.success) {
-        onComplete()
+        onComplete(response.backupCodes)
       }
     } catch (err) {
       const authError = handleAuthError(err)

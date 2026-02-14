@@ -64,10 +64,11 @@ Uma plataforma moderna e segura para gestão financeira pessoal e de pequenos ne
 - 🔄 Planejamento automático com IA (planejado)
 
 ### 📱 Mobile
-- 🔄 App React Native
-- 🔄 Modo offline
-- 🔄 Captura de recibos com OCR
-- 🔄 Pagamentos via PIX
+- ✅ App React Native/Expo (login real, registro, dashboard, contas, transações, investimentos, perfil)
+- ✅ Integração com backend NestJS (JWT, OAuth)
+- ⏳ Modo offline (planejado)
+- ⏳ Captura de recibos com OCR (planejado)
+- ⏳ Pagamentos via PIX (planejado)
 
 ### 📋 Relatórios
 - ✅ Sistema completo de relatórios financeiros
@@ -84,6 +85,17 @@ Uma plataforma moderna e segura para gestão financeira pessoal e de pequenos ne
 - ✅ Cards visuais com cores e ícones
 
 **Legenda:** ✅ Implementado | 🔄 Em desenvolvimento | ⏳ Planejado
+
+### 📌 Pendências e Recomendações
+
+**Priorização:** Dada a complexidade e o escopo do projeto, priorizar funcionalidades em desenvolvimento e planejadas com base no valor de negócio e feedback dos usuários.
+
+**Testes Abrangentes:** Manter cobertura alta (unitários, integração e e2e) para garantir estabilidade em funcionalidades e integrações críticas.
+
+**Documentação Contínua:** Manter documentação atualizada. Documentos principais em `backend/docs/`:
+- [Open Banking](backend/docs/OPEN_BANKING_CHECKPOINT_REPORT.md)
+- [Segurança](backend/docs/SECURITY_IMPLEMENTATION.md)
+- [Autenticação avançada](backend/docs/ADVANCED_AUTH_IMPLEMENTATION.md)
 
 ## 🏗️ Arquitetura
 
@@ -108,11 +120,11 @@ Uma plataforma moderna e segura para gestão financeira pessoal e de pequenos ne
 - **Charts**: Recharts + D3.js para visualizações avançadas
 - **Auth**: NextAuth.js v5
 
-**Mobile (Futuro)**
-- **Framework**: React Native 0.73+ com Expo
-- **Navigation**: React Navigation 6+
-- **State**: Zustand + React Query
-- **UI**: NativeBase ou Tamagui
+**Mobile**
+- **Framework**: React Native 0.81+ com Expo 54
+- **Navigation**: Expo Router 6+
+- **State**: React Query (TanStack)
+- **UI**: NativeWind (TailwindCSS)
 
 **DevOps & Infraestrutura**
 - **Containerização**: Docker + Docker Compose
@@ -127,7 +139,7 @@ Uma plataforma moderna e segura para gestão financeira pessoal e de pequenos ne
 plataforma-financeira/
 ├── 📁 backend/          # API NestJS
 ├── 📁 frontend/         # Web Next.js  
-├── 📁 mobile/           # App React Native (futuro)
+├── 📁 app-mobile/       # App React Native/Expo
 ├── 📁 shared/           # Tipos compartilhados
 ├── 📁 docs/             # Documentação
 ├── 📁 docker/           # Configurações Docker
@@ -191,8 +203,8 @@ plataforma-financeira/
 
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:3001
-- **Documentação API**: http://localhost:3001/api/docs
-- **Mobile**: Expo DevTools será aberto automaticamente
+- **Documentação API**: http://localhost:3001/docs
+- **Mobile**: `cd app-mobile && pnpm start` ou `npx expo start`
 - **Prisma Studio**: `npm run prisma:studio`
 
 ## 📝 Scripts Disponíveis

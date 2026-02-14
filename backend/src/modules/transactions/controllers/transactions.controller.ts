@@ -11,7 +11,10 @@ import {
   Request,
   HttpStatus,
   HttpCode,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
@@ -32,6 +35,7 @@ import {
   CreateCategoryDto,
   UpdateCategoryDto,
   BulkCategorizeDto,
+  BulkDeleteDto,
   SuggestCategoryDto
 } from '../dto';
 
@@ -47,6 +51,41 @@ export class TransactionsController {
     private readonly recurringTransactionsService: RecurringTransactionsService,
     private readonly recurringSchedulerService: RecurringSchedulerService,
   ) {}
+
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Upload transaction attachment (stub)' })
+  @ApiResponse({ status: 200, description: 'File upload stub' })
+  uploadAttachment(@UploadedFile() file?: Express.Multer.File) {
+    return { url: '/uploads/stub', filename: file?.originalname ?? 'stub' };
+  }
+
+  @Post('ocr')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'OCR extract from image (stub)' })
+  @ApiResponse({ status: 200, description: 'OCR stub' })
+  processOCR(@UploadedFile() file?: Express.Multer.File) {
+    return {
+      amount: undefined,
+      description: undefined,
+      date: undefined,
+      merchant: undefined,
+      confidence: 0,
+    };
+  }
+
+  @Post('import')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Import transactions from CSV (stub)' })
+  @ApiResponse({ status: 200, description: 'Import stub' })
+  importFromCSV(@UploadedFile() file?: Express.Multer.File) {
+    return {
+      success: 0,
+      failed: 0,
+      duplicates: 0,
+      errors: ['Importação em desenvolvimento. Adicione transações manualmente.'],
+    };
+  }
 
   @Post()
   @ApiOperation({ summary: 'Create a new transaction' })
@@ -287,19 +326,40 @@ export class TransactionsController {
   }
 
   @Post('bulk-categorize')
-  @ApiOperation({ summary: 'Bulk categorize uncategorized transactions' })
+  @ApiOperation({ summary: 'Bulk categorize transactions (by IDs or ML auto-categorize)' })
   @ApiResponse({
     status: 200,
     description: 'Bulk categorization completed',
   })
   async bulkCategorizeTransactions(
-    @Body() bulkCategorizeDto: BulkCategorizeDto,
+    @Body() dto: BulkCategorizeDto,
     @Request() req,
   ) {
+    if (dto.transactionIds?.length && dto.categoryId) {
+      return this.transactionsService.bulkCategorizeByIds(
+        req.user.id,
+        dto.transactionIds,
+        dto.categoryId,
+      );
+    }
     return this.mlCategorizationService.bulkCategorizeTransactions(
       req.user.id,
-      bulkCategorizeDto.limit
+      dto.limit ?? 100,
     );
+  }
+
+  @Post('bulk-delete')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete multiple transactions' })
+  @ApiResponse({
+    status: 200,
+    description: 'Bulk delete completed',
+  })
+  async bulkDeleteTransactions(
+    @Body() dto: BulkDeleteDto,
+    @Request() req,
+  ) {
+    return this.transactionsService.bulkDelete(req.user.id, dto.transactionIds);
   }
 
   @Get('ml/accuracy')

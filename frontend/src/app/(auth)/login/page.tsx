@@ -110,8 +110,15 @@ export default function LoginPage() {
     } catch (err) {
       console.error('[Login] Erro no login:', err)
       const authError = handleAuthError(err)
-      console.error('[Login] Erro tratado:', authError)
-      setError(authError.message)
+      const msg = authError.message?.toLowerCase() || ''
+      if (authError.statusCode === 401 && (msg.includes('dois fatores') || msg.includes('2fa'))) {
+        setRequiresTwoFactor(true)
+        setTwoFactorMethods(['totp'])
+        setLoginData(data)
+        setError(null)
+      } else {
+        setError(authError.message)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -122,7 +129,11 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const response = await authApi.verifyTwoFactor(data)
+      if (!loginData) {
+        setError('Erro: dados de login não encontrados')
+        return
+      }
+      const response = await authApi.verifyTwoFactorForLogin(loginData, data)
       
       if (response.success) {
         // Store tokens and redirect

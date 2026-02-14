@@ -4,7 +4,7 @@ import { oauthUrls } from "@/lib/auth-api"
 import { useState } from "react"
 
 interface OAuthButtonProps {
-  provider: 'google' | 'facebook' | 'apple'
+  provider: 'google' | 'facebook' | 'apple' | 'microsoft'
   className?: string
   disabled?: boolean
 }
@@ -36,6 +36,17 @@ function AppleIcon() {
   )
 }
 
+function MicrosoftIcon() {
+  return (
+    <svg className="w-5 h-5" viewBox="0 0 24 24">
+      <path fill="#f35325" d="M1 1h10v10H1z"/>
+      <path fill="#81bc06" d="M1 13h10v10H1z"/>
+      <path fill="#05a6f0" d="M13 1h10v10H13z"/>
+      <path fill="#ffba08" d="M13 13h10v10H13z"/>
+    </svg>
+  )
+}
+
 const providerConfig = {
   google: {
     name: 'Google',
@@ -49,6 +60,10 @@ const providerConfig = {
     name: 'Apple',
     icon: AppleIcon,
   },
+  microsoft: {
+    name: 'Microsoft',
+    icon: MicrosoftIcon,
+  },
 }
 
 export function OAuthButton({ provider, className, disabled }: OAuthButtonProps) {
@@ -59,9 +74,11 @@ export function OAuthButton({ provider, className, disabled }: OAuthButtonProps)
   const handleOAuthLogin = () => {
     setIsLoading(true)
     
-    // Store the current URL to redirect back after OAuth
+    // Store redirect URL after OAuth (dashboard if on login/register)
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem('oauth_redirect_url', window.location.pathname)
+      const path = window.location.pathname
+      const redirectTo = path === '/login' || path === '/register' ? '/dashboard' : path
+      sessionStorage.setItem('oauth_redirect_url', redirectTo)
     }
     
     // Redirect to OAuth provider

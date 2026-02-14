@@ -16,6 +16,8 @@ import { AccountsModule } from './modules/accounts/accounts.module';
 import { InvestmentsModule } from './modules/investments/investments.module';
 import { GoalsModule } from './modules/goals/goals.module';
 import { AnomalyDetectionModule } from './modules/anomaly-detection/anomaly-detection.module';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -71,6 +73,8 @@ import { AnomalyDetectionModule } from './modules/anomaly-detection/anomaly-dete
     InvestmentsModule,
     GoalsModule,
     AnomalyDetectionModule,
+    SubscriptionsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

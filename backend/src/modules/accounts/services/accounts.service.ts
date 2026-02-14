@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../common/prisma/prisma.service';
 import { UpdateAccountDto } from '../dto/update-account.dto';
+import { CreateManualAccountDto } from '../dto/create-manual-account.dto';
 import { AccountFiltersDto } from '../dto/account-filters.dto';
 import { Account, Prisma } from '@prisma/client';
 
@@ -72,6 +73,20 @@ export class AccountsService {
   async create(data: Prisma.AccountCreateInput): Promise<Account> {
     return this.prisma.account.create({
       data,
+    });
+  }
+
+  async createManualAccount(userId: string, dto: CreateManualAccountDto): Promise<Account> {
+    return this.prisma.account.create({
+      data: {
+        userId,
+        name: dto.name,
+        type: dto.type,
+        balance: dto.balance ?? 0,
+        currency: dto.currency ?? 'BRL',
+        provider: 'manual',
+        isActive: true,
+      },
     });
   }
 

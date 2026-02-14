@@ -67,12 +67,15 @@ export default function RegisterPage() {
       const response = await authApi.register(data)
       
       if (response.success) {
-        setSuccess('Conta criada com sucesso! Verifique seu email para ativar sua conta.')
-        
-        // Optionally redirect to login after a delay
-        setTimeout(() => {
-          router.push('/login?message=Conta criada com sucesso! Verifique seu email.')
-        }, 3000)
+        if (response.tokens) {
+          localStorage.setItem('accessToken', response.tokens.accessToken)
+          localStorage.setItem('refreshToken', response.tokens.refreshToken)
+          setSuccess('Conta criada com sucesso! Redirecionando...')
+          setTimeout(() => router.push('/dashboard'), 1500)
+        } else {
+          setSuccess('Conta criada com sucesso! Faça login para continuar.')
+          setTimeout(() => router.push('/login?message=Conta criada com sucesso!'), 3000)
+        }
       }
     } catch (err) {
       const authError = handleAuthError(err)

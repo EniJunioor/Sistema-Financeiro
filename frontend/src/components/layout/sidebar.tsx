@@ -26,7 +26,8 @@ import {
   BarChart,
   Calendar,
   Settings,
-  X
+  X,
+  Repeat
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { authApi } from '@/lib/auth-api'
@@ -69,6 +70,12 @@ const sidebarItems: SidebarItem[] = [
     label: 'Contas',
     icon: Wallet,
     href: '/accounts'
+  },
+  {
+    id: 'subscriptions',
+    label: 'Assinaturas',
+    icon: Repeat,
+    href: '/subscriptions'
   },
   {
     id: 'investments',
@@ -277,25 +284,28 @@ function UserProfile({ onLogout }: { onLogout: () => void }) {
   }
 
   return (
-    <div className="p-4 border-t border-gray-200 bg-white relative">
+    <div className="bg-gray-50 rounded-lg p-3 relative">
       <div className="flex items-center">
         <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
           <User className="w-6 h-6 text-emerald-600" />
         </div>
         <div className="ml-3 min-w-0 flex-1">
           <p className="text-sm font-medium text-gray-900 truncate">Enivander Junior</p>
-          <p className="text-xs text-gray-500 truncate">enivander@example.com</p>
+          <p className="text-xs text-gray-500 truncate">@enivander</p>
         </div>
         <button
           onClick={() => setShowMenu(!showMenu)}
-          className="p-1.5 hover:bg-gray-100 rounded transition-colors duration-200 flex-shrink-0"
+          className="p-1.5 hover:bg-gray-200 rounded transition-colors duration-200 flex-shrink-0"
         >
-          <MoreVertical className="w-4 h-4 text-gray-600" />
+          <ChevronDown className={cn(
+            "w-4 h-4 text-gray-600 transition-transform duration-200",
+            showMenu && "transform rotate-180"
+          )} />
         </button>
       </div>
       
       {showMenu && (
-        <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg py-1 animate-fade-in z-10">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg py-1 animate-fade-in z-10">
           <button
             onClick={handleSettingsClick}
             className={cn(
@@ -418,6 +428,11 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
         
         <SidebarLogo />
         
+        {/* User Profile no topo */}
+        <div className="px-4 py-4 border-b border-gray-200">
+          <UserProfile onLogout={handleLogout} />
+        </div>
+        
         <nav className="flex-1 mt-2 px-2">
           {sidebarItems.map(item => (
             <SidebarItemComponent 
@@ -429,8 +444,6 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
             />
           ))}
         </nav>
-        
-        <UserProfile onLogout={handleLogout} />
       </aside>
     </>
   )

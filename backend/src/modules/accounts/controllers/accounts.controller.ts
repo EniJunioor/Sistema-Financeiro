@@ -18,6 +18,7 @@ import { AccountsService } from '../services/accounts.service';
 import { OpenBankingService } from '../services/open-banking.service';
 import { SyncService } from '../services/sync.service';
 import { ConnectAccountDto } from '../dto/connect-account.dto';
+import { CreateManualAccountDto } from '../dto/create-manual-account.dto';
 import { UpdateAccountDto } from '../dto/update-account.dto';
 import { AccountFiltersDto } from '../dto/account-filters.dto';
 import { SyncAccountDto } from '../dto/sync-account.dto';
@@ -42,6 +43,17 @@ export class AccountsController {
     @Body() connectAccountDto: ConnectAccountDto,
   ) {
     return this.openBankingService.connectAccount(userId, connectAccountDto);
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Create a manual account' })
+  @ApiResponse({ status: 201, description: 'Account created successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
+  async createManualAccount(
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateManualAccountDto,
+  ) {
+    return this.accountsService.createManualAccount(userId, dto);
   }
 
   @Get()

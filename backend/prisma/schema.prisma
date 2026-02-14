@@ -38,6 +38,7 @@ model User {
   behaviorProfile   UserBehaviorProfile?
   mlModels          MLModel[]
   fcmTokens         FCMToken[]
+  subscriptions     Subscription[]
 
   @@map("users")
 }
@@ -64,6 +65,7 @@ model Account {
   // Relacionamentos
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions      Transaction[]
+  subscriptions     Subscription[]
 
   @@map("accounts")
 }
@@ -337,4 +339,33 @@ model FCMToken {
   @@index([userId])
   @@index([isActive])
   @@map("fcm_tokens")
+}
+
+model Subscription {
+  id              String    @id @default(cuid())
+  userId          String
+  name            String
+  amount          Decimal
+  currency        String    @default("BRL")
+  frequency       String    // 'monthly', 'yearly', 'weekly', 'daily'
+  nextPaymentDate DateTime
+  startDate       DateTime  @default(now())
+  endDate         DateTime?
+  isActive        Boolean   @default(true)
+  categoryId      String?
+  accountId       String?
+  logo            String?   // URL or icon identifier
+  description     String?
+  metadata        String?   // JSON: provider-specific data
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relacionamentos
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account         Account?  @relation(fields: [accountId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([isActive])
+  @@index([nextPaymentDate])
+  @@map("subscriptions")
 }

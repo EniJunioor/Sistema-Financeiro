@@ -312,6 +312,33 @@ export class TransactionsService {
     await this.clearUserCache(userId);
   }
 
+  async bulkCategorizeByIds(
+    userId: string,
+    transactionIds: string[],
+    categoryId: string,
+  ): Promise<{ updated: number }> {
+    const result = await this.prisma.transaction.updateMany({
+      where: {
+        id: { in: transactionIds },
+        userId,
+      },
+      data: { categoryId, updatedAt: new Date() },
+    });
+    await this.clearUserCache(userId);
+    return { updated: result.count };
+  }
+
+  async bulkDelete(userId: string, transactionIds: string[]): Promise<{ deleted: number }> {
+    const result = await this.prisma.transaction.deleteMany({
+      where: {
+        id: { in: transactionIds },
+        userId,
+      },
+    });
+    await this.clearUserCache(userId);
+    return { deleted: result.count };
+  }
+
   async getStats(userId: string, startDate?: string, endDate?: string): Promise<TransactionStats> {
     const cacheKey = `stats:${userId}:${startDate || 'all'}:${endDate || 'all'}`;
     const cached = await this.cacheManager.get<TransactionStats>(cacheKey);

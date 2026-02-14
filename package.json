@@ -6,7 +6,7 @@
   "workspaces": [
     "backend",
     "frontend",
-    "mobile",
+    "app-mobile",
     "shared"
   ],
   "scripts": {
@@ -14,7 +14,7 @@
     "dev:all": "npm run dev",
     "dev:backend": "cd backend && npm run start:dev",
     "dev:frontend": "cd frontend && npm run dev",
-    "dev:mobile": "cd mobile && npm start",
+    "dev:mobile": "cd app-mobile && pnpm start",
     "build": "npm run build:shared && npm run build:backend && npm run build:frontend",
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm run build",

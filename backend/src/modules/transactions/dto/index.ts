@@ -4,6 +4,7 @@ export * from './transaction-filters.dto';
 export * from './create-category.dto';
 export * from './update-category.dto';
 export * from './bulk-categorize.dto';
+export * from './bulk-delete.dto';
 export * from './suggest-category.dto';
 export * from './recurring-rule.dto';
 export * from './deduplication.dto';

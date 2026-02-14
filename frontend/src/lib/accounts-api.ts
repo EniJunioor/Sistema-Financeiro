@@ -70,15 +70,16 @@ export interface PaginatedAccountTransactions {
 }
 
 export class AccountsAPI {
-  // Get all user accounts
+  // Get all user accounts - backend retorna { accounts, total }
   static async getAccounts(filters?: AccountFilters): Promise<Account[]> {
     const params = new URLSearchParams();
     if (filters?.type) params.append('type', filters.type);
     if (filters?.provider) params.append('provider', filters.provider);
     if (filters?.isActive !== undefined) params.append('isActive', filters.isActive.toString());
 
-    const response = await apiClient.get<Account[]>(`/accounts?${params.toString()}`);
-    return response.data;
+    const response = await apiClient.get<{ accounts?: Account[]; total?: number } | Account[]>(`/accounts?${params.toString()}`);
+    const data = response.data;
+    return Array.isArray(data) ? data : (data?.accounts ?? []);
   }
 
   // Get account by ID

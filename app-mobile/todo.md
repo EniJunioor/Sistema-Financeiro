@@ -1,0 +1,38 @@
+# Project TODO
+
+- [x] Configurar tema de cores financeiro (verde/slate)
+- [x] Adicionar mapeamento de ícones no icon-symbol.tsx
+- [x] Configurar estrutura de navegação com 5 tabs
+- [x] Criar tipos TypeScript para entidades (Transaction, Account, Investment, Goal)
+- [x] Criar utilitários de formatação (moeda BRL, datas)
+- [x] Criar store de dados com AsyncStorage
+- [x] Implementar tela Dashboard com cards de resumo e transações recentes
+- [x] Implementar tela de Transações com lista, filtros e FAB
+- [x] Implementar modal de criação/edição de transação
+- [x] Implementar tela de Contas com lista de contas e saldo total
+- [x] Implementar modal de criação de conta
+- [x] Implementar tela de Investimentos com lista e patrimônio
+- [x] Implementar modal de criação de investimento
+- [x] Implementar tela de Perfil com metas e configurações
+- [x] Implementar modal de criação de meta
+- [x] Adicionar dados de exemplo para demonstração
+- [x] Gerar logo e branding do app
+- [x] Atualizar app.config.ts com nome e branding
+- [x] Redesign: Atualizar tema para dark mode moderno (fundo preto, cards cinza escuro)
+- [x] Redesign: Tab bar estilo pill/glass como na referência
+- [x] Redesign: Dashboard com layout inspirado na imagem (card de conta principal, ações rápidas, gastos da semana)
+- [x] Redesign: Tela de Contas com cores reais dos cartões (Nubank roxo, Itaú laranja, etc.)
+- [x] Redesign: Atualizar telas de Transações, Investimentos e Perfil para o novo tema
+- [x] Redesign v2: Tema azul escuro premium (#0D1B2A fundo, #1B2838 cards)
+- [x] Redesign v2: Tab bar inferior com ícones e cor de destaque rosa/coral
+- [x] Redesign v2: Dashboard com card de saldo total + cartão gradiente visual
+- [x] Redesign v2: Seções de operações do mês e resumo financeiro
+- [x] Redesign v2: Atualizar todas as telas para o novo tema azul escuro
+- [ ] Redesign v3: Paleta de cores exata da referência (#0F1117, #121826, #1C1F2A, #FF4D8D)
+- [ ] Redesign v3: Header com avatar, nome, indicador online, ícones de busca/notificação/menu
+- [ ] Redesign v3: Total Balance com valor grande e badge de cashback
+- [ ] Redesign v3: Cartão gradiente flutuante rosa/laranja com Mastercard logo
+- [ ] Redesign v3: Grid 2 colunas - All Operations com barra colorida + Consumer Loan com badge verde
+- [ ] Redesign v3: Quick Money Transfers com avatares horizontais e botão +
+- [ ] Redesign v3: Exchange Rate com bandeiras CAD/AUS e valores verde/vermelho
+- [ ] Redesign v3: Tab bar com 5 ícones (Home rosa ativo, Card, Graph, Chat, History)
