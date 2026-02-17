@@ -33,7 +33,14 @@ export async function getSessionToken(): Promise<string | null> {
   }
 }
 
-export async function setSessionToken(token: string): Promise<void> {
+export type SetSessionTokenOptions = {
+  requireAuthentication?: boolean;
+};
+
+export async function setSessionToken(
+  token: string,
+  options?: SetSessionTokenOptions
+): Promise<void> {
   try {
     // Web platform uses cookie-based auth, no manual token management needed
     if (Platform.OS === "web") {
@@ -42,8 +49,12 @@ export async function setSessionToken(token: string): Promise<void> {
     }
 
     // Use SecureStore for native
-    console.log("[Auth] Setting session token...", token.substring(0, 20) + "...");
-    await SecureStore.setItemAsync(SESSION_TOKEN_KEY, token);
+    const useBiometric = options?.requireAuthentication ?? false;
+    console.log("[Auth] Setting session token...", token.substring(0, 20) + "...", useBiometric ? "(com biometric)" : "");
+    await SecureStore.setItemAsync(SESSION_TOKEN_KEY, token, {
+      keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+      requireAuthentication: useBiometric,
+    });
     console.log("[Auth] Session token stored in SecureStore successfully");
   } catch (error) {
     console.error("[Auth] Failed to set session token:", error);

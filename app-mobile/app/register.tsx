@@ -11,37 +11,45 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
-  FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+import { Svg, Path } from "react-native-svg";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useRouter, Link } from "expo-router";
+import * as Haptics from "expo-haptics";
 
 import { apiCall } from "@/lib/_core/api";
 import * as Auth from "@/lib/_core/auth";
 import { getApiBaseUrl } from "@/constants/oauth";
 
-const GREEN = "#22C55E";
+function GoogleIcon({ size = 20 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+      <Path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+      <Path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+      <Path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+    </Svg>
+  );
+}
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [businessName, setBusinessName] = useState("");
-  const [country, setCountry] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [countryModalVisible, setCountryModalVisible] = useState(false);
+  const [successModalVisible, setSuccessModalVisible] = useState(false);
 
   const hasApi = !!getApiBaseUrl();
 
-  const COUNTRIES = ["Brasil", "Portugal", "Estados Unidos", "Argentina", "México", "Chile", "Colômbia", "Peru", "Espanha", "Outro"];
-
   const handleRegister = async () => {
     const trimmedEmail = email.trim();
-    const trimmedName = businessName.trim();
+    const trimmedName = fullName.trim();
 
     if (!trimmedEmail || !password) {
       Alert.alert("Campos obrigatórios", "Preencha email e senha.");
@@ -59,7 +67,6 @@ export default function RegisterScreen() {
     }
 
     if (!hasApi) {
-      // Modo demonstração: simula registro e redireciona
       setLoading(true);
       await Auth.setUserInfo({
         id: 0,
@@ -70,7 +77,7 @@ export default function RegisterScreen() {
         lastSignedIn: new Date(),
       });
       setLoading(false);
-      router.replace("/(tabs)");
+      setSuccessModalVisible(true);
       return;
     }
 
@@ -98,7 +105,8 @@ export default function RegisterScreen() {
         lastSignedIn: new Date(),
       });
 
-      router.replace("/(tabs)");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setSuccessModalVisible(true);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Falha ao criar conta.";
       Alert.alert("Erro", message);
@@ -107,207 +115,239 @@ export default function RegisterScreen() {
     }
   };
 
+  const handleBrowseHome = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSuccessModalVisible(false);
+    router.replace("/(tabs)");
+  };
+
+  const handleAppleSignUp = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Alert.alert("Apple", "Cadastro com Apple em desenvolvimento.");
+  };
+
+  const handleGoogleSignUp = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Alert.alert("Google", "Cadastro com Google em desenvolvimento.");
+  };
+
   return (
     <View style={s.screen}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <SafeAreaView style={s.safeArea} edges={["top", "bottom", "left", "right"]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={s.keyboardView}
-      >
-        <ScrollView
-          contentContainerStyle={s.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={s.keyboardView}
         >
-          <TouchableOpacity onPress={() => router.back()} style={s.backLink}>
-            <MaterialIcons name="arrow-back" size={24} color="#D1D5DB" />
-            <Text style={s.backLinkText}>Voltar</Text>
-          </TouchableOpacity>
+          <ScrollView
+            contentContainerStyle={s.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <TouchableOpacity onPress={() => router.back()} style={s.backLink}>
+              <MaterialIcons name="arrow-back" size={24} color="#374151" />
+              <Text style={s.backLinkText}>Voltar</Text>
+            </TouchableOpacity>
 
-          <View style={s.header}>
-            <Text style={s.title}>Create Account Now</Text>
-            <Text style={s.subtitle}>
-              Create An Account Now Start Managing Payments!
-            </Text>
-          </View>
-
-          <View style={s.form}>
-            <View style={s.fieldGroup}>
-              <Text style={s.label}>Email</Text>
-              <TextInput
-                style={s.input}
-                placeholder="Email"
-                placeholderTextColor="#9CA3AF"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                editable={!loading}
-              />
+            <View style={s.header}>
+              <Text style={s.title}>Crie sua conta</Text>
+              <Text style={s.subtitle}>
+                Informe seu nome completo, email e senha para criar sua conta e começar.
+              </Text>
             </View>
 
-            <View style={s.fieldGroup}>
-              <Text style={s.label}>Password</Text>
-              <View style={s.passwordWrap}>
-                <TextInput
-                  style={[s.input, s.inputFlex]}
-                  placeholder="Password"
-                  placeholderTextColor="#9CA3AF"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                  editable={!loading}
-                />
-                <TouchableOpacity
-                  onPress={() => setShowPassword(!showPassword)}
-                  style={s.eyeBtn}
-                >
-                  <MaterialIcons
-                    name={showPassword ? "visibility-off" : "visibility"}
-                    size={22}
-                    color="#9CA3AF"
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <View style={s.fieldGroup}>
-              <Text style={s.label}>Business Name</Text>
-              <TextInput
-                style={s.input}
-                placeholder="Business Name"
-                placeholderTextColor="#9CA3AF"
-                value={businessName}
-                onChangeText={setBusinessName}
-                autoCapitalize="words"
-                editable={!loading}
-              />
-            </View>
-
-            <View style={s.fieldGroup}>
-              <Text style={s.label}>Country</Text>
+            {/* Social Signup - FIRST */}
+            <View style={s.socialWrap}>
               <TouchableOpacity
-                style={s.countryWrap}
-                onPress={() => setCountryModalVisible(true)}
-                disabled={loading}
-              >
-                <TextInput
-                  style={[s.input, s.inputFlex]}
-                  placeholder="Country"
-                  placeholderTextColor="#9CA3AF"
-                  value={country}
-                  onChangeText={setCountry}
-                  editable={false}
-                  pointerEvents="none"
-                />
-                <MaterialIcons
-                  name="keyboard-arrow-down"
-                  size={24}
-                  color="#9CA3AF"
-                  style={s.chevron}
-                />
-              </TouchableOpacity>
-            </View>
-
-            <Modal
-              visible={countryModalVisible}
-              transparent
-              animationType="slide"
-              onRequestClose={() => setCountryModalVisible(false)}
-            >
-              <TouchableOpacity
-                style={s.modalOverlay}
-                activeOpacity={1}
-                onPress={() => setCountryModalVisible(false)}
-              >
-                <View style={s.modalContent} onStartShouldSetResponder={() => true}>
-                  <Text style={s.modalTitle}>Selecione o país</Text>
-                  <FlatList
-                    data={COUNTRIES}
-                    keyExtractor={(item) => item}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity
-                        style={s.modalItem}
-                        onPress={() => {
-                          setCountry(item);
-                          setCountryModalVisible(false);
-                        }}
-                      >
-                        <Text style={s.modalItemText}>{item}</Text>
-                      </TouchableOpacity>
-                    )}
-                  />
-                </View>
-              </TouchableOpacity>
-            </Modal>
-
-            <View style={s.checkboxWrap}>
-              <TouchableOpacity
-                onPress={() => setAgreedToTerms(!agreedToTerms)}
-                style={s.checkboxTouch}
+                onPress={handleGoogleSignUp}
+                style={s.socialBtn}
                 activeOpacity={0.8}
               >
-                <View style={[s.checkbox, agreedToTerms && s.checkboxChecked]}>
-                  {agreedToTerms && (
-                    <MaterialIcons name="check" size={16} color="#fff" />
-                  )}
-                </View>
+                <GoogleIcon size={20} />
+                <Text style={s.socialBtnText}>Google</Text>
               </TouchableOpacity>
-              <View style={s.checkboxTextWrap}>
-                <Text style={s.checkboxText}>I agree to </Text>
-                <Link href="/terms" asChild>
-                  <TouchableOpacity>
-                    <Text style={s.link}>Terms</Text>
-                  </TouchableOpacity>
-                </Link>
-                <Text style={s.checkboxText}> and </Text>
-                <Link href="/privacy" asChild>
-                  <TouchableOpacity>
-                    <Text style={s.link}>Privacy Policy.</Text>
-                  </TouchableOpacity>
-                </Link>
-              </View>
+
+              <TouchableOpacity
+                onPress={handleAppleSignUp}
+                style={[s.socialBtn, s.socialBtnLight]}
+                activeOpacity={0.8}
+              >
+                <MaterialCommunityIcons name="apple" size={24} color="#111827" />
+                <Text style={s.socialBtnLightText}>Apple</Text>
+              </TouchableOpacity>
             </View>
 
+            {/* Divider */}
+            <View style={s.dividerWrap}>
+              <View style={s.divider} />
+              <Text style={s.dividerText}>ou</Text>
+              <View style={s.divider} />
+            </View>
+
+            {/* Form */}
+            <View style={s.form}>
+              <View style={s.fieldGroup}>
+                <Text style={s.label}>Nome completo</Text>
+                <TextInput
+                  style={s.input}
+                  placeholder="Seu nome completo"
+                  placeholderTextColor="#9CA3AF"
+                  value={fullName}
+                  onChangeText={setFullName}
+                  autoCapitalize="words"
+                  editable={!loading}
+                />
+              </View>
+
+              <View style={s.fieldGroup}>
+                <Text style={s.label}>Email</Text>
+                <TextInput
+                  style={s.input}
+                  placeholder="seu@email.com"
+                  placeholderTextColor="#9CA3AF"
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  autoComplete="email"
+                  editable={!loading}
+                />
+              </View>
+
+              <View style={s.fieldGroup}>
+                <Text style={s.label}>Senha</Text>
+                <View style={s.passwordWrap}>
+                  <TextInput
+                    style={[s.input, s.inputFlex]}
+                    placeholder="••••••••"
+                    placeholderTextColor="#9CA3AF"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    autoComplete="new-password"
+                    editable={!loading}
+                  />
+                  <TouchableOpacity
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setShowPassword(!showPassword);
+                    }}
+                    style={s.eyeBtn}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  >
+                    <MaterialIcons
+                      name={showPassword ? "visibility-off" : "visibility"}
+                      size={22}
+                      color="#9CA3AF"
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={s.checkboxWrap}>
+                <TouchableOpacity
+                  onPress={() => setAgreedToTerms(!agreedToTerms)}
+                  style={s.checkboxRow}
+                  activeOpacity={0.8}
+                >
+                  <View style={[s.checkbox, agreedToTerms && s.checkboxChecked]}>
+                    {agreedToTerms && (
+                      <MaterialIcons name="check" size={14} color="#fff" />
+                    )}
+                  </View>
+                </TouchableOpacity>
+                <View style={s.checkboxTextWrap}>
+                  <Text style={s.checkboxText}>Concordo com os </Text>
+                  <Link href="/terms" asChild>
+                    <TouchableOpacity>
+                      <Text style={s.link}>Termos</Text>
+                    </TouchableOpacity>
+                  </Link>
+                  <Text style={s.checkboxText}> e </Text>
+                  <Link href="/privacy" asChild>
+                    <TouchableOpacity>
+                      <Text style={s.link}>Política de Privacidade</Text>
+                    </TouchableOpacity>
+                  </Link>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                onPress={handleRegister}
+                disabled={loading}
+                style={s.primaryBtn}
+                activeOpacity={0.9}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={s.primaryBtnText}>Cadastrar</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <View style={s.signInWrap}>
+              <Text style={s.signInText}>Já tem uma conta? </Text>
+              <Link href="/login" asChild>
+                <TouchableOpacity>
+                  <Text style={s.signInLink}>Entrar</Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+
+      {/* Success Modal */}
+      <Modal
+        visible={successModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={handleBrowseHome}
+      >
+        <View style={s.modalOverlay}>
+          <View style={s.modalContent}>
+            {/* Success icon with green circle */}
+            <View style={s.successIconWrap}>
+              <MaterialCommunityIcons
+                name="check"
+                size={48}
+                color="#FFFFFF"
+              />
+            </View>
+            <Text style={s.modalTitle}>Sucesso!</Text>
+            <Text style={s.modalSubtitle}>
+              Sua conta foi criada com sucesso e está pronta para uso.
+            </Text>
             <TouchableOpacity
-              onPress={handleRegister}
-              disabled={loading}
-              style={s.primaryBtn}
+              onPress={handleBrowseHome}
+              style={s.modalBtn}
               activeOpacity={0.9}
             >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={s.primaryBtnText}>Sign Up</Text>
-              )}
+              <Text style={s.modalBtnText}>Acessar Início</Text>
             </TouchableOpacity>
           </View>
-
-          <View style={s.signInWrap}>
-            <Text style={s.signInText}>Already Have Account? </Text>
-            <Link href="/login" asChild>
-              <TouchableOpacity>
-                <Text style={s.signInLink}>Sign In</Text>
-              </TouchableOpacity>
-            </Link>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-      </SafeAreaView>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#000000" },
-  safeArea: { flex: 1, backgroundColor: "#000000" },
+  screen: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
   keyboardView: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 40,
+    paddingTop: 56,
+    paddingBottom: 48,
   },
   backLink: {
     flexDirection: "row",
@@ -316,109 +356,129 @@ const s = StyleSheet.create({
     marginBottom: 24,
   },
   backLinkText: {
-    color: "#D1D5DB",
+    color: "#374151",
     fontSize: 16,
   },
-  header: { marginBottom: 32 },
+  header: {
+    marginBottom: 32,
+  },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: "#111827",
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
-    color: "#D1D5DB",
-    lineHeight: 24,
+    fontSize: 15,
+    color: "#6B7280",
+    lineHeight: 22,
   },
-  form: { marginBottom: 28 },
-  fieldGroup: { marginBottom: 20 },
+  socialWrap: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 24,
+  },
+  socialBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    height: 52,
+    gap: 10,
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
+  },
+  socialBtnText: {
+    color: "#374151",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  socialBtnLight: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#E5E7EB",
+  },
+  socialBtnLightText: {
+    color: "#111827",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  dividerWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#E5E7EB",
+  },
+  dividerText: {
+    color: "#9CA3AF",
+    fontSize: 14,
+    marginHorizontal: 16,
+  },
+  form: {
+    marginBottom: 32,
+  },
+  fieldGroup: {
+    marginBottom: 20,
+  },
   label: {
     fontSize: 15,
     fontWeight: "500",
-    color: "#FFFFFF",
+    color: "#374151",
     marginBottom: 8,
   },
   input: {
-    backgroundColor: "#1F2937",
+    backgroundColor: "#F9FAFB",
     borderRadius: 14,
     height: 52,
     paddingHorizontal: 16,
-    color: "#FFFFFF",
+    color: "#111827",
     fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   inputFlex: {
     flex: 1,
     backgroundColor: "transparent",
+    borderWidth: 0,
   },
   passwordWrap: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1F2937",
+    backgroundColor: "#F9FAFB",
     borderRadius: 14,
+    height: 52,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   eyeBtn: {
-    position: "absolute",
-    right: 12,
-    padding: 8,
-  },
-  countryWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#1F2937",
-    borderRadius: 14,
-  },
-  chevron: {
-    paddingRight: 16,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: "#1F2937",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: "50%",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#FFFFFF",
-    padding: 20,
-    textAlign: "center",
-  },
-  modalItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#374151",
-  },
-  modalItemText: {
-    fontSize: 16,
-    color: "#FFFFFF",
+    padding: 10,
   },
   checkboxWrap: {
     flexDirection: "row",
     alignItems: "flex-start",
     marginBottom: 24,
   },
-  checkboxTouch: {
-    padding: 4,
+  checkboxRow: {
+    padding: 2,
   },
   checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
+    width: 20,
+    height: 20,
+    borderRadius: 4,
     borderWidth: 2,
-    borderColor: "#6B7280",
+    borderColor: "#D1D5DB",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
   },
   checkboxChecked: {
-    backgroundColor: GREEN,
-    borderColor: GREEN,
+    backgroundColor: "#111827",
+    borderColor: "#111827",
   },
   checkboxTextWrap: {
     flex: 1,
@@ -427,16 +487,16 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   checkboxText: {
-    color: "#D1D5DB",
+    color: "#6B7280",
     fontSize: 14,
     lineHeight: 22,
   },
   link: {
-    color: GREEN,
-    textDecorationLine: "underline",
+    color: "#111827",
+    fontWeight: "600",
   },
   primaryBtn: {
-    backgroundColor: GREEN,
+    backgroundColor: "#111827",
     borderRadius: 14,
     height: 54,
     alignItems: "center",
@@ -450,25 +510,65 @@ const s = StyleSheet.create({
   signInWrap: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 28,
   },
-  signInText: { color: "#9CA3AF", fontSize: 15 },
+  signInText: {
+    color: "#6B7280",
+    fontSize: 15,
+  },
   signInLink: {
-    color: GREEN,
+    color: "#111827",
     fontSize: 15,
     fontWeight: "600",
   },
-  centered: {
+  // Success Modal
+  modalOverlay: {
     flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
   },
-  errorText: {
-    color: "#9CA3AF",
-    textAlign: "center",
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 32,
+    width: "100%",
+    maxWidth: 340,
+    alignItems: "center",
+  },
+  successIconWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: "#22C55E",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 24,
   },
-  backBtn: { padding: 12 },
-  backBtnText: { color: GREEN, fontWeight: "600" },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 15,
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 28,
+  },
+  modalBtn: {
+    backgroundColor: "#111827",
+    borderRadius: 14,
+    height: 54,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalBtnText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "700",
+  },
 });

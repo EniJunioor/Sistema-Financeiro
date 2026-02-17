@@ -7,6 +7,7 @@ interface OAuthButtonProps {
   provider: 'google' | 'facebook' | 'apple' | 'microsoft'
   className?: string
   disabled?: boolean
+  variant?: 'default' | 'light' | 'dark'
 }
 
 function GoogleIcon() {
@@ -66,10 +67,16 @@ const providerConfig = {
   },
 }
 
-export function OAuthButton({ provider, className, disabled }: OAuthButtonProps) {
+export function OAuthButton({ provider, className, disabled, variant = 'default' }: OAuthButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
   const config = providerConfig[provider]
   const IconComponent = config.icon
+
+  const variantStyles = {
+    default: 'bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300',
+    light: 'bg-white/95 border border-white/20 hover:bg-white hover:border-white/30 text-gray-700',
+    dark: 'bg-black/40 border border-white/10 hover:bg-black/50 hover:border-white/20 text-white',
+  }
 
   const handleOAuthLogin = () => {
     setIsLoading(true)
@@ -85,21 +92,20 @@ export function OAuthButton({ provider, className, disabled }: OAuthButtonProps)
     window.location.href = oauthUrls[provider]
   }
 
-  const iconColor = provider === 'apple' ? 'text-gray-900' : ''
+  const iconColor = (provider === 'apple' && variant !== 'dark') ? 'text-gray-900' : ''
   
   return (
     <button
       onClick={handleOAuthLogin}
       disabled={disabled || isLoading}
       className={`
-        w-12 h-12 rounded-full 
-        bg-white border border-gray-200 
+        w-14 h-14 rounded-xl 
         flex items-center justify-center
-        hover:bg-gray-50 hover:border-gray-300
         disabled:opacity-50 disabled:cursor-not-allowed
         transition-all duration-200
-        shadow-sm hover:shadow-md
-        transform hover:scale-110 active:scale-95
+        shadow-lg hover:shadow-xl
+        hover:scale-105 active:scale-95
+        ${variantStyles[variant]}
         ${className || ''}
       `}
       title={config.name}

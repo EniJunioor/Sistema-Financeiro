@@ -1,10 +1,11 @@
 import { ThemedView } from "@/components/themed-view";
+import { isBiometricAvailable, getBiometricType } from "@/lib/biometric";
 import * as Api from "@/lib/_core/api";
 import * as Auth from "@/lib/_core/auth";
 import * as Linking from "expo-linking";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Text } from "react-native";
+import { ActivityIndicator, Alert, Platform, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function OAuthCallback() {
@@ -61,9 +62,7 @@ export default function OAuthCallback() {
 
           setStatus("success");
           console.log("[OAuth] Web authentication successful, redirecting to home...");
-          setTimeout(() => {
-            router.replace("/(tabs)");
-          }, 1000);
+          setTimeout(() => offerBiometricAndRedirect(params.sessionToken!), 1000);
           return;
         }
 
@@ -158,9 +157,7 @@ export default function OAuthCallback() {
           // No need to fetch from API
           setStatus("success");
           console.log("[OAuth] Redirecting to home...");
-          setTimeout(() => {
-            router.replace("/(tabs)");
-          }, 1000);
+          setTimeout(() => offerBiometricAndRedirect(sessionToken!), 1000);
           return;
         }
 
@@ -211,12 +208,7 @@ export default function OAuthCallback() {
 
           setStatus("success");
           console.log("[OAuth] Authentication successful, redirecting to home...");
-
-          // Redirect to home after a short delay
-          setTimeout(() => {
-            console.log("[OAuth] Executing redirect...");
-            router.replace("/(tabs)");
-          }, 1000);
+          setTimeout(() => offerBiometricAndRedirect(result.sessionToken), 1000);
         } else {
           console.error("[OAuth] No session token in result:", result);
           setStatus("error");
@@ -233,6 +225,39 @@ export default function OAuthCallback() {
 
     handleCallback();
   }, [params.code, params.state, params.error, params.sessionToken, params.user, router]);
+
+  async function offerBiometricAndRedirect(token: string) {
+    if (Platform.OS === "web") {
+      router.replace("/(tabs)");
+      return;
+    }
+    const biometricAvailable = await isBiometricAvailable();
+    if (biometricAvailable) {
+      const type = await getBiometricType();
+      const label =
+        type === "face" ? "reconhecimento facial" : type === "fingerprint" ? "impressão digital" : "biometria";
+      Alert.alert(
+        "Login rápido",
+        `Deseja usar ${label} para entrar mais rápido na próxima vez?`,
+        [
+          { text: "Agora não", style: "cancel", onPress: () => router.replace("/(tabs)") },
+          {
+            text: "Sim, habilitar",
+            onPress: async () => {
+              try {
+                await Auth.setSessionToken(token, { requireAuthentication: true });
+              } catch {
+                /* ignora erro */
+              }
+              router.replace("/(tabs)");
+            },
+          },
+        ]
+      );
+    } else {
+      router.replace("/(tabs)");
+    }
+  }
 
   return (
     <SafeAreaView className="flex-1" edges={["top", "bottom", "left", "right"]}>

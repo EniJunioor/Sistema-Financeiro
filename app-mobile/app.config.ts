@@ -120,6 +120,12 @@ const config: ExpoConfig = {
         },
       },
     ],
+    [
+      "expo-local-authentication",
+      {
+        faceIDPermission: "Use $(PRODUCT_NAME) para fazer login rápido com reconhecimento facial.",
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

@@ -108,14 +108,14 @@ export default function RegisterPage() {
   const passwordStrength = password ? getPasswordStrength(password) : null
 
   return (
-    <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl text-center">Criar Conta</CardTitle>
-        <CardDescription className="text-center">
+    <Card className="shadow-2xl border border-white/10 backdrop-blur-xl bg-white/[0.07] overflow-hidden">
+      <CardHeader className="space-y-1 pb-6 pt-8">
+        <CardTitle className="text-xl text-center text-white font-bold tracking-tight">Criar Conta</CardTitle>
+        <CardDescription className="text-center text-slate-400">
           Crie sua conta para começar a usar a plataforma
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pb-8">
         {error && (
           <Alert variant="destructive">
             <AlertIcon variant="destructive" />

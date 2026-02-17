@@ -162,10 +162,10 @@ export default function LoginPage() {
 
   if (requiresTwoFactor) {
     return (
-      <Card>
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">Autenticação de Dois Fatores</CardTitle>
-          <CardDescription className="text-center">
+      <Card className="shadow-2xl border border-white/10 backdrop-blur-xl bg-white/[0.07]">
+        <CardHeader className="space-y-1 pb-6 pt-8">
+          <CardTitle className="text-xl text-center text-white font-bold">Autenticação de Dois Fatores</CardTitle>
+          <CardDescription className="text-center text-slate-400">
             Digite o código de verificação para completar o login
           </CardDescription>
         </CardHeader>
@@ -183,16 +183,16 @@ export default function LoginPage() {
   }
 
   return (
-    <Card className="shadow-2xl border-0 backdrop-blur-sm bg-white/95">
-      <CardHeader className="space-y-1 pb-6">
-        <CardTitle className="text-2xl text-center bg-gradient-to-r from-blue-700 to-emerald-600 bg-clip-text text-transparent font-bold">
+    <Card className="shadow-2xl border border-white/10 backdrop-blur-xl bg-white/[0.07] overflow-hidden">
+      <CardHeader className="space-y-1 pb-6 pt-8">
+        <CardTitle className="text-xl text-center text-white font-bold tracking-tight">
           Entrar
         </CardTitle>
-        <CardDescription className="text-center text-gray-600">
-          Entre com sua conta para acessar a plataforma
+        <CardDescription className="text-center text-slate-400">
+          Use seu email ou continue com uma rede social
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-5">
+      <CardContent className="space-y-5 pb-8">
         {error && (
           <Alert variant="destructive">
             <AlertIcon variant="destructive" />
@@ -214,8 +214,8 @@ export default function LoginPage() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    <Mail className="h-4 w-4" />
+                  <FormLabel className="flex items-center gap-2 text-slate-300 font-medium">
+                    <Mail className="h-4 w-4 text-slate-400" />
                     Email
                   </FormLabel>
                   <FormControl>
@@ -223,10 +223,11 @@ export default function LoginPage() {
                       type="email"
                       placeholder="seu@email.com"
                       autoComplete="email"
+                      className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500/50 h-12 rounded-xl"
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-red-400" />
                 </FormItem>
               )}
             />
@@ -236,8 +237,8 @@ export default function LoginPage() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    <Lock className="h-4 w-4" />
+                  <FormLabel className="flex items-center gap-2 text-slate-300 font-medium">
+                    <Lock className="h-4 w-4 text-slate-400" />
                     Senha
                   </FormLabel>
                   <FormControl>
@@ -246,13 +247,14 @@ export default function LoginPage() {
                         type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         autoComplete="current-password"
+                        className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-500/50 h-12 rounded-xl pr-12"
                         {...field}
                       />
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-slate-400 hover:text-slate-300"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
@@ -263,7 +265,7 @@ export default function LoginPage() {
                       </Button>
                     </div>
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-red-400" />
                 </FormItem>
               )}
             />
@@ -278,10 +280,11 @@ export default function LoginPage() {
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={field.onChange}
+                        className="border-white/20 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel className="text-sm font-normal">
+                      <FormLabel className="text-sm font-normal text-slate-400">
                         Lembrar de mim
                       </FormLabel>
                     </div>
@@ -291,7 +294,7 @@ export default function LoginPage() {
 
               <Link
                 href="/forgot-password"
-                className="text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors font-medium"
+                className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
               >
                 Esqueceu a senha?
               </Link>
@@ -299,7 +302,7 @@ export default function LoginPage() {
 
             <LoadingButton
               type="submit"
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
+              className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/30 transition-all duration-200"
               loading={isLoading}
               loadingText="Entrando..."
             >
@@ -309,24 +312,25 @@ export default function LoginPage() {
         </Form>
 
         <div className="text-center pt-2">
-          <Link href="/register" className="text-sm text-emerald-600 hover:text-emerald-700 hover:underline transition-colors font-medium">
-            Não tem uma conta? Cadastre-se
+          <span className="text-sm text-slate-400">Não tem uma conta? </span>
+          <Link href="/register" className="text-sm text-emerald-400 hover:text-emerald-300 font-semibold transition-colors">
+            Cadastre-se
           </Link>
         </div>
 
-        <div className="relative py-4">
+        <div className="relative py-6">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-gray-200" />
+            <span className="w-full border-t border-white/10" />
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-3 text-gray-500 font-medium">Ou continue com</span>
+          <div className="relative flex justify-center">
+            <span className="bg-transparent px-4 text-xs uppercase tracking-wider text-slate-500 font-medium">Ou continue com</span>
           </div>
         </div>
 
-        <div className="flex justify-center gap-4">
-          <OAuthButton provider="google" disabled={isLoading} />
-          <OAuthButton provider="facebook" disabled={isLoading} />
-          <OAuthButton provider="apple" disabled={isLoading} />
+        <div className="flex justify-center gap-3">
+          <OAuthButton provider="google" disabled={isLoading} variant="light" />
+          <OAuthButton provider="apple" disabled={isLoading} variant="dark" />
+          <OAuthButton provider="facebook" disabled={isLoading} variant="light" />
         </div>
       </CardContent>
     </Card>
