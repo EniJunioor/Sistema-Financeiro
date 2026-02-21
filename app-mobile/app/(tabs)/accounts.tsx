@@ -19,6 +19,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useAccounts } from "@/lib/store";
 import { formatCurrency } from "@/lib/formatters";
 import type { AccountType } from "@/lib/types";
+import { AppColors } from "@/constants/colors";
 
 const ACCOUNT_TYPE_LABELS: Record<string, string> = {
   checking: "Conta Corrente",
@@ -85,11 +86,11 @@ export default function AccountsScreen() {
   };
 
   return (
-    <ScreenContainer containerClassName="bg-background">
+    <ScreenContainer containerClassName="bg-[#f2f3f5]">
       <View style={styles.header}>
         <Text style={styles.title}>Contas</Text>
         <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.addBtn}>
-          <MaterialIcons name="add" size={22} color="#E8536A" />
+          <MaterialIcons name="add" size={22} color={AppColors.lime} />
         </TouchableOpacity>
       </View>
 
@@ -193,11 +194,11 @@ function AccountModal({
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1, backgroundColor: "#0D1B2A" }}
+        style={{ flex: 1, backgroundColor: AppColors.lightGrey }}
       >
         <View style={styles.modalHeader}>
           <TouchableOpacity onPress={onClose}>
-            <MaterialIcons name="close" size={24} color="#fff" />
+            <MaterialIcons name="close" size={24} color={AppColors.black} />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Nova Conta</Text>
           <TouchableOpacity onPress={handleSave}>
@@ -259,19 +260,19 @@ const styles = StyleSheet.create({
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
     paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4,
   },
-  title: { color: "#FFFFFF", fontSize: 28, fontWeight: "800" },
+  title: { color: AppColors.black, fontSize: 28, fontWeight: "800" },
   addBtn: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(232,83,106,0.12)",
+    width: 40, height: 40, borderRadius: 20, backgroundColor: AppColors.lime + "30",
     alignItems: "center", justifyContent: "center",
   },
   totalCard: {
     marginHorizontal: 20, marginTop: 16, marginBottom: 20,
-    backgroundColor: "#1B2838", borderRadius: 20, padding: 24,
-    borderWidth: 1, borderColor: "#243447",
+    backgroundColor: AppColors.white, borderRadius: 20, padding: 24,
+    borderWidth: 1, borderColor: AppColors.lightGrey,
   },
-  totalLabel: { color: "#7B8CA3", fontSize: 11, fontWeight: "700", letterSpacing: 1 },
-  totalValue: { color: "#FFFFFF", fontSize: 32, fontWeight: "800", marginTop: 8, letterSpacing: -0.5 },
-  totalSub: { color: "#5A6B80", fontSize: 13, marginTop: 6 },
+  totalLabel: { color: "#6B7280", fontSize: 11, fontWeight: "700", letterSpacing: 1 },
+  totalValue: { color: AppColors.black, fontSize: 32, fontWeight: "800", marginTop: 8, letterSpacing: -0.5 },
+  totalSub: { color: "#6B7280", fontSize: 13, marginTop: 6 },
   accountCard: {
     borderRadius: 20, padding: 22, marginBottom: 14, minHeight: 170,
     justifyContent: "space-between",
@@ -292,37 +293,37 @@ const styles = StyleSheet.create({
   cardBalance: { color: "#fff", fontSize: 24, fontWeight: "800" },
   cardNumber: { color: "rgba(255,255,255,0.5)", fontSize: 14, fontWeight: "600" },
   emptyCard: {
-    backgroundColor: "#1B2838", borderRadius: 20, padding: 40, alignItems: "center",
-    marginTop: 20, borderWidth: 1, borderColor: "#243447",
+    backgroundColor: AppColors.white, borderRadius: 20, padding: 40, alignItems: "center",
+    marginTop: 20, borderWidth: 1, borderColor: AppColors.lightGrey,
   },
-  emptyText: { color: "#7B8CA3", fontSize: 14, marginTop: 8 },
+  emptyText: { color: "#6B7280", fontSize: 14, marginTop: 8 },
   emptyBtn: {
-    marginTop: 16, backgroundColor: "#E8536A", borderRadius: 14,
+    marginTop: 16, backgroundColor: AppColors.lime, borderRadius: 14,
     paddingHorizontal: 24, paddingVertical: 12,
   },
-  emptyBtnText: { color: "#fff", fontWeight: "700", fontSize: 14 },
+  emptyBtnText: { color: AppColors.black, fontWeight: "700", fontSize: 14 },
   modalHeader: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12,
   },
-  modalTitle: { color: "#FFFFFF", fontSize: 18, fontWeight: "700" },
-  modalSave: { color: "#E8536A", fontSize: 16, fontWeight: "700" },
-  fieldLabel: { color: "#7B8CA3", fontSize: 11, fontWeight: "700", letterSpacing: 1, marginTop: 24, marginBottom: 10 },
+  modalTitle: { color: AppColors.black, fontSize: 18, fontWeight: "700" },
+  modalSave: { color: AppColors.lime, fontSize: 16, fontWeight: "700" },
+  fieldLabel: { color: "#6B7280", fontSize: 11, fontWeight: "700", letterSpacing: 1, marginTop: 24, marginBottom: 10 },
   typeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   typeCard: {
-    width: "47%", backgroundColor: "#1B2838", borderRadius: 16, padding: 16,
-    alignItems: "center", gap: 8, borderWidth: 1, borderColor: "#243447",
+    width: "47%", backgroundColor: AppColors.white, borderRadius: 16, padding: 16,
+    alignItems: "center", gap: 8, borderWidth: 1, borderColor: AppColors.lightGrey,
   },
-  typeCardActive: { borderColor: "#E8536A", backgroundColor: "rgba(232,83,106,0.08)" },
-  typeLabel: { color: "#7B8CA3", fontSize: 13, fontWeight: "600" },
+  typeCardActive: { borderColor: AppColors.lime, backgroundColor: AppColors.lime + "18" },
+  typeLabel: { color: "#6B7280", fontSize: 13, fontWeight: "600" },
   input: {
-    backgroundColor: "#1B2838", borderRadius: 16, paddingHorizontal: 16, height: 52,
-    color: "#fff", fontSize: 15, borderWidth: 1, borderColor: "#243447",
+    backgroundColor: AppColors.white, borderRadius: 16, paddingHorizontal: 16, height: 52,
+    color: AppColors.black, fontSize: 15, borderWidth: 1, borderColor: AppColors.lightGrey,
   },
   amountRow: {
-    flexDirection: "row", alignItems: "center", backgroundColor: "#1B2838",
-    borderRadius: 16, paddingHorizontal: 16, height: 56, borderWidth: 1, borderColor: "#243447",
+    flexDirection: "row", alignItems: "center", backgroundColor: AppColors.white,
+    borderRadius: 16, paddingHorizontal: 16, height: 56, borderWidth: 1, borderColor: AppColors.lightGrey,
   },
-  currencyPrefix: { color: "#7B8CA3", fontSize: 18, marginRight: 8 },
-  amountInput: { flex: 1, color: "#fff", fontSize: 22, fontWeight: "700", height: 56 },
+  currencyPrefix: { color: "#6B7280", fontSize: 18, marginRight: 8 },
+  amountInput: { flex: 1, color: AppColors.black, fontSize: 22, fontWeight: "700", height: 56 },
 });

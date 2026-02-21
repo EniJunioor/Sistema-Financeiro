@@ -21,9 +21,10 @@ import * as Auth from "@/lib/_core/auth";
 import { formatCurrency } from "@/lib/formatters";
 import { GOAL_TYPE_LABELS } from "@/lib/sample-data";
 import type { GoalType, GoalFormData } from "@/lib/types";
+import { AppColors } from "@/constants/colors";
 
 const GOAL_COLORS: Record<string, string> = {
-  savings: "#34C759",
+  savings: AppColors.lime,
   spending_limit: "#E8536A",
   investment: "#3B82F6",
 };
@@ -42,14 +43,17 @@ export default function ProfileScreen() {
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(settings.userName);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userInfo, setUserInfo] = useState<Auth.User | null>(null);
 
   useEffect(() => {
     Auth.getSessionToken().then((t) => setIsLoggedIn(!!t));
+    Auth.getUserInfo().then(setUserInfo);
   }, []);
 
   useFocusEffect(
     useCallback(() => {
       Auth.getSessionToken().then((t) => setIsLoggedIn(!!t));
+      Auth.getUserInfo().then(setUserInfo);
       reloadGoals();
     }, [reloadGoals])
   );
@@ -100,7 +104,7 @@ export default function ProfileScreen() {
   );
 
   return (
-    <ScreenContainer containerClassName="bg-background">
+    <ScreenContainer containerClassName="bg-[#f2f3f5]">
       <ScrollView
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
@@ -112,7 +116,7 @@ export default function ProfileScreen() {
         {/* User Card */}
         <View style={styles.userCard}>
           <View style={styles.avatar}>
-            <MaterialIcons name="person" size={32} color="#E8536A" />
+            <MaterialIcons name="person" size={32} color={AppColors.lime} />
           </View>
           <View style={styles.userInfo}>
             {editingName ? (
@@ -126,7 +130,7 @@ export default function ProfileScreen() {
                   onSubmitEditing={handleSaveName}
                 />
                 <TouchableOpacity onPress={handleSaveName}>
-                  <MaterialIcons name="check" size={22} color="#E8536A" />
+                  <MaterialIcons name="check" size={22} color={AppColors.lime} />
                 </TouchableOpacity>
               </View>
             ) : (
@@ -138,10 +142,56 @@ export default function ProfileScreen() {
                 style={styles.nameRow}
               >
                 <Text style={styles.userName}>{settings.userName}</Text>
-                <MaterialIcons name="edit" size={16} color="#7B8CA3" />
+                <MaterialIcons name="edit" size={16} color={AppColors.gray600} />
               </TouchableOpacity>
             )}
             <Text style={styles.userSub}>Conta pessoal</Text>
+          </View>
+        </View>
+
+        {/* Dados cadastrais */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Dados cadastrais</Text>
+          <View style={styles.settingsCard}>
+            <View style={styles.settingRow}>
+              <View style={styles.settingLeft}>
+                <View style={[styles.settingIcon, { backgroundColor: AppColors.lime + "30" }]}>
+                  <MaterialIcons name="person" size={18} color={AppColors.lime} />
+                </View>
+                <View>
+                  <Text style={styles.settingLabel}>Nome</Text>
+                  <Text style={styles.dataValue}>
+                    {settings.userName || userInfo?.name || "—"}
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.settingRow}>
+              <View style={styles.settingLeft}>
+                <View style={[styles.settingIcon, { backgroundColor: AppColors.lime + "30" }]}>
+                  <MaterialIcons name="email" size={18} color={AppColors.lime} />
+                </View>
+                <View>
+                  <Text style={styles.settingLabel}>Email</Text>
+                  <Text style={styles.dataValue}>
+                    {userInfo?.email || (isLoggedIn ? "Não informado" : "Faça login para ver")}
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.settingRow}>
+              <View style={styles.settingLeft}>
+                <View style={[styles.settingIcon, { backgroundColor: AppColors.lime + "30" }]}>
+                  <MaterialIcons name="language" size={18} color={AppColors.lime} />
+                </View>
+                <View>
+                  <Text style={styles.settingLabel}>Moeda</Text>
+                  <Text style={styles.dataValue}>{settings.currency}</Text>
+                </View>
+              </View>
+            </View>
           </View>
         </View>
 
@@ -154,18 +204,18 @@ export default function ProfileScreen() {
               onPress={() => (isLoggedIn ? handleLogout() : router.push("/login"))}
             >
               <View style={styles.settingLeft}>
-                <View style={[styles.settingIcon, { backgroundColor: "rgba(255,77,141,0.12)" }]}>
+                <View style={[styles.settingIcon, { backgroundColor: AppColors.lime + "30" }]}>
                   <MaterialIcons
                     name={isLoggedIn ? "logout" : "login"}
                     size={18}
-                    color="#FF4D8D"
+                    color={AppColors.lime}
                   />
                 </View>
                 <Text style={styles.settingLabel}>
                   {isLoggedIn ? "Sair da conta" : "Fazer login"}
                 </Text>
               </View>
-              <MaterialIcons name="chevron-right" size={20} color="#6B7280" />
+              <MaterialIcons name="chevron-right" size={20} color={AppColors.gray600} />
             </TouchableOpacity>
             <View style={styles.divider} />
           </View>
@@ -177,23 +227,38 @@ export default function ProfileScreen() {
           <View style={styles.settingsCard}>
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <View style={[styles.settingIcon, { backgroundColor: "rgba(232,83,106,0.12)" }]}>
-                  <MaterialIcons name="notifications" size={18} color="#E8536A" />
+                <View style={[styles.settingIcon, { backgroundColor: AppColors.lime + "30" }]}>
+                  <MaterialIcons name="visibility-off" size={18} color={AppColors.lime} />
+                </View>
+                <Text style={styles.settingLabel}>Ocultar saldos</Text>
+              </View>
+              <Switch
+                value={settings.hideBalances}
+                onValueChange={(val) => updateSettings({ hideBalances: val })}
+                trackColor={{ false: AppColors.gray500, true: AppColors.lime }}
+                thumbColor={AppColors.white}
+              />
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.settingRow}>
+              <View style={styles.settingLeft}>
+                <View style={[styles.settingIcon, { backgroundColor: AppColors.lime + "30" }]}>
+                  <MaterialIcons name="notifications" size={18} color={AppColors.lime} />
                 </View>
                 <Text style={styles.settingLabel}>Notificações</Text>
               </View>
               <Switch
                 value={settings.notifications}
                 onValueChange={(val) => updateSettings({ notifications: val })}
-                trackColor={{ false: "#243447", true: "#E8536A" }}
-                thumbColor="#fff"
+                trackColor={{ false: AppColors.gray500, true: AppColors.lime }}
+                thumbColor={AppColors.white}
               />
             </View>
             <View style={styles.divider} />
             <View style={styles.settingRow}>
               <View style={styles.settingLeft}>
-                <View style={[styles.settingIcon, { backgroundColor: "rgba(59,130,246,0.12)" }]}>
-                  <MaterialIcons name="language" size={18} color="#3B82F6" />
+                <View style={[styles.settingIcon, { backgroundColor: AppColors.lime + "30" }]}>
+                  <MaterialIcons name="language" size={18} color={AppColors.lime} />
                 </View>
                 <Text style={styles.settingLabel}>Moeda</Text>
               </View>
@@ -210,13 +275,13 @@ export default function ProfileScreen() {
               onPress={() => setModalVisible(true)}
               style={styles.addBtn}
             >
-              <MaterialIcons name="add" size={20} color="#E8536A" />
+              <MaterialIcons name="add" size={20} color={AppColors.lime} />
             </TouchableOpacity>
           </View>
 
           {activeGoals.length === 0 ? (
             <View style={styles.emptyCard}>
-              <MaterialIcons name="flag" size={40} color="#243447" />
+              <MaterialIcons name="flag" size={40} color={AppColors.lightGrey} />
               <Text style={styles.emptyText}>Nenhuma meta ativa</Text>
             </View>
           ) : (
@@ -251,7 +316,7 @@ export default function ProfileScreen() {
                         styles.progressFill,
                         {
                           width: `${progress}%`,
-                          backgroundColor: progress >= 100 ? "#34C759" : goalColor,
+                          backgroundColor: progress >= 100 ? AppColors.lime : goalColor,
                         },
                       ]}
                     />
@@ -276,7 +341,7 @@ export default function ProfileScreen() {
             <Text style={styles.sectionTitle}>Metas Concluídas</Text>
             {completedGoals.map((goal) => (
               <View key={goal.id} style={styles.completedCard}>
-                <MaterialIcons name="check-circle" size={20} color="#34C759" />
+                <MaterialIcons name="check-circle" size={20} color={AppColors.lime} />
                 <Text style={styles.completedName} numberOfLines={1}>
                   {goal.name}
                 </Text>
@@ -352,11 +417,11 @@ function GoalModal({
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1, backgroundColor: "#0D1B2A" }}
+        style={{ flex: 1, backgroundColor: AppColors.lightGrey }}
       >
         <View style={styles.modalHeader}>
           <TouchableOpacity onPress={onClose}>
-            <MaterialIcons name="close" size={24} color="#fff" />
+            <MaterialIcons name="close" size={24} color={AppColors.black} />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Nova Meta</Text>
           <TouchableOpacity onPress={handleSave}>
@@ -374,14 +439,14 @@ function GoalModal({
                 style={[
                   styles.typeChip,
                   {
-                    backgroundColor: type === gt.key ? gt.color + "18" : "#1B2838",
-                    borderColor: type === gt.key ? gt.color : "#243447",
+                    backgroundColor: type === gt.key ? gt.color + "18" : AppColors.white,
+                    borderColor: type === gt.key ? gt.color : AppColors.lightGrey,
                   },
                 ]}
               >
                 <Text
                   style={{
-                    color: type === gt.key ? gt.color : "#fff",
+                    color: type === gt.key ? gt.color : AppColors.black,
                     fontSize: 13,
                     fontWeight: "600",
                   }}
@@ -396,7 +461,7 @@ function GoalModal({
           <TextInput
             style={styles.input}
             placeholder="Ex: Reserva de emergência"
-            placeholderTextColor="#5A6B80"
+            placeholderTextColor={AppColors.gray600}
             value={name}
             onChangeText={setName}
             returnKeyType="done"
@@ -408,7 +473,7 @@ function GoalModal({
             <TextInput
               style={styles.amountInput}
               placeholder="0,00"
-              placeholderTextColor="#5A6B80"
+              placeholderTextColor={AppColors.gray600}
               keyboardType="decimal-pad"
               value={targetAmount}
               onChangeText={setTargetAmount}
@@ -421,7 +486,7 @@ function GoalModal({
             <TextInput
               style={styles.amountInput}
               placeholder="0,00"
-              placeholderTextColor="#5A6B80"
+              placeholderTextColor={AppColors.gray600}
               keyboardType="decimal-pad"
               value={currentAmount}
               onChangeText={setCurrentAmount}
@@ -440,7 +505,7 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   title: {
-    color: "#FFFFFF",
+    color: AppColors.black,
     fontSize: 28,
     fontWeight: "800",
   },
@@ -449,17 +514,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginHorizontal: 20,
     marginTop: 20,
-    backgroundColor: "#1B2838",
+    backgroundColor: AppColors.white,
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: "#243447",
+    borderColor: AppColors.lightGrey,
   },
   avatar: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "rgba(232,83,106,0.12)",
+    backgroundColor: AppColors.lime + "30",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -473,12 +538,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   userName: {
-    color: "#FFFFFF",
+    color: AppColors.black,
     fontSize: 20,
     fontWeight: "700",
   },
   userSub: {
-    color: "#7B8CA3",
+    color: AppColors.gray600,
     fontSize: 13,
     marginTop: 2,
   },
@@ -489,11 +554,11 @@ const styles = StyleSheet.create({
   },
   nameInput: {
     flex: 1,
-    color: "#fff",
+    color: AppColors.black,
     fontSize: 18,
     fontWeight: "600",
     borderBottomWidth: 1,
-    borderBottomColor: "#E8536A",
+    borderBottomColor: AppColors.lime,
     paddingVertical: 2,
   },
   section: {
@@ -507,7 +572,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: {
-    color: "#FFFFFF",
+    color: AppColors.black,
     fontSize: 18,
     fontWeight: "800",
     marginBottom: 12,
@@ -516,16 +581,16 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(232,83,106,0.12)",
+    backgroundColor: AppColors.lime + "30",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
   },
   settingsCard: {
-    backgroundColor: "#1B2838",
+    backgroundColor: AppColors.white,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#243447",
+    borderColor: AppColors.lightGrey,
     overflow: "hidden",
   },
   settingRow: {
@@ -548,26 +613,31 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   settingLabel: {
-    color: "#FFFFFF",
+    color: AppColors.black,
     fontSize: 15,
     fontWeight: "500",
   },
   settingValue: {
-    color: "#7B8CA3",
+    color: AppColors.gray600,
     fontSize: 14,
+  },
+  dataValue: {
+    color: AppColors.gray600,
+    fontSize: 13,
+    marginTop: 2,
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: "#243447",
+    backgroundColor: AppColors.lightGrey,
     marginLeft: 60,
   },
   goalCard: {
-    backgroundColor: "#1B2838",
+    backgroundColor: AppColors.white,
     borderRadius: 16,
     padding: 16,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#243447",
+    borderColor: AppColors.lightGrey,
   },
   goalTop: {
     flexDirection: "row",
@@ -586,7 +656,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   goalName: {
-    color: "#FFFFFF",
+    color: AppColors.black,
     fontSize: 15,
     fontWeight: "600",
   },
@@ -596,14 +666,14 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   goalPct: {
-    color: "#E8536A",
+    color: AppColors.lime,
     fontSize: 16,
     fontWeight: "800",
   },
   progressBar: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#243447",
+    backgroundColor: AppColors.lightGrey,
     overflow: "hidden",
   },
   progressFill: {
@@ -616,58 +686,58 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   goalAmount: {
-    color: "#7B8CA3",
+    color: AppColors.gray600,
     fontSize: 12,
   },
   completedCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1B2838",
+    backgroundColor: AppColors.white,
     borderRadius: 14,
     padding: 14,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: "#243447",
+    borderColor: AppColors.lightGrey,
     gap: 10,
   },
   completedName: {
     flex: 1,
-    color: "#7B8CA3",
+    color: AppColors.gray600,
     fontSize: 14,
     fontWeight: "500",
   },
   completedAmount: {
-    color: "#34C759",
+    color: AppColors.lime,
     fontSize: 14,
     fontWeight: "700",
   },
   emptyCard: {
-    backgroundColor: "#1B2838",
+    backgroundColor: AppColors.white,
     borderRadius: 20,
     padding: 32,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#243447",
+    borderColor: AppColors.lightGrey,
   },
   emptyText: {
-    color: "#7B8CA3",
+    color: AppColors.gray600,
     fontSize: 14,
     marginTop: 8,
   },
   aboutCard: {
-    backgroundColor: "#1B2838",
+    backgroundColor: AppColors.white,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#243447",
+    borderColor: AppColors.lightGrey,
   },
   aboutTitle: {
-    color: "#FFFFFF",
+    color: AppColors.black,
     fontSize: 15,
     fontWeight: "600",
   },
   aboutSub: {
-    color: "#7B8CA3",
+    color: AppColors.gray600,
     fontSize: 12,
     marginTop: 4,
   },
@@ -680,17 +750,17 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   modalTitle: {
-    color: "#FFFFFF",
+    color: AppColors.black,
     fontSize: 18,
     fontWeight: "700",
   },
   modalSave: {
-    color: "#E8536A",
+    color: AppColors.lime,
     fontSize: 16,
     fontWeight: "700",
   },
   fieldLabel: {
-    color: "#7B8CA3",
+    color: AppColors.gray600,
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 1,
@@ -709,33 +779,33 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   input: {
-    backgroundColor: "#1B2838",
+    backgroundColor: AppColors.white,
     borderRadius: 16,
     paddingHorizontal: 16,
     height: 52,
-    color: "#fff",
+    color: AppColors.black,
     fontSize: 15,
     borderWidth: 1,
-    borderColor: "#243447",
+    borderColor: AppColors.lightGrey,
   },
   amountRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1B2838",
+    backgroundColor: AppColors.white,
     borderRadius: 16,
     paddingHorizontal: 16,
     height: 56,
     borderWidth: 1,
-    borderColor: "#243447",
+    borderColor: AppColors.lightGrey,
   },
   currencyPrefix: {
-    color: "#7B8CA3",
+    color: AppColors.gray600,
     fontSize: 18,
     marginRight: 8,
   },
   amountInput: {
     flex: 1,
-    color: "#fff",
+    color: AppColors.black,
     fontSize: 22,
     fontWeight: "700",
     height: 56,

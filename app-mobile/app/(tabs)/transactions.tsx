@@ -23,7 +23,9 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useTransactions } from "@/lib/store";
 import { formatCurrency, formatCurrencyShort, getMonthName } from "@/lib/formatters";
 import { CATEGORIES } from "@/lib/sample-data";
+import { getMerchantOrCategoryFallback } from "@/lib/merchant-config";
 import type { Transaction, TransactionType, TransactionFormData } from "@/lib/types";
+import { AppColors } from "@/constants/colors";
 
 type FilterType = "all" | "income" | "expense";
 
@@ -296,7 +298,7 @@ export default function TransactionsScreen() {
       description: form.description,
       date: form.date || new Date().toISOString(),
       categoryId: form.categoryId,
-      accountId: form.accountId,
+      accountId: form.accountId || accounts?.[0]?.id,
       tags: [],
       isRecurring: false,
     });
@@ -500,7 +502,11 @@ export default function TransactionsScreen() {
           const tx = item.tx;
           const cat = CATEGORIES.find((c) => c.id === tx.categoryId);
           const isIncome = tx.type === "income";
-          const iconName = cat ? ICON_MAP[cat.icon] || "receipt" : "receipt";
+          const merchant = getMerchantOrCategoryFallback(
+            tx.description,
+            cat?.color || "#5A6B80",
+            cat?.name || "Outros"
+          );
           return (
             <TouchableOpacity
               onLongPress={() => handleDelete(tx.id)}
@@ -513,11 +519,9 @@ export default function TransactionsScreen() {
                   { backgroundColor: (cat?.color || "#5A6B80") + "22" },
                 ]}
               >
-                <MaterialIcons
-                  name={iconName as any}
-                  size={20}
-                  color={cat?.color || "#5A6B80"}
-                />
+                <Text style={[styles.txIconLetter, { color: merchant.color }]}>
+                  {merchant.letter}
+                </Text>
               </View>
               <View style={styles.txInfo}>
                 <Text style={styles.txDesc} numberOfLines={1}>
@@ -568,6 +572,7 @@ export default function TransactionsScreen() {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         onSave={handleAdd}
+        defaultAccountId={accounts?.[0]?.id}
       />
     </ScreenContainer>
   );
@@ -578,10 +583,12 @@ function TransactionModal({
   visible,
   onClose,
   onSave,
+  defaultAccountId,
 }: {
   visible: boolean;
   onClose: () => void;
   onSave: (form: TransactionFormData) => void;
+  defaultAccountId?: string;
 }) {
   const [type, setType] = useState<TransactionType>("expense");
   const [amount, setAmount] = useState("");
@@ -606,6 +613,7 @@ function TransactionModal({
       description,
       date: new Date().toISOString(),
       categoryId,
+      accountId: defaultAccountId,
     });
     reset();
   };

@@ -1,30 +1,84 @@
+import { useEffect } from "react";
 import { Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Platform, View, StyleSheet } from "react-native";
+import { Platform, View, StyleSheet, Text } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 
+import { AnimatedTabIcon } from "@/components/animated-tab-icon";
 import { HapticTab } from "@/components/haptic-tab";
-import { IconSymbol } from "@/components/ui/icon-symbol";
+import { AppColors } from "@/constants/colors";
+import { useSettings } from "@/lib/store";
+
+const springConfig = { damping: 15, stiffness: 150 };
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase() || "?";
+}
+
+function AnimatedProfileIcon({ focused, initials }: { focused: boolean; initials: string }) {
+  const scale = useSharedValue(1);
+  const borderWidth = useSharedValue(0);
+
+  useEffect(() => {
+    scale.value = withSpring(focused ? 1.08 : 1, springConfig);
+    borderWidth.value = withSpring(focused ? 2 : 0, springConfig);
+  }, [focused]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    borderWidth: borderWidth.value,
+    borderColor: AppColors.lime,
+  }));
+
+  return (
+    <Animated.View style={[styles.profileCircle, animatedStyle]}>
+      <View style={styles.profilePhoto}>
+        <Text style={styles.profileInitials}>{initials}</Text>
+      </View>
+    </Animated.View>
+  );
+}
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { settings } = useSettings();
   const bottomPadding = Platform.OS === "web" ? 12 : Math.max(insets.bottom, 8);
   const tabBarHeight = 56 + bottomPadding;
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#FF4D8D",
-        tabBarInactiveTintColor: "#6B7280",
+        tabBarActiveTintColor: AppColors.lime,
+        tabBarInactiveTintColor: AppColors.gray400,
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarShowLabel: false,
+        tabBarShowLabel: true,
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "500",
+        },
+        tabBarIconStyle: {
+          marginBottom: -2,
+        },
         tabBarStyle: {
-          paddingTop: 8,
+          paddingTop: 12,
           paddingBottom: bottomPadding,
           height: tabBarHeight,
-          backgroundColor: "#0F1117",
-          borderTopColor: "#1C1F2A",
-          borderTopWidth: 0.5,
+          backgroundColor: AppColors.white,
+          borderTopWidth: 0,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 8,
+          elevation: 8,
         },
       }}
     >
@@ -33,10 +87,7 @@ export default function TabLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color, focused }) => (
-            <View style={styles.tabIconWrap}>
-              <IconSymbol size={24} name="house.fill" color={color} />
-              {focused && <View style={styles.activeDot} />}
-            </View>
+            <AnimatedTabIcon name="house.fill" color={color} focused={focused} />
           ),
         }}
       />
@@ -44,8 +95,8 @@ export default function TabLayout() {
         name="transactions"
         options={{
           title: "Cards",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={24} name="creditcard.fill" color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon name="creditcard.fill" color={color} focused={focused} />
           ),
         }}
       />
@@ -53,8 +104,8 @@ export default function TabLayout() {
         name="accounts"
         options={{
           title: "Investimentos",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={24} name="chart.line.uptrend.xyaxis" color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon name="chart.line.uptrend.xyaxis" color={color} focused={focused} />
           ),
         }}
       />
@@ -62,17 +113,17 @@ export default function TabLayout() {
         name="investments"
         options={{
           title: "Chat",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={24} name="bubble.left.fill" color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon name="bubble.left.fill" color={color} focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Histórico",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={24} name="arrow.clockwise" color={color} />
+          title: "Profile",
+          tabBarIcon: ({ focused }) => (
+            <AnimatedProfileIcon focused={focused} initials={getInitials(settings.userName || "Usuário")} />
           ),
         }}
       />
@@ -81,14 +132,26 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  tabIconWrap: {
+  profileCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center",
-    gap: 4,
+    justifyContent: "center",
+    padding: 2,
   },
-  activeDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: "#FF4D8D",
+  profilePhoto: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 18,
+    backgroundColor: AppColors.gray400,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  profileInitials: {
+    color: AppColors.white,
+    fontSize: 14,
+    fontWeight: "700",
   },
 });

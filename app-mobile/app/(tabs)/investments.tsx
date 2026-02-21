@@ -20,6 +20,7 @@ import { useInvestments } from "@/lib/store";
 import { formatCurrency, formatPercentage } from "@/lib/formatters";
 import { INVESTMENT_TYPE_LABELS } from "@/lib/sample-data";
 import type { InvestmentType, InvestmentFormData } from "@/lib/types";
+import { AppColors } from "@/constants/colors";
 
 const TYPE_COLORS: Record<string, string> = {
   stock: "#3B82F6",
@@ -79,7 +80,7 @@ export default function InvestmentsScreen() {
   };
 
   return (
-    <ScreenContainer containerClassName="bg-background">
+    <ScreenContainer containerClassName="bg-[#f2f3f5]">
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Investimentos</Text>
@@ -267,11 +268,11 @@ function InvestmentModal({
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1, backgroundColor: "#0D1B2A" }}
+        style={{ flex: 1, backgroundColor: AppColors.lightGrey }}
       >
         <View style={styles.modalHeader}>
           <TouchableOpacity onPress={onClose}>
-            <MaterialIcons name="close" size={24} color="#fff" />
+            <MaterialIcons name="close" size={24} color={AppColors.black} />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Novo Investimento</Text>
           <TouchableOpacity onPress={handleSave}>
@@ -292,14 +293,14 @@ function InvestmentModal({
                   style={[
                     styles.typeChip,
                     {
-                      backgroundColor: type === t.key ? tc + "20" : "#1A1A1A",
-                      borderColor: type === t.key ? tc : "#2C2C2E",
+                      backgroundColor: type === t.key ? tc + "20" : AppColors.white,
+                      borderColor: type === t.key ? tc : AppColors.lightGrey,
                     },
                   ]}
                 >
                   <Text
                     style={{
-                      color: type === t.key ? tc : "#fff",
+                      color: type === t.key ? tc : AppColors.black,
                       fontSize: 13,
                       fontWeight: "600",
                     }}
@@ -377,25 +378,25 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   title: {
-    color: "#FFFFFF",
+    color: AppColors.black,
     fontSize: 28,
     fontWeight: "800",
   },
   portfolioCard: {
     marginHorizontal: 20,
     marginTop: 16,
-    backgroundColor: "#1B2838",
+    backgroundColor: AppColors.white,
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,
-    borderColor: "#243447",
+    borderColor: AppColors.lightGrey,
   },
   portfolioLabel: {
-    color: "#7B8CA3",
+    color: "#6B7280",
     fontSize: 14,
   },
   portfolioValue: {
-    color: "#FFFFFF",
+    color: AppColors.black,
     fontSize: 32,
     fontWeight: "800",
     marginTop: 8,
@@ -420,27 +421,27 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: "#1B2838",
+    backgroundColor: AppColors.white,
     borderRadius: 16,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#243447",
+    borderColor: AppColors.lightGrey,
   },
   statLabel: {
-    color: "#7B8CA3",
+    color: "#6B7280",
     fontSize: 12,
   },
   statValue: {
-    color: "#FFFFFF",
+    color: AppColors.black,
     fontSize: 16,
     fontWeight: "700",
     marginTop: 4,
   },
   invCard: {
-    backgroundColor: "#1B2838",
+    backgroundColor: AppColors.white,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#243447",
+    borderColor: AppColors.lightGrey,
     overflow: "hidden",
   },
   invTop: {
@@ -460,7 +461,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   invSymbol: {
-    color: "#FFFFFF",
+    color: AppColors.black,
     fontSize: 16,
     fontWeight: "800",
   },
@@ -473,7 +474,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   invTotal: {
-    color: "#FFFFFF",
+    color: AppColors.black,
     fontSize: 15,
     fontWeight: "700",
   },
@@ -487,32 +488,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#243447",
+    borderTopColor: AppColors.lightGrey,
   },
   invDetail: {
     flex: 1,
     alignItems: "center",
   },
   detailLabel: {
-    color: "#7B8CA3",
+    color: "#6B7280",
     fontSize: 11,
   },
   detailValue: {
-    color: "#FFFFFF",
+    color: AppColors.black,
     fontSize: 12,
     fontWeight: "600",
     marginTop: 2,
   },
   emptyCard: {
-    backgroundColor: "#1B2838",
+    backgroundColor: AppColors.white,
     borderRadius: 20,
     padding: 40,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#243447",
+    borderColor: AppColors.lightGrey,
   },
   emptyText: {
-    color: "#7B8CA3",
+    color: "#6B7280",
     fontSize: 14,
     marginTop: 8,
   },
@@ -523,11 +524,11 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#E8536A",
+    backgroundColor: AppColors.lime,
     alignItems: "center",
     justifyContent: "center",
     elevation: 8,
-    shadowColor: "#E8536A",
+    shadowColor: AppColors.lime,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -541,17 +542,17 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   modalTitle: {
-    color: "#FFFFFF",
+    color: AppColors.black,
     fontSize: 18,
     fontWeight: "700",
   },
   modalSave: {
-    color: "#E8536A",
+    color: AppColors.lime,
     fontSize: 16,
     fontWeight: "700",
   },
   fieldLabel: {
-    color: "#7B8CA3",
+    color: "#6B7280",
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 1,
@@ -570,33 +571,33 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   input: {
-    backgroundColor: "#1B2838",
+    backgroundColor: AppColors.white,
     borderRadius: 16,
     paddingHorizontal: 16,
     height: 52,
-    color: "#fff",
+    color: AppColors.black,
     fontSize: 15,
     borderWidth: 1,
-    borderColor: "#243447",
+    borderColor: AppColors.lightGrey,
   },
   amountRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1B2838",
+    backgroundColor: AppColors.white,
     borderRadius: 16,
     paddingHorizontal: 16,
     height: 56,
     borderWidth: 1,
-    borderColor: "#243447",
+    borderColor: AppColors.lightGrey,
   },
   currencyPrefix: {
-    color: "#7B8CA3",
+    color: "#6B7280",
     fontSize: 18,
     marginRight: 8,
   },
   amountInput: {
     flex: 1,
-    color: "#fff",
+    color: AppColors.black,
     fontSize: 22,
     fontWeight: "700",
     height: 56,
