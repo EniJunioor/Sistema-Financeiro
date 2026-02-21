@@ -182,6 +182,7 @@ const catBarStyles = StyleSheet.create({
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 export default function TransactionsScreen() {
   const { transactions, loading, addTransaction, deleteTransaction, reload } = useTransactions();
+  const accounts: any[] = [];
   const [filter, setFilter] = useState<FilterType>("all");
   const [search, setSearch] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
@@ -519,7 +520,7 @@ export default function TransactionsScreen() {
                   { backgroundColor: (cat?.color || "#5A6B80") + "22" },
                 ]}
               >
-                <Text style={[styles.txIconLetter, { color: merchant.color }]}>
+                <Text style={[styles.txIconLetter as any, { color: merchant.color }]}>
                   {merchant.letter}
                 </Text>
               </View>
@@ -908,6 +909,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   txIcon: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  txIconLetter: { fontSize: 16, fontWeight: "700" },
   txInfo: { flex: 1, marginLeft: 12, marginRight: 8 },
   txDesc: { color: "#FFFFFF", fontSize: 14, fontWeight: "600" },
   txMeta: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 },
