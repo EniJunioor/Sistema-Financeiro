@@ -18,6 +18,7 @@ import { GoalsModule } from './modules/goals/goals.module';
 import { AnomalyDetectionModule } from './modules/anomaly-detection/anomaly-detection.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { CurrenciesModule } from './modules/currencies/currencies.module';
 
 @Module({
   imports: [
@@ -75,6 +76,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     AnomalyDetectionModule,
     SubscriptionsModule,
     NotificationsModule,
+    CurrenciesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

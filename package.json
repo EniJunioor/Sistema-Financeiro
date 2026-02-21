@@ -35,6 +35,7 @@
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "metro-core": "^0.81.0",
     "@typescript-eslint/parser": "^6.0.0",
     "concurrently": "^8.2.2",
     "eslint": "^8.42.0",

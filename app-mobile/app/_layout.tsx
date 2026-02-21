@@ -97,12 +97,14 @@ export default function RootLayout() {
               name="login"
               options={{
                 presentation: "fullScreenModal",
+                animation: "slide_from_right",
               }}
             />
             <Stack.Screen
               name="register"
               options={{
                 presentation: "fullScreenModal",
+                animation: "slide_from_right",
               }}
             />
             <Stack.Screen

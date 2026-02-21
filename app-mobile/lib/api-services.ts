@@ -219,3 +219,37 @@ export async function createInvestment(form: InvestmentFormData): Promise<Invest
 export async function deleteInvestment(id: string): Promise<void> {
   await apiCall(`${BASE}/investments/${id}`, { method: "DELETE" });
 }
+
+// ─── Câmbio (público, não requer auth) ───
+export interface CurrencyRates {
+  base: string;
+  date: string;
+  rates: Record<string, number>;
+}
+
+const FRANKFURTER_URL = "https://api.frankfurter.app";
+
+export async function fetchCurrenciesRates(
+  base = "BRL",
+  symbols = "USD,EUR,CAD"
+): Promise<CurrencyRates> {
+  try {
+    const q = new URLSearchParams({ base, symbols });
+    const res = await apiCall<CurrencyRates>(`${BASE}/currencies/rates?${q.toString()}`);
+    return res;
+  } catch {
+    // Fallback: chamar Frankfurter diretamente (quando backend indisponível)
+    try {
+      const url = `${FRANKFURTER_URL}/latest?from=${base}&to=${symbols}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      return {
+        base: data.base ?? base,
+        date: data.date ?? new Date().toISOString().slice(0, 10),
+        rates: data.rates ?? {},
+      };
+    } catch {
+      return { base: "BRL", date: new Date().toISOString().slice(0, 10), rates: {} };
+    }
+  }
+}

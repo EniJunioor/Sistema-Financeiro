@@ -16,10 +16,12 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useFocusEffect } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
-import { useTransactions } from "@/lib/store";
+import { useTransactions, useAccounts } from "@/lib/store";
 import { formatCurrency, formatDateRelative } from "@/lib/formatters";
 import { CATEGORIES } from "@/lib/sample-data";
+import { getMerchantOrCategoryFallback } from "@/lib/merchant-config";
 import type { Transaction, TransactionType, TransactionFormData } from "@/lib/types";
+import { AppColors } from "@/constants/colors";
 
 type FilterType = "all" | "income" | "expense";
 
@@ -39,6 +41,7 @@ const ICON_MAP: Record<string, string> = {
 export default function TransactionsScreen() {
   const { transactions, loading, addTransaction, deleteTransaction, reload } =
     useTransactions();
+  const { accounts } = useAccounts();
   const [filter, setFilter] = useState<FilterType>("all");
   const [search, setSearch] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
@@ -100,7 +103,7 @@ export default function TransactionsScreen() {
       description: form.description,
       date: form.date || new Date().toISOString(),
       categoryId: form.categoryId,
-      accountId: form.accountId,
+      accountId: form.accountId || accounts?.[0]?.id,
       tags: [],
       isRecurring: false,
     });
@@ -122,7 +125,7 @@ export default function TransactionsScreen() {
   ];
 
   return (
-    <ScreenContainer containerClassName="bg-background">
+    <ScreenContainer containerClassName="bg-[#f2f3f5]">
       <View style={styles.header}>
         <Text style={styles.title}>Transações</Text>
       </View>
@@ -201,7 +204,11 @@ export default function TransactionsScreen() {
           const tx = item.tx;
           const cat = CATEGORIES.find((c) => c.id === tx.categoryId);
           const isIncome = tx.type === "income";
-          const iconName = cat ? ICON_MAP[cat.icon] || "receipt" : "receipt";
+          const merchant = getMerchantOrCategoryFallback(
+            tx.description,
+            cat?.color || "#5A6B80",
+            cat?.name || "Outros"
+          );
           return (
             <TouchableOpacity
               onLongPress={() => handleDelete(tx.id)}
@@ -210,14 +217,12 @@ export default function TransactionsScreen() {
               <View
                 style={[
                   styles.txIcon,
-                  { backgroundColor: (cat?.color || "#5A6B80") + "18" },
+                  { backgroundColor: merchant.color + "18" },
                 ]}
               >
-                <MaterialIcons
-                  name={iconName as any}
-                  size={20}
-                  color={cat?.color || "#5A6B80"}
-                />
+                <Text style={[styles.txIconLetter, { color: merchant.color }]}>
+                  {merchant.letter}
+                </Text>
               </View>
               <View style={styles.txInfo}>
                 <Text style={styles.txDesc} numberOfLines={1}>
@@ -259,6 +264,7 @@ export default function TransactionsScreen() {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         onSave={handleAdd}
+        defaultAccountId={accounts?.[0]?.id}
       />
     </ScreenContainer>
   );
@@ -268,10 +274,12 @@ function TransactionModal({
   visible,
   onClose,
   onSave,
+  defaultAccountId,
 }: {
   visible: boolean;
   onClose: () => void;
   onSave: (form: TransactionFormData) => void;
+  defaultAccountId?: string;
 }) {
   const [type, setType] = useState<TransactionType>("expense");
   const [amount, setAmount] = useState("");
@@ -296,6 +304,7 @@ function TransactionModal({
       description,
       date: new Date().toISOString(),
       categoryId,
+      accountId: defaultAccountId,
     });
     reset();
   };
@@ -323,11 +332,11 @@ function TransactionModal({
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1, backgroundColor: "#0D1B2A" }}
+        style={{ flex: 1, backgroundColor: AppColors.lightGrey }}
       >
         <View style={styles.modalHeader}>
           <TouchableOpacity onPress={onClose}>
-            <MaterialIcons name="close" size={24} color="#fff" />
+            <MaterialIcons name="close" size={24} color={AppColors.black} />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Nova Transação</Text>
           <TouchableOpacity onPress={handleSave}>
@@ -344,14 +353,14 @@ function TransactionModal({
                 style={[
                   styles.typeChip,
                   {
-                    backgroundColor: type === t.key ? t.color + "18" : "#1B2838",
-                    borderColor: type === t.key ? t.color : "#243447",
+                    backgroundColor: type === t.key ? t.color + "18" : AppColors.white,
+                    borderColor: type === t.key ? t.color : AppColors.lightGrey,
                   },
                 ]}
               >
                 <Text
                   style={{
-                    color: type === t.key ? t.color : "#fff",
+                    color: type === t.key ? t.color : AppColors.black,
                     fontWeight: "600",
                     fontSize: 14,
                   }}
@@ -395,15 +404,15 @@ function TransactionModal({
                   styles.catChip,
                   {
                     backgroundColor:
-                      categoryId === cat.id ? cat.color + "18" : "#1B2838",
+                      categoryId === cat.id ? cat.color + "18" : AppColors.white,
                     borderColor:
-                      categoryId === cat.id ? cat.color : "#243447",
+                      categoryId === cat.id ? cat.color : AppColors.lightGrey,
                   },
                 ]}
               >
                 <Text
                   style={{
-                    color: categoryId === cat.id ? cat.color : "#fff",
+                    color: categoryId === cat.id ? cat.color : AppColors.black,
                     fontSize: 13,
                     fontWeight: "600",
                   }}
@@ -421,65 +430,66 @@ function TransactionModal({
 
 const styles = StyleSheet.create({
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 },
-  title: { color: "#FFFFFF", fontSize: 28, fontWeight: "800" },
+  title: { color: AppColors.black, fontSize: 28, fontWeight: "800" },
   summaryRow: { flexDirection: "row", paddingHorizontal: 20, marginTop: 16, gap: 12 },
   summaryCard: {
-    flex: 1, backgroundColor: "#1B2838", borderRadius: 16, padding: 14,
-    borderWidth: 1, borderColor: "#243447", gap: 4,
+    flex: 1, backgroundColor: AppColors.white, borderRadius: 16, padding: 14,
+    borderWidth: 1, borderColor: AppColors.lightGrey, gap: 4,
   },
-  summaryLabel: { color: "#7B8CA3", fontSize: 12 },
+  summaryLabel: { color: "#6B7280", fontSize: 12 },
   summaryValue: { fontSize: 16, fontWeight: "700" },
   searchWrap: { paddingHorizontal: 20, marginTop: 16 },
   searchBar: {
-    flexDirection: "row", alignItems: "center", backgroundColor: "#1B2838",
-    borderRadius: 16, paddingHorizontal: 14, height: 44, borderWidth: 1, borderColor: "#243447",
+    flexDirection: "row", alignItems: "center", backgroundColor: AppColors.white,
+    borderRadius: 16, paddingHorizontal: 14, height: 44, borderWidth: 1, borderColor: AppColors.lightGrey,
   },
-  searchInput: { flex: 1, marginLeft: 8, color: "#fff", fontSize: 14, height: 44 },
+  searchInput: { flex: 1, marginLeft: 8, color: AppColors.black, fontSize: 14, height: 44 },
   filterRow: { flexDirection: "row", paddingHorizontal: 20, marginTop: 12, marginBottom: 4, gap: 8 },
   filterChip: {
     paddingHorizontal: 18, paddingVertical: 8, borderRadius: 20,
-    backgroundColor: "#1B2838", borderWidth: 1, borderColor: "#243447",
+    backgroundColor: AppColors.white, borderWidth: 1, borderColor: AppColors.lightGrey,
   },
-  filterActive: { backgroundColor: "rgba(232,83,106,0.12)", borderColor: "#E8536A" },
-  filterText: { color: "#7B8CA3", fontSize: 13, fontWeight: "600" },
-  filterTextActive: { color: "#E8536A" },
+  filterActive: { backgroundColor: AppColors.lime + "30", borderColor: AppColors.lime },
+  filterText: { color: "#6B7280", fontSize: 13, fontWeight: "600" },
+  filterTextActive: { color: AppColors.lime },
   dateHeader: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
-  dateText: { color: "#7B8CA3", fontSize: 12, fontWeight: "700", letterSpacing: 0.5 },
+  dateText: { color: "#6B7280", fontSize: 12, fontWeight: "700", letterSpacing: 0.5 },
   txRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 14 },
   txIcon: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  txIconLetter: { fontSize: 14, fontWeight: "800" },
   txInfo: { flex: 1, marginLeft: 12, marginRight: 8 },
-  txDesc: { color: "#FFFFFF", fontSize: 15, fontWeight: "600" },
-  txCat: { color: "#7B8CA3", fontSize: 12, marginTop: 2 },
+  txDesc: { color: AppColors.black, fontSize: 15, fontWeight: "600" },
+  txCat: { color: "#6B7280", fontSize: 12, marginTop: 2 },
   txAmount: { fontSize: 15, fontWeight: "700" },
   emptyCard: {
-    backgroundColor: "#1B2838", borderRadius: 20, padding: 40, alignItems: "center",
-    marginHorizontal: 20, marginTop: 20, borderWidth: 1, borderColor: "#243447",
+    backgroundColor: AppColors.white, borderRadius: 20, padding: 40, alignItems: "center",
+    marginHorizontal: 20, marginTop: 20, borderWidth: 1, borderColor: AppColors.lightGrey,
   },
-  emptyText: { color: "#7B8CA3", fontSize: 14, marginTop: 8 },
+  emptyText: { color: "#6B7280", fontSize: 14, marginTop: 8 },
   fab: {
     position: "absolute", right: 20, bottom: 90, width: 56, height: 56, borderRadius: 28,
-    backgroundColor: "#E8536A", alignItems: "center", justifyContent: "center",
-    elevation: 8, shadowColor: "#E8536A", shadowOffset: { width: 0, height: 4 },
+    backgroundColor: AppColors.lime, alignItems: "center", justifyContent: "center",
+    elevation: 8, shadowColor: AppColors.lime, shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3, shadowRadius: 8,
   },
   modalHeader: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12,
   },
-  modalTitle: { color: "#FFFFFF", fontSize: 18, fontWeight: "700" },
-  modalSave: { color: "#E8536A", fontSize: 16, fontWeight: "700" },
+  modalTitle: { color: AppColors.black, fontSize: 18, fontWeight: "700" },
+  modalSave: { color: AppColors.lime, fontSize: 16, fontWeight: "700" },
   typeRow: { flexDirection: "row", gap: 10, marginTop: 16 },
   typeChip: { flex: 1, paddingVertical: 12, borderRadius: 14, alignItems: "center", borderWidth: 1 },
-  fieldLabel: { color: "#7B8CA3", fontSize: 11, fontWeight: "700", letterSpacing: 1, marginTop: 24, marginBottom: 10 },
+  fieldLabel: { color: "#6B7280", fontSize: 11, fontWeight: "700", letterSpacing: 1, marginTop: 24, marginBottom: 10 },
   amountRow: {
-    flexDirection: "row", alignItems: "center", backgroundColor: "#1B2838",
-    borderRadius: 16, paddingHorizontal: 16, height: 56, borderWidth: 1, borderColor: "#243447",
+    flexDirection: "row", alignItems: "center", backgroundColor: AppColors.white,
+    borderRadius: 16, paddingHorizontal: 16, height: 56, borderWidth: 1, borderColor: AppColors.lightGrey,
   },
-  currencyPrefix: { color: "#7B8CA3", fontSize: 18, marginRight: 8 },
-  amountInput: { flex: 1, color: "#fff", fontSize: 22, fontWeight: "700", height: 56 },
+  currencyPrefix: { color: "#6B7280", fontSize: 18, marginRight: 8 },
+  amountInput: { flex: 1, color: AppColors.black, fontSize: 22, fontWeight: "700", height: 56 },
   input: {
-    backgroundColor: "#1B2838", borderRadius: 16, paddingHorizontal: 16, height: 52,
-    color: "#fff", fontSize: 15, borderWidth: 1, borderColor: "#243447",
+    backgroundColor: AppColors.white, borderRadius: 16, paddingHorizontal: 16, height: 52,
+    color: AppColors.black, fontSize: 15, borderWidth: 1, borderColor: AppColors.lightGrey,
   },
   catGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 32 },
   catChip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, borderWidth: 1 },

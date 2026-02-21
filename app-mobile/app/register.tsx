@@ -23,6 +23,10 @@ import * as Haptics from "expo-haptics";
 import { apiCall } from "@/lib/_core/api";
 import * as Auth from "@/lib/_core/auth";
 import { getApiBaseUrl } from "@/constants/oauth";
+import { AppColors } from "@/constants/colors";
+import { Image } from "react-native";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function GoogleIcon({ size = 20 }: { size?: number }) {
   return (
@@ -44,25 +48,45 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
+  const [nameFocused, setNameFocused] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [nameError, setNameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   const hasApi = !!getApiBaseUrl();
+
+  const validateEmail = (value: string) => {
+    const v = value.trim();
+    if (!v) return "Campo obrigatório";
+    if (!EMAIL_REGEX.test(v)) return "Email inválido";
+    return "";
+  };
+
+  const validatePassword = (value: string) => {
+    if (!value) return "Campo obrigatório";
+    if (value.length < 8) return "Mínimo 8 caracteres";
+    return "";
+  };
 
   const handleRegister = async () => {
     const trimmedEmail = email.trim();
     const trimmedName = fullName.trim();
+    const eErr = validateEmail(trimmedEmail);
+    const pErr = validatePassword(password);
+    setNameError(!trimmedName ? "Campo obrigatório" : "");
+    setEmailError(eErr);
+    setPasswordError(pErr);
 
-    if (!trimmedEmail || !password) {
-      Alert.alert("Campos obrigatórios", "Preencha email e senha.");
+    if (!trimmedName || eErr || pErr) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert("Campos obrigatórios", !trimmedName ? "Preencha seu nome." : eErr || pErr);
       return;
     }
 
     if (!agreedToTerms) {
       Alert.alert("Atenção", "Você precisa aceitar os Termos e Política de Privacidade.");
-      return;
-    }
-
-    if (password.length < 8) {
-      Alert.alert("Senha fraca", "A senha deve ter pelo menos 8 caracteres.");
       return;
     }
 
@@ -144,44 +168,18 @@ export default function RegisterScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <TouchableOpacity onPress={() => router.back()} style={s.backLink}>
-              <MaterialIcons name="arrow-back" size={24} color="#374151" />
-              <Text style={s.backLinkText}>Voltar</Text>
-            </TouchableOpacity>
-
+            <View style={s.mainBlock}>
             <View style={s.header}>
+              <Image
+                source={require("@/assets/images/icon.png")}
+                style={s.logo}
+                resizeMode="contain"
+                accessibilityLabel="Logo do app"
+              />
               <Text style={s.title}>Crie sua conta</Text>
               <Text style={s.subtitle}>
                 Informe seu nome completo, email e senha para criar sua conta e começar.
               </Text>
-            </View>
-
-            {/* Social Signup - FIRST */}
-            <View style={s.socialWrap}>
-              <TouchableOpacity
-                onPress={handleGoogleSignUp}
-                style={s.socialBtn}
-                activeOpacity={0.8}
-              >
-                <GoogleIcon size={20} />
-                <Text style={s.socialBtnText}>Google</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={handleAppleSignUp}
-                style={[s.socialBtn, s.socialBtnLight]}
-                activeOpacity={0.8}
-              >
-                <MaterialCommunityIcons name="apple" size={24} color="#111827" />
-                <Text style={s.socialBtnLightText}>Apple</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Divider */}
-            <View style={s.dividerWrap}>
-              <View style={s.divider} />
-              <Text style={s.dividerText}>ou</Text>
-              <View style={s.divider} />
             </View>
 
             {/* Form */}
@@ -189,43 +187,106 @@ export default function RegisterScreen() {
               <View style={s.fieldGroup}>
                 <Text style={s.label}>Nome completo</Text>
                 <TextInput
-                  style={s.input}
+                  style={[
+                    s.input,
+                    nameFocused && s.inputFocused,
+                    nameError && s.inputError,
+                  ]}
                   placeholder="Seu nome completo"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={AppColors.gray600}
                   value={fullName}
-                  onChangeText={setFullName}
+                  onChangeText={(v) => {
+                    setFullName(v);
+                    if (nameError) setNameError(v.trim() ? "" : "Campo obrigatório");
+                  }}
+                  onFocus={() => {
+                    setNameFocused(true);
+                    setNameError("");
+                  }}
+                  onBlur={() => {
+                    setNameFocused(false);
+                    setNameError(fullName.trim() ? "" : "Campo obrigatório");
+                  }}
                   autoCapitalize="words"
                   editable={!loading}
+                  accessibilityLabel="Campo nome completo"
+                  accessibilityHint="Digite seu nome completo"
                 />
+                {nameError ? (
+                  <Text style={s.errorText} accessibilityLiveRegion="polite">
+                    {nameError}
+                  </Text>
+                ) : null}
               </View>
 
               <View style={s.fieldGroup}>
                 <Text style={s.label}>Email</Text>
                 <TextInput
-                  style={s.input}
+                  style={[
+                    s.input,
+                    emailFocused && s.inputFocused,
+                    emailError && s.inputError,
+                  ]}
                   placeholder="seu@email.com"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={AppColors.gray600}
                   value={email}
-                  onChangeText={setEmail}
+                  onChangeText={(v) => {
+                    setEmail(v);
+                    if (emailError) setEmailError(validateEmail(v));
+                  }}
+                  onFocus={() => {
+                    setEmailFocused(true);
+                    setEmailError("");
+                  }}
+                  onBlur={() => {
+                    setEmailFocused(false);
+                    setEmailError(validateEmail(email));
+                  }}
                   autoCapitalize="none"
                   keyboardType="email-address"
                   autoComplete="email"
                   editable={!loading}
+                  accessibilityLabel="Campo de email"
+                  accessibilityHint="Digite seu email"
                 />
+                {emailError ? (
+                  <Text style={s.errorText} accessibilityLiveRegion="polite">
+                    {emailError}
+                  </Text>
+                ) : null}
               </View>
 
               <View style={s.fieldGroup}>
                 <Text style={s.label}>Senha</Text>
-                <View style={s.passwordWrap}>
+                <View
+                  style={[
+                    s.passwordWrap,
+                    passwordFocused && s.inputFocused,
+                    passwordError && s.inputError,
+                  ]}
+                >
                   <TextInput
                     style={[s.input, s.inputFlex]}
                     placeholder="••••••••"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={AppColors.gray600}
                     value={password}
-                    onChangeText={setPassword}
+                    onChangeText={(v) => {
+                      setPassword(v);
+                      if (passwordError) setPasswordError(validatePassword(v));
+                    }}
+                    onFocus={() => {
+                      setPasswordFocused(true);
+                      setPasswordError("");
+                    }}
+                    onBlur={() => {
+                      setPasswordFocused(false);
+                      setPasswordError(validatePassword(password));
+                    }}
                     secureTextEntry={!showPassword}
                     autoComplete="new-password"
                     editable={!loading}
+                    accessibilityLabel="Campo de senha"
+                    accessibilityHint="Mínimo 8 caracteres"
                   />
                   <TouchableOpacity
                     onPress={() => {
@@ -234,14 +295,21 @@ export default function RegisterScreen() {
                     }}
                     style={s.eyeBtn}
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                    accessibilityLabel={showPassword ? "Ocultar senha" : "Mostrar senha"}
                   >
                     <MaterialIcons
                       name={showPassword ? "visibility-off" : "visibility"}
                       size={22}
-                      color="#9CA3AF"
+                      color={AppColors.gray600}
                     />
                   </TouchableOpacity>
                 </View>
+                <Text style={s.passwordHint}>Mínimo 8 caracteres</Text>
+                {passwordError ? (
+                  <Text style={s.errorText} accessibilityLiveRegion="polite">
+                    {passwordError}
+                  </Text>
+                ) : null}
               </View>
 
               <View style={s.checkboxWrap}>
@@ -249,10 +317,13 @@ export default function RegisterScreen() {
                   onPress={() => setAgreedToTerms(!agreedToTerms)}
                   style={s.checkboxRow}
                   activeOpacity={0.8}
+                  accessibilityLabel="Concordo com os termos"
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: agreedToTerms }}
                 >
                   <View style={[s.checkbox, agreedToTerms && s.checkboxChecked]}>
                     {agreedToTerms && (
-                      <MaterialIcons name="check" size={14} color="#fff" />
+                      <MaterialIcons name="check" size={14} color={AppColors.black} />
                     )}
                   </View>
                 </TouchableOpacity>
@@ -272,24 +343,61 @@ export default function RegisterScreen() {
                 </View>
               </View>
 
+              {/* ou - abaixo do checkbox */}
+              <View style={s.dividerWrap}>
+                <View style={s.divider} />
+                <Text style={s.dividerText}>ou</Text>
+                <View style={s.divider} />
+              </View>
+
+              {/* Google e Apple */}
+              <View style={s.socialWrap}>
+                <TouchableOpacity
+                  onPress={handleGoogleSignUp}
+                  style={s.socialBtn}
+                  activeOpacity={0.8}
+                  accessibilityLabel="Cadastrar com Google"
+                  accessibilityRole="button"
+                >
+                  <GoogleIcon size={20} />
+                  <Text style={s.socialBtnText}>Google</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={handleAppleSignUp}
+                  style={[s.socialBtn, s.socialBtnLight]}
+                  activeOpacity={0.8}
+                  accessibilityLabel="Cadastrar com Apple"
+                  accessibilityRole="button"
+                >
+                  <MaterialCommunityIcons name="apple" size={24} color={AppColors.black} />
+                  <Text style={s.socialBtnLightText}>Apple</Text>
+                </TouchableOpacity>
+              </View>
+
               <TouchableOpacity
                 onPress={handleRegister}
                 disabled={loading}
-                style={s.primaryBtn}
+                style={[s.primaryBtn, loading && s.primaryBtnDisabled]}
                 activeOpacity={0.9}
+                accessibilityLabel="Botão cadastrar"
+                accessibilityRole="button"
+                accessibilityState={{ disabled: loading }}
               >
                 {loading ? (
-                  <ActivityIndicator color="#fff" size="small" />
+                  <ActivityIndicator color={AppColors.black} size="small" />
                 ) : (
                   <Text style={s.primaryBtnText}>Cadastrar</Text>
                 )}
               </TouchableOpacity>
             </View>
+            </View>
 
+            {/* Já tem conta - em baixo */}
             <View style={s.signInWrap}>
-              <Text style={s.signInText}>Já tem uma conta? </Text>
+              <Text style={s.signInText}>Já tem conta? </Text>
               <Link href="/login" asChild>
-                <TouchableOpacity>
+                <TouchableOpacity accessibilityLabel="Ir para login" accessibilityRole="link">
                   <Text style={s.signInLink}>Entrar</Text>
                 </TouchableOpacity>
               </Link>
@@ -312,7 +420,7 @@ export default function RegisterScreen() {
               <MaterialCommunityIcons
                 name="check"
                 size={48}
-                color="#FFFFFF"
+                color={AppColors.white}
               />
             </View>
             <Text style={s.modalTitle}>Sucesso!</Text>
@@ -323,6 +431,8 @@ export default function RegisterScreen() {
               onPress={handleBrowseHome}
               style={s.modalBtn}
               activeOpacity={0.9}
+              accessibilityLabel="Acessar início"
+              accessibilityRole="button"
             >
               <Text style={s.modalBtnText}>Acessar Início</Text>
             </TouchableOpacity>
@@ -336,42 +446,62 @@ export default function RegisterScreen() {
 const s = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: AppColors.white,
   },
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: AppColors.white,
   },
   keyboardView: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 56,
+    paddingTop: 16,
     paddingBottom: 48,
+    justifyContent: "space-between",
   },
-  backLink: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 24,
-  },
-  backLinkText: {
-    color: "#374151",
-    fontSize: 16,
+  mainBlock: {
+    flex: 1,
+    justifyContent: "center",
   },
   header: {
     marginBottom: 32,
+    alignItems: "center",
+  },
+  logo: {
+    width: 56,
+    height: 56,
+    marginBottom: 16,
+  },
+  inputFocused: {
+    borderColor: AppColors.lime,
+  },
+  inputError: {
+    borderColor: AppColors.error,
+  },
+  errorText: {
+    fontSize: 12,
+    color: AppColors.error,
+    marginTop: 4,
+    marginLeft: 4,
+  },
+  passwordHint: {
+    fontSize: 12,
+    color: AppColors.gray600,
+    marginTop: 4,
   },
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#111827",
+    color: AppColors.black,
     marginBottom: 8,
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 15,
-    color: "#6B7280",
+    color: AppColors.gray600,
     lineHeight: 22,
+    textAlign: "center",
   },
   socialWrap: {
     flexDirection: "row",
@@ -383,24 +513,24 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: AppColors.white,
     borderRadius: 14,
     height: 52,
     gap: 10,
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: AppColors.lightGrey,
   },
   socialBtnText: {
-    color: "#374151",
+    color: AppColors.black,
     fontSize: 16,
     fontWeight: "600",
   },
   socialBtnLight: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#E5E7EB",
+    backgroundColor: AppColors.white,
+    borderColor: AppColors.lightGrey,
   },
   socialBtnLightText: {
-    color: "#111827",
+    color: AppColors.black,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -412,10 +542,10 @@ const s = StyleSheet.create({
   divider: {
     flex: 1,
     height: 1,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: AppColors.lightGrey,
   },
   dividerText: {
-    color: "#9CA3AF",
+    color: AppColors.gray600,
     fontSize: 14,
     marginHorizontal: 16,
   },
@@ -428,18 +558,18 @@ const s = StyleSheet.create({
   label: {
     fontSize: 15,
     fontWeight: "500",
-    color: "#374151",
+    color: AppColors.black,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: AppColors.white,
     borderRadius: 14,
     height: 52,
     paddingHorizontal: 16,
-    color: "#111827",
+    color: AppColors.black,
     fontSize: 16,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderWidth: 1.5,
+    borderColor: AppColors.lightGrey,
   },
   inputFlex: {
     flex: 1,
@@ -449,11 +579,11 @@ const s = StyleSheet.create({
   passwordWrap: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F9FAFB",
+    backgroundColor: AppColors.white,
     borderRadius: 14,
     height: 52,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderWidth: 1.5,
+    borderColor: AppColors.lightGrey,
   },
   eyeBtn: {
     padding: 10,
@@ -471,14 +601,14 @@ const s = StyleSheet.create({
     height: 20,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: "#D1D5DB",
+    borderColor: AppColors.lightGrey,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
   },
   checkboxChecked: {
-    backgroundColor: "#111827",
-    borderColor: "#111827",
+    backgroundColor: AppColors.lime,
+    borderColor: AppColors.lime,
   },
   checkboxTextWrap: {
     flex: 1,
@@ -487,36 +617,41 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   checkboxText: {
-    color: "#6B7280",
+    color: AppColors.gray600,
     fontSize: 14,
     lineHeight: 22,
   },
   link: {
-    color: "#111827",
+    color: AppColors.lime,
     fontWeight: "600",
   },
   primaryBtn: {
-    backgroundColor: "#111827",
+    backgroundColor: AppColors.lime,
     borderRadius: 14,
     height: 54,
     alignItems: "center",
     justifyContent: "center",
   },
+  primaryBtnDisabled: {
+    opacity: 0.6,
+  },
   primaryBtnText: {
-    color: "#FFFFFF",
+    color: AppColors.black,
     fontSize: 16,
     fontWeight: "700",
   },
   signInWrap: {
     flexDirection: "row",
     justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 16,
   },
   signInText: {
-    color: "#6B7280",
+    color: AppColors.gray600,
     fontSize: 15,
   },
   signInLink: {
-    color: "#111827",
+    color: AppColors.lime,
     fontSize: 15,
     fontWeight: "600",
   },
@@ -529,7 +664,7 @@ const s = StyleSheet.create({
     padding: 24,
   },
   modalContent: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: AppColors.white,
     borderRadius: 24,
     padding: 32,
     width: "100%",
@@ -540,7 +675,7 @@ const s = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: "#22C55E",
+    backgroundColor: AppColors.lime,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 24,
@@ -548,18 +683,18 @@ const s = StyleSheet.create({
   modalTitle: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#111827",
+    color: AppColors.black,
     marginBottom: 8,
   },
   modalSubtitle: {
     fontSize: 15,
-    color: "#6B7280",
+    color: AppColors.gray600,
     textAlign: "center",
     lineHeight: 22,
     marginBottom: 28,
   },
   modalBtn: {
-    backgroundColor: "#111827",
+    backgroundColor: AppColors.lime,
     borderRadius: 14,
     height: 54,
     width: "100%",
@@ -567,7 +702,7 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   modalBtnText: {
-    color: "#FFFFFF",
+    color: AppColors.black,
     fontSize: 16,
     fontWeight: "700",
   },
