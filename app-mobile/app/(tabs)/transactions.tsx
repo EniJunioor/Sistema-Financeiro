@@ -13,33 +13,29 @@ import {
   Alert,
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { useTransactions, useAccounts } from "@/lib/store";
-import { formatCurrency, formatDateRelative } from "@/lib/formatters";
+import {
+  formatCurrency,
+  formatCurrencyShort,
+  getCurrentMonthYear,
+  formatDateShort,
+} from "@/lib/formatters";
 import { CATEGORIES } from "@/lib/sample-data";
 import { getMerchantOrCategoryFallback } from "@/lib/merchant-config";
 import type { Transaction, TransactionType, TransactionFormData } from "@/lib/types";
 import { AppColors } from "@/constants/colors";
 
+const PADDING = 20;
+const CARD_GAP = 12;
+
 type FilterType = "all" | "income" | "expense";
 
-const ICON_MAP: Record<string, string> = {
-  "fork.knife": "restaurant",
-  "car.fill": "directions-car",
-  "building.2.fill": "business",
-  "heart.fill": "favorite",
-  "graduationcap.fill": "school",
-  "gamecontroller.fill": "sports-esports",
-  "cart.fill": "shopping-cart",
-  "banknote.fill": "payments",
-  "star.fill": "star",
-  "tag.fill": "local-offer",
-};
-
 export default function TransactionsScreen() {
-  const { transactions, loading, addTransaction, deleteTransaction, reload } =
+  const { transactions, addTransaction, deleteTransaction, reload } =
     useTransactions();
   const { accounts } = useAccounts();
   const [filter, setFilter] = useState<FilterType>("all");
@@ -110,13 +106,43 @@ export default function TransactionsScreen() {
     setModalVisible(false);
   };
 
-  const now = new Date();
-  const monthTx = transactions.filter((t) => {
-    const d = new Date(t.date);
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  });
-  const totalIncome = monthTx.filter((t) => t.type === "income").reduce((s, t) => s + t.amount, 0);
-  const totalExpense = monthTx.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+  const monthTx = useMemo(() => {
+    const n = new Date();
+    return transactions.filter((t) => {
+      const d = new Date(t.date);
+      return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear();
+    });
+  }, [transactions]);
+  const totalIncome = useMemo(
+    () => monthTx.filter((t) => t.type === "income").reduce((s, t) => s + t.amount, 0),
+    [monthTx]
+  );
+  const totalExpense = useMemo(
+    () => monthTx.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount, 0),
+    [monthTx]
+  );
+  const monthlyBalance = totalIncome - totalExpense;
+  const savingsPercent =
+    totalIncome > 0 ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : 0;
+
+  const categorySpending = useMemo(() => {
+    const byCat: Record<string, number> = {};
+    monthTx
+      .filter((t) => t.type === "expense")
+      .forEach((t) => {
+        byCat[t.categoryId] = (byCat[t.categoryId] || 0) + t.amount;
+      });
+    const total = totalExpense || 1;
+    return CATEGORIES.filter((c) => !["cat-8", "cat-9"].includes(c.id))
+      .map((c) => ({
+        ...c,
+        amount: byCat[c.id] || 0,
+        percent: total > 0 ? ((byCat[c.id] || 0) / total) * 100 : 0,
+      }))
+      .filter((c) => c.amount > 0)
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 4);
+  }, [monthTx, totalExpense]);
 
   const filters: { key: FilterType; label: string }[] = [
     { key: "all", label: "Todas" },
@@ -124,71 +150,136 @@ export default function TransactionsScreen() {
     { key: "expense", label: "Despesas" },
   ];
 
-  return (
-    <ScreenContainer containerClassName="bg-[#f2f3f5]">
+  const ListHeader = () => (
+    <>
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Transações</Text>
+        <View>
+          <Text style={styles.title}>Transações</Text>
+          <Text style={styles.subtitle}>{getCurrentMonthYear()}</Text>
+        </View>
+        <TouchableOpacity style={styles.notificationBtn}>
+          <MaterialIcons name="notifications-none" size={24} color={AppColors.black} />
+        </TouchableOpacity>
       </View>
 
-      <View style={styles.summaryRow}>
-        <View style={styles.summaryCard}>
-          <MaterialIcons name="arrow-upward" size={16} color="#34C759" />
-          <Text style={styles.summaryLabel}>Receitas</Text>
-          <Text style={[styles.summaryValue, { color: "#34C759" }]}>
-            {formatCurrency(totalIncome)}
-          </Text>
-        </View>
-        <View style={styles.summaryCard}>
-          <MaterialIcons name="arrow-downward" size={16} color="#E8536A" />
-          <Text style={styles.summaryLabel}>Despesas</Text>
-          <Text style={[styles.summaryValue, { color: "#E8536A" }]}>
-            {formatCurrency(totalExpense)}
-          </Text>
-        </View>
+      {/* Card principal - Saldo do Mês */}
+      <View style={styles.mainCardWrap}>
+        <LinearGradient
+          colors={[AppColors.lime, "#a8d83a"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.mainCard}
+        >
+          <Text style={styles.mainCardLabel}>Saldo do Mês</Text>
+          <Text style={styles.mainCardBalance}>{formatCurrency(monthlyBalance)}</Text>
+          <View style={styles.savingsPill}>
+            <Text style={styles.savingsPillText}>{savingsPercent}% de economia</Text>
+          </View>
+          <View style={styles.mainCardMetrics}>
+            <View style={styles.mainMetric}>
+              <Text style={styles.mainMetricLabel}>Receitas</Text>
+              <Text style={styles.mainMetricValue}>{formatCurrencyShort(totalIncome)}</Text>
+            </View>
+            <View style={styles.mainMetricDivider} />
+            <View style={styles.mainMetric}>
+              <Text style={styles.mainMetricLabel}>Despesas</Text>
+              <Text style={styles.mainMetricValue}>{formatCurrencyShort(totalExpense)}</Text>
+            </View>
+            <View style={styles.mainMetricDivider} />
+            <View style={styles.mainMetric}>
+              <Text style={styles.mainMetricLabel}>Transações</Text>
+              <Text style={styles.mainMetricValue}>{monthTx.length}</Text>
+            </View>
+          </View>
+        </LinearGradient>
       </View>
 
+      {/* Cards Receitas e Despesas */}
+      <View style={styles.overviewRow}>
+        <LinearGradient
+          colors={["#34C759", "#2da84a"]}
+          style={styles.overviewCard}
+        >
+          <MaterialIcons name="account-balance-wallet" size={28} color="#fff" />
+          <Text style={styles.overviewLabel}>Receitas</Text>
+          <Text style={styles.overviewValue}>{formatCurrency(totalIncome)}</Text>
+        </LinearGradient>
+        <LinearGradient
+          colors={["#E8536A", "#d14458"]}
+          style={styles.overviewCard}
+        >
+          <MaterialIcons name="shopping-cart" size={28} color="#fff" />
+          <Text style={styles.overviewLabel}>Despesas</Text>
+          <Text style={styles.overviewValue}>{formatCurrency(totalExpense)}</Text>
+        </LinearGradient>
+      </View>
+
+      {/* Categorias de Gastos */}
+      {categorySpending.length > 0 && (
+        <View style={styles.chartCard}>
+          <Text style={styles.chartTitle}>Categorias de Gastos</Text>
+          {categorySpending.map((cat) => (
+            <View key={cat.id} style={styles.categoryRow}>
+              <Text style={styles.categoryName}>{cat.name}</Text>
+              <View style={styles.progressBarBg}>
+                <View
+                  style={[
+                    styles.progressBarFill,
+                    {
+                      width: `${Math.min(cat.percent, 100)}%`,
+                      backgroundColor: cat.color,
+                    },
+                  ]}
+                />
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Busca e Filtros */}
       <View style={styles.searchWrap}>
         <View style={styles.searchBar}>
-          <MaterialIcons name="search" size={20} color="#5A6B80" />
+          <MaterialIcons name="search" size={20} color={AppColors.gray500} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Buscar transações..."
-            placeholderTextColor="#5A6B80"
+            placeholder="Busca"
+            placeholderTextColor={AppColors.gray500}
             value={search}
             onChangeText={setSearch}
             returnKeyType="done"
           />
-          {search.length > 0 && (
-            <TouchableOpacity onPress={() => setSearch("")}>
-              <MaterialIcons name="close" size={18} color="#5A6B80" />
+        </View>
+        <View style={styles.filterRow}>
+          {filters.map((f) => (
+            <TouchableOpacity
+              key={f.key}
+              onPress={() => setFilter(f.key)}
+              style={[styles.filterChip, filter === f.key && styles.filterActive]}
+            >
+              <Text style={[styles.filterText, filter === f.key && styles.filterTextActive]}>
+                {f.label}
+              </Text>
             </TouchableOpacity>
-          )}
+          ))}
         </View>
       </View>
 
-      <View style={styles.filterRow}>
-        {filters.map((f) => (
-          <TouchableOpacity
-            key={f.key}
-            onPress={() => setFilter(f.key)}
-            style={[
-              styles.filterChip,
-              filter === f.key && styles.filterActive,
-            ]}
-          >
-            <Text
-              style={[
-                styles.filterText,
-                filter === f.key && styles.filterTextActive,
-              ]}
-            >
-              {f.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      {/* Título Histórico */}
+      <View style={styles.historyHeader}>
+        <Text style={styles.historyTitle}>Histórico</Text>
       </View>
+    </>
+  );
 
+  return (
+    <ScreenContainer
+      containerClassName="bg-[#f2f3f5]"
+      style={{ backgroundColor: AppColors.lightGrey }}
+    >
       <FlatList
+        ListHeaderComponent={ListHeader}
         data={flatData}
         keyExtractor={(item, idx) =>
           item.type === "header" ? `h-${item.title}` : `t-${item.tx.id}`
@@ -225,11 +316,18 @@ export default function TransactionsScreen() {
                 </Text>
               </View>
               <View style={styles.txInfo}>
-                <Text style={styles.txDesc} numberOfLines={1}>
-                  {tx.description}
-                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Text style={styles.txDesc} numberOfLines={1}>
+                    {tx.description}
+                  </Text>
+                  {tx.isRecurring && (
+                    <View style={styles.recurringTag}>
+                      <Text style={styles.recurringTagText}>Recorrente</Text>
+                    </View>
+                  )}
+                </View>
                 <Text style={styles.txCat}>
-                  {cat?.name || "Sem categoria"}
+                  {cat?.name || "Sem categoria"} • {formatDateShort(tx.date)}
                 </Text>
               </View>
               <Text
@@ -245,7 +343,7 @@ export default function TransactionsScreen() {
         }}
         ListEmptyComponent={
           <View style={styles.emptyCard}>
-            <MaterialIcons name="receipt-long" size={48} color="#243447" />
+            <MaterialIcons name="receipt-long" size={48} color={AppColors.gray400} />
             <Text style={styles.emptyText}>Nenhuma transação encontrada</Text>
           </View>
         }
@@ -429,43 +527,112 @@ function TransactionModal({
 }
 
 const styles = StyleSheet.create({
-  header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 },
-  title: { color: AppColors.black, fontSize: 28, fontWeight: "800" },
-  summaryRow: { flexDirection: "row", paddingHorizontal: 20, marginTop: 16, gap: 12 },
-  summaryCard: {
-    flex: 1, backgroundColor: AppColors.white, borderRadius: 16, padding: 14,
-    borderWidth: 1, borderColor: AppColors.lightGrey, gap: 4,
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: PADDING,
+    paddingTop: 8,
+    paddingBottom: 16,
   },
-  summaryLabel: { color: "#6B7280", fontSize: 12 },
-  summaryValue: { fontSize: 16, fontWeight: "700" },
-  searchWrap: { paddingHorizontal: 20, marginTop: 16 },
+  title: { color: AppColors.black, fontSize: 24, fontWeight: "800" },
+  subtitle: { color: AppColors.gray500, fontSize: 14, marginTop: 2 },
+  notificationBtn: { padding: 4 },
+  mainCardWrap: { paddingHorizontal: PADDING, marginBottom: CARD_GAP },
+  mainCard: {
+    borderRadius: 20,
+    padding: 20,
+    minHeight: 160,
+  },
+  mainCardLabel: { color: "rgba(0,0,0,0.7)", fontSize: 14, fontWeight: "600" },
+  mainCardBalance: { color: AppColors.black, fontSize: 28, fontWeight: "800", marginTop: 4 },
+  savingsPill: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(0,0,0,0.15)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginTop: 8,
+  },
+  savingsPillText: { color: AppColors.black, fontSize: 12, fontWeight: "600" },
+  mainCardMetrics: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0,0,0,0.15)",
+  },
+  mainMetric: { flex: 1, alignItems: "center" },
+  mainMetricLabel: { color: "rgba(0,0,0,0.7)", fontSize: 11 },
+  mainMetricValue: { color: AppColors.black, fontSize: 14, fontWeight: "700" },
+  mainMetricDivider: { width: 1, height: 24, backgroundColor: "rgba(0,0,0,0.15)" },
+  overviewRow: { flexDirection: "row", paddingHorizontal: PADDING, gap: CARD_GAP, marginBottom: CARD_GAP },
+  overviewCard: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 16,
+    minHeight: 100,
+    justifyContent: "space-between",
+  },
+  overviewLabel: { color: "rgba(255,255,255,0.9)", fontSize: 12 },
+  overviewValue: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  chartCard: {
+    marginHorizontal: PADDING,
+    marginBottom: CARD_GAP,
+    backgroundColor: AppColors.white,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: AppColors.lightGrey,
+  },
+  chartTitle: { color: AppColors.black, fontSize: 16, fontWeight: "700", marginBottom: 16 },
+  categoryRow: { marginBottom: 12 },
+  categoryName: { color: AppColors.black, fontSize: 13, marginBottom: 4 },
+  progressBarBg: {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: AppColors.lightGrey,
+    overflow: "hidden",
+  },
+  progressBarFill: { height: "100%", borderRadius: 4 },
+  searchWrap: { paddingHorizontal: PADDING, marginBottom: 12 },
   searchBar: {
     flexDirection: "row", alignItems: "center", backgroundColor: AppColors.white,
     borderRadius: 16, paddingHorizontal: 14, height: 44, borderWidth: 1, borderColor: AppColors.lightGrey,
   },
   searchInput: { flex: 1, marginLeft: 8, color: AppColors.black, fontSize: 14, height: 44 },
-  filterRow: { flexDirection: "row", paddingHorizontal: 20, marginTop: 12, marginBottom: 4, gap: 8 },
+  filterRow: { flexDirection: "row", marginTop: 12, gap: 8 },
+  historyHeader: { paddingHorizontal: PADDING, paddingTop: 8, paddingBottom: 8 },
+  historyTitle: { color: AppColors.black, fontSize: 18, fontWeight: "800" },
   filterChip: {
     paddingHorizontal: 18, paddingVertical: 8, borderRadius: 20,
     backgroundColor: AppColors.white, borderWidth: 1, borderColor: AppColors.lightGrey,
   },
   filterActive: { backgroundColor: AppColors.lime + "30", borderColor: AppColors.lime },
-  filterText: { color: "#6B7280", fontSize: 13, fontWeight: "600" },
+  filterText: { color: AppColors.gray500, fontSize: 13, fontWeight: "600" },
   filterTextActive: { color: AppColors.lime },
   dateHeader: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
-  dateText: { color: "#6B7280", fontSize: 12, fontWeight: "700", letterSpacing: 0.5 },
+  dateText: { color: AppColors.gray500, fontSize: 12, fontWeight: "700", letterSpacing: 0.5 },
   txRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 14 },
   txIcon: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   txIconLetter: { fontSize: 14, fontWeight: "800" },
   txInfo: { flex: 1, marginLeft: 12, marginRight: 8 },
   txDesc: { color: AppColors.black, fontSize: 15, fontWeight: "600" },
-  txCat: { color: "#6B7280", fontSize: 12, marginTop: 2 },
+  txCat: { color: AppColors.gray500, fontSize: 12, marginTop: 2 },
+  recurringTag: {
+    backgroundColor: AppColors.error + "20",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  recurringTagText: { color: AppColors.error, fontSize: 10, fontWeight: "600" },
   txAmount: { fontSize: 15, fontWeight: "700" },
   emptyCard: {
     backgroundColor: AppColors.white, borderRadius: 20, padding: 40, alignItems: "center",
     marginHorizontal: 20, marginTop: 20, borderWidth: 1, borderColor: AppColors.lightGrey,
   },
-  emptyText: { color: "#6B7280", fontSize: 14, marginTop: 8 },
+  emptyText: { color: AppColors.gray500, fontSize: 14, marginTop: 8 },
   fab: {
     position: "absolute", right: 20, bottom: 90, width: 56, height: 56, borderRadius: 28,
     backgroundColor: AppColors.lime, alignItems: "center", justifyContent: "center",
@@ -480,12 +647,12 @@ const styles = StyleSheet.create({
   modalSave: { color: AppColors.lime, fontSize: 16, fontWeight: "700" },
   typeRow: { flexDirection: "row", gap: 10, marginTop: 16 },
   typeChip: { flex: 1, paddingVertical: 12, borderRadius: 14, alignItems: "center", borderWidth: 1 },
-  fieldLabel: { color: "#6B7280", fontSize: 11, fontWeight: "700", letterSpacing: 1, marginTop: 24, marginBottom: 10 },
+  fieldLabel: { color: AppColors.gray500, fontSize: 11, fontWeight: "700", letterSpacing: 1, marginTop: 24, marginBottom: 10 },
   amountRow: {
     flexDirection: "row", alignItems: "center", backgroundColor: AppColors.white,
     borderRadius: 16, paddingHorizontal: 16, height: 56, borderWidth: 1, borderColor: AppColors.lightGrey,
   },
-  currencyPrefix: { color: "#6B7280", fontSize: 18, marginRight: 8 },
+  currencyPrefix: { color: AppColors.gray500, fontSize: 18, marginRight: 8 },
   amountInput: { flex: 1, color: AppColors.black, fontSize: 22, fontWeight: "700", height: 56 },
   input: {
     backgroundColor: AppColors.white, borderRadius: 16, paddingHorizontal: 16, height: 52,

@@ -11,8 +11,8 @@ export class MicrosoftStrategy extends PassportStrategy(Strategy, 'microsoft') {
     private readonly authService: AuthService,
   ) {
     super({
-      clientID: configService.get('MICROSOFT_CLIENT_ID'),
-      clientSecret: configService.get('MICROSOFT_CLIENT_SECRET'),
+      clientID: configService.get('MICROSOFT_CLIENT_ID') || 'disabled',
+      clientSecret: configService.get('MICROSOFT_CLIENT_SECRET') || 'disabled',
       callbackURL: configService.get('MICROSOFT_CALLBACK_URL', '/auth/microsoft/callback'),
       scope: ['user.read'],
     });

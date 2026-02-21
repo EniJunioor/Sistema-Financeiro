@@ -56,7 +56,7 @@ export class TransactionsController {
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ summary: 'Upload transaction attachment (stub)' })
   @ApiResponse({ status: 200, description: 'File upload stub' })
-  uploadAttachment(@UploadedFile() file?: Express.Multer.File) {
+  uploadAttachment(@UploadedFile() file?: { originalname?: string }) {
     return { url: '/uploads/stub', filename: file?.originalname ?? 'stub' };
   }
 
@@ -64,7 +64,7 @@ export class TransactionsController {
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ summary: 'OCR extract from image (stub)' })
   @ApiResponse({ status: 200, description: 'OCR stub' })
-  processOCR(@UploadedFile() file?: Express.Multer.File) {
+  processOCR(@UploadedFile() file?: { originalname?: string }) {
     return {
       amount: undefined,
       description: undefined,
@@ -78,7 +78,7 @@ export class TransactionsController {
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ summary: 'Import transactions from CSV (stub)' })
   @ApiResponse({ status: 200, description: 'Import stub' })
-  importFromCSV(@UploadedFile() file?: Express.Multer.File) {
+  importFromCSV(@UploadedFile() file?: { originalname?: string }) {
     return {
       success: 0,
       failed: 0,
