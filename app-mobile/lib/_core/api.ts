@@ -151,9 +151,9 @@ export async function loginWithEmail(
   return result;
 }
 
-// Logout
+// Logout (backend NestJS: api/v1/auth/logout)
 export async function logout(): Promise<void> {
-  await apiCall<void>("/api/auth/logout", {
+  await apiCall<void>("api/v1/auth/logout", {
     method: "POST",
   });
 }

@@ -34,13 +34,14 @@
     "db:seed": "cd backend && npm run prisma:seed"
   },
   "devDependencies": {
+    "@swc/helpers": "^0.4.37",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "metro-core": "^0.81.0",
     "@typescript-eslint/parser": "^6.0.0",
     "concurrently": "^8.2.2",
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
+    "metro-core": "^0.81.0",
     "prettier": "^3.0.0",
     "typescript": "^5.1.3"
   },

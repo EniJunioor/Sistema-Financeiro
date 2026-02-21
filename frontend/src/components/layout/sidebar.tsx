@@ -305,7 +305,7 @@ function UserProfile({ onLogout }: { onLogout: () => void }) {
       </div>
       
       {showMenu && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg py-1 animate-fade-in z-10">
+        <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg py-1 animate-fade-in z-10">
           <button
             onClick={handleSettingsClick}
             className={cn(
@@ -428,12 +428,7 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
         
         <SidebarLogo />
         
-        {/* User Profile no topo */}
-        <div className="px-4 py-4 border-b border-gray-200">
-          <UserProfile onLogout={handleLogout} />
-        </div>
-        
-        <nav className="flex-1 mt-2 px-2">
+        <nav className="flex-1 mt-2 px-2 overflow-y-auto">
           {sidebarItems.map(item => (
             <SidebarItemComponent 
               key={item.id}
@@ -444,6 +439,11 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
             />
           ))}
         </nav>
+        
+        {/* User Profile na parte inferior */}
+        <div className="px-4 py-4 border-t border-gray-200 mt-auto flex-shrink-0">
+          <UserProfile onLogout={handleLogout} />
+        </div>
       </aside>
     </>
   )

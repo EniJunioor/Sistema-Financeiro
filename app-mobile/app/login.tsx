@@ -21,7 +21,7 @@ import { useRouter, Link } from "expo-router";
 import * as Haptics from "expo-haptics";
 import * as Api from "../lib/_core/api";
 import * as Auth from "../lib/_core/auth";
-import { isBiometricAvailable, getBiometricType } from "../lib/biometric";
+import { isBiometricAvailable, authenticateWithBiometric } from "../lib/biometric";
 import { startOAuthLogin, getApiBaseUrl } from "../constants/oauth";
 import { AppColors } from "@/constants/colors";
 import { Image } from "react-native";
@@ -101,37 +101,22 @@ export default function LoginScreen() {
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-      // Perguntar se deseja habilitar reconhecimento facial/digital
-      const biometricAvailable = await isBiometricAvailable();
-      if (biometricAvailable) {
-        const type = await getBiometricType();
-        const label = type === "face" ? "reconhecimento facial" : type === "fingerprint" ? "impressão digital" : "biometria";
-        Alert.alert(
-          "Login rápido",
-          `Deseja usar ${label} para entrar mais rápido na próxima vez?`,
-          [
-            {
-              text: "Agora não",
-              style: "cancel",
-              onPress: () => router.replace("/(tabs)"),
-            },
-            {
-              text: "Sim, habilitar",
-              onPress: async () => {
-                try {
-                  await Auth.setSessionToken(result.access_token, { requireAuthentication: true });
-                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                } catch (err) {
-                  console.warn("[Login] Falha ao habilitar biometria:", err);
-                }
-                router.replace("/(tabs)");
-              },
-            },
-          ]
-        );
-      } else {
-        router.replace("/(tabs)");
+      // Só mostra o modal nativo (Face ID / biometria) se "Lembrar de mim" estiver marcado
+      if (rememberMe) {
+        const biometricAvailable = await isBiometricAvailable();
+        if (biometricAvailable) {
+          const authenticated = await authenticateWithBiometric();
+          if (authenticated) {
+            try {
+              await Auth.setSessionToken(result.access_token, { requireAuthentication: true });
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            } catch (err) {
+              console.warn("[Login] Falha ao habilitar biometria:", err);
+            }
+          }
+        }
       }
+      router.replace("/(tabs)");
     } catch (err) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       const message = err instanceof Error ? err.message : "Falha ao fazer login.";

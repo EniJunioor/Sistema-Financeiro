@@ -7,7 +7,6 @@ import { PaginatedTransactions, Transaction, TransactionStats } from '../interfa
 import { MLCategorizationService } from './ml-categorization.service';
 import { DeduplicationService } from './deduplication.service';
 import { AnomalyDetectionService } from '../../anomaly-detection/services/anomaly-detection.service';
-import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class TransactionsService {
@@ -139,7 +138,7 @@ export class TransactionsService {
     const skip = (page - 1) * limit;
 
     // Build where clause
-    const where: Prisma.TransactionWhereInput = {
+    const where = {
       userId,
       ...(filterOptions.type && { type: filterOptions.type }),
       ...(filterOptions.categoryId && { categoryId: filterOptions.categoryId }),
@@ -262,8 +261,8 @@ export class TransactionsService {
     if (dto.attachments) {
       updateData.attachments = JSON.stringify(dto.attachments);
     }
-    if (dto.date) {
-      updateData.date = new Date(dto.date);
+    if ('date' in dto && dto.date) {
+      updateData.date = new Date((dto as { date?: string }).date);
     }
 
     const transaction = await this.prisma.transaction.update({
@@ -347,7 +346,7 @@ export class TransactionsService {
       return cached;
     }
 
-    const where: Prisma.TransactionWhereInput = {
+    const where = {
       userId,
       ...(startDate && endDate && {
         date: {

@@ -39,3 +39,25 @@ export async function getBiometricType(): Promise<"face" | "fingerprint" | "unkn
     return "unknown";
   }
 }
+
+/**
+ * Mostra o modal nativo do iOS/Android (Face ID / impressão digital).
+ * Retorna true se o usuário autenticou com sucesso, false se cancelou ou falhou.
+ */
+export async function authenticateWithBiometric(): Promise<boolean> {
+  if (Platform.OS === "web") return false;
+
+  try {
+    const available = await isBiometricAvailable();
+    if (!available) return false;
+
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: "Use Face ID ou biometria para acessar mais rápido na próxima vez",
+      cancelLabel: "Agora não",
+      fallbackLabel: "Usar senha do dispositivo",
+    });
+    return result.success;
+  } catch {
+    return false;
+  }
+}
