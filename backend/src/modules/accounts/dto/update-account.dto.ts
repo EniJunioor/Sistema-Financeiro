@@ -1,4 +1,5 @@
-import { IsString, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsNumber, Min } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateAccountDto {
@@ -17,4 +18,14 @@ export class UpdateAccountDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Limite total do cartão. Só faz sentido para type = credit_card.',
+    example: 5000,
+  })
+  @IsOptional()
+  @Transform(({ value }) => (value === undefined || value === null ? value : parseFloat(value)))
+  @IsNumber()
+  @Min(0)
+  creditLimit?: number;
 }

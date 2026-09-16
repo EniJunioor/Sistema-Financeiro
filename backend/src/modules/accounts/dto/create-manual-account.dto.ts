@@ -35,6 +35,15 @@ export class CreateManualAccountDto {
   balance?: number = 0;
 
   @ApiPropertyOptional({
+    description: 'Limite total do cartão. Só faz sentido para type = credit_card.',
+    example: 5000,
+  })
+  @IsOptional()
+  @Transform(({ value }) => (value === undefined || value === null ? value : parseFloat(value)))
+  @Min(0)
+  creditLimit?: number;
+
+  @ApiPropertyOptional({
     description: 'Moeda',
     example: 'BRL',
     default: 'BRL',

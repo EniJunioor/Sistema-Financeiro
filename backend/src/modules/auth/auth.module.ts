@@ -10,6 +10,7 @@ import { TwoFactorService } from './services/two-factor.service';
 import { EmailService } from './services/email.service';
 import { SmsService } from './services/sms.service';
 import { RateLimitService } from './services/rate-limit.service';
+import { ProfileService } from './services/profile.service';
 import { 
   JwtStrategy, 
   LocalStrategy, 
@@ -39,6 +40,7 @@ import { PrismaModule } from '../../common/prisma/prisma.module';
     EmailService,
     SmsService,
     RateLimitService,
+    ProfileService,
     JwtStrategy,
     LocalStrategy,
     GoogleStrategy,

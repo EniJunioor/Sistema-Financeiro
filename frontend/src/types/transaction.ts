@@ -32,6 +32,8 @@ export interface Account {
   name: string;
   type: 'checking' | 'savings' | 'credit_card' | 'investment';
   balance: number;
+  /** Limite total do cartão. Presente apenas quando type === 'credit_card'. */
+  creditLimit?: number | null;
   currency: string;
   isActive: boolean;
   provider?: string;
