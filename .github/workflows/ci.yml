@@ -13,7 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '20'
+  # Next 16 exige Node >= 20.9.
+  NODE_VERSION: '20.19'
   # O Chromium do puppeteer não é usado no CI (só testes unitários e build),
   # e baixá-lo custa ~170MB por job.
   PUPPETEER_SKIP_DOWNLOAD: 'true'
