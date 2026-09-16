@@ -1,7 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import * as puppeteer from 'puppeteer';
 import { ChartGeneratorService } from './chart-generator.service';
 import { ReportTemplateConfig, ReportSection } from './report-templates.service';
+
+/**
+ * O puppeteer 25 passou a ser ESM-only, e o backend compila para CommonJS.
+ * Um `import()` normal seria rebaixado para `require()` pelo TypeScript e
+ * falharia em runtime; passar pelo Function construtor preserva o import
+ * dinâmico nativo e mantém o pacote fora do bundle do webpack.
+ */
+const importPuppeteer = (): Promise<typeof import('puppeteer')> =>
+  new Function('return import("puppeteer")')();
 
 export interface PDFReportData {
   title: string;
@@ -41,7 +49,9 @@ export class PDFGeneratorService {
 
   async generatePDFReport(data: PDFReportData): Promise<Buffer> {
     const html = this.generateHTML(data);
-    
+
+    const puppeteer = await importPuppeteer();
+
     const browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -49,7 +59,10 @@ export class PDFGeneratorService {
 
     try {
       const page = await browser.newPage();
-      await page.setContent(html, { waitUntil: 'networkidle0' });
+      // O puppeteer 25 aceita apenas 'load'/'domcontentloaded' em setContent.
+      // Como o HTML do relatório é autocontido (gráficos entram como data URI),
+      // 'load' já cobre todos os recursos.
+      await page.setContent(html, { waitUntil: 'load' });
       
       const pdfBuffer = await page.pdf({
         format: 'A4',
