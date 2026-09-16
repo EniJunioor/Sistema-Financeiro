@@ -31,6 +31,9 @@ export class SecurityMiddleware implements NestMiddleware {
 
   private initializeRateLimiting() {
     const rateLimitConfig = this.configService.get('security.rateLimit');
+    // Carregado via require: o pacote é CJS e o import estático conflita com
+    // a configuração de módulos do build.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const slowDown = require('express-slow-down');
     
     // General rate limiting

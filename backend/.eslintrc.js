@@ -7,7 +7,7 @@ module.exports = {
   },
   plugins: ['@typescript-eslint/eslint-plugin'],
   extends: [
-    '@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended',
     'prettier',
   ],
   root: true,
@@ -21,5 +21,17 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
+    // O lint passou a rodar de verdade só agora (o `extends` estava com o nome
+    // errado e falhava antes de checar qualquer arquivo), o que expôs ~120
+    // ocorrências antigas. Ficam como aviso para não travar o CI enquanto são
+    // limpadas aos poucos; um `_` no prefixo marca o que é intencional.
+    '@typescript-eslint/no-unused-vars': [
+      'warn',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+      },
+    ],
   },
 };

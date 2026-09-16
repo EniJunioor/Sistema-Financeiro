@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as AWS from 'aws-sdk';
-import * as vault from 'node-vault';
+
+// aws-sdk e node-vault são optionalDependencies: o HSM vem desabilitado por
+// padrão e os SDKs só são carregados quando security.hsm.enabled for true.
 
 export interface HSMKeyInfo {
   keyId: string;
@@ -19,7 +20,7 @@ export interface SignatureResult {
 @Injectable()
 export class HSMService {
   private readonly logger = new Logger(HSMService.name);
-  private kms: AWS.KMS;
+  private kms: any;
   private vaultClient: any;
   private readonly hsmEnabled: boolean;
   private readonly provider: string;
@@ -29,46 +30,67 @@ export class HSMService {
     this.provider = this.configService.get<string>('security.hsm.provider', 'aws-cloudhsm');
 
     if (this.hsmEnabled) {
-      this.initializeHSM();
+      void this.initializeHSM();
     }
   }
 
-  private initializeHSM() {
+  private async initializeHSM() {
     switch (this.provider) {
       case 'aws-cloudhsm':
       case 'aws-kms':
-        this.initializeAWS();
+        await this.initializeAWS();
         break;
       case 'hashicorp-vault':
-        this.initializeVault();
+        await this.initializeVault();
         break;
       default:
         this.logger.warn(`Unsupported HSM provider: ${this.provider}`);
     }
   }
 
-  private initializeAWS() {
+  private async initializeAWS() {
     const region = this.configService.get<string>('security.hsm.region');
-    
-    AWS.config.update({
-      region,
-      accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID'),
-      secretAccessKey: this.configService.get<string>('AWS_SECRET_ACCESS_KEY'),
-    });
 
-    this.kms = new AWS.KMS();
-    this.logger.log('AWS KMS/CloudHSM initialized');
+    try {
+      // Specifier indireto: o pacote é opcional e pode não estar instalado,
+      // então não deve ser resolvido estaticamente pelo TypeScript.
+      const awsModule = 'aws-sdk';
+      const AWS = await import(awsModule);
+
+      AWS.config.update({
+        region,
+        accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID'),
+        secretAccessKey: this.configService.get<string>('AWS_SECRET_ACCESS_KEY'),
+      });
+
+      this.kms = new AWS.KMS();
+      this.logger.log('AWS KMS/CloudHSM initialized');
+    } catch (error) {
+      this.logger.error(
+        'HSM habilitado mas "aws-sdk" não está instalado. Execute: npm install aws-sdk',
+      );
+    }
   }
 
-  private initializeVault() {
+  private async initializeVault() {
     const vaultOptions = {
       apiVersion: 'v1',
       endpoint: this.configService.get<string>('VAULT_ENDPOINT'),
       token: this.configService.get<string>('VAULT_TOKEN'),
     };
 
-    this.vaultClient = vault(vaultOptions);
-    this.logger.log('HashiCorp Vault initialized');
+    try {
+      const vaultSpecifier = 'node-vault';
+      const vaultModule = await import(vaultSpecifier);
+      const vault = (vaultModule as any).default ?? vaultModule;
+
+      this.vaultClient = vault(vaultOptions);
+      this.logger.log('HashiCorp Vault initialized');
+    } catch (error) {
+      this.logger.error(
+        'HSM habilitado mas "node-vault" não está instalado. Execute: npm install node-vault',
+      );
+    }
   }
 
   /**

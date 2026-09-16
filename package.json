@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "Plataforma moderna para gestão financeira pessoal e de pequenos negócios",
   "private": true,
+  "//workspaces": "app-mobile é gerenciado por pnpm (ver dev:mobile) e fixa React 19. Incluí-lo aqui faz o npm içar o React 19 para a raiz, quebrando o frontend, que usa React 18.",
   "workspaces": [
     "backend",
     "frontend",
-    "app-mobile",
     "shared"
   ],
   "scripts": {

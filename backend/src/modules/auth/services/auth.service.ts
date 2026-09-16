@@ -150,7 +150,7 @@ export class AuthService {
 
   async findOrCreateOAuthUser(oauthData: OAuthUserDto): Promise<any> {
     // Check if OAuth account already exists
-    let oauthAccount = await this.prisma.oAuthAccount.findUnique({
+    const oauthAccount = await this.prisma.oAuthAccount.findUnique({
       where: {
         provider_providerAccountId: {
           provider: oauthData.provider,
