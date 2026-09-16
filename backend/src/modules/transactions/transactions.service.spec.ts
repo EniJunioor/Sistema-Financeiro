@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { TransactionsService } from './services/transactions.service';
 import { MLCategorizationService } from './services/ml-categorization.service';
+import { DeduplicationService } from './services/deduplication.service';
+import { AnomalyDetectionService } from '../anomaly-detection/services/anomaly-detection.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 
@@ -31,6 +33,14 @@ describe('TransactionsService', () => {
     suggestCategory: jest.fn(),
   };
 
+  const mockDeduplicationService = {
+    findDuplicatesForTransaction: jest.fn().mockResolvedValue([]),
+  };
+
+  const mockAnomalyDetectionService = {
+    analyzeTransaction: jest.fn().mockResolvedValue(undefined),
+  };
+
   const mockCacheManager = {
     get: jest.fn(),
     set: jest.fn(),
@@ -48,6 +58,14 @@ describe('TransactionsService', () => {
         {
           provide: MLCategorizationService,
           useValue: mockMLService,
+        },
+        {
+          provide: DeduplicationService,
+          useValue: mockDeduplicationService,
+        },
+        {
+          provide: AnomalyDetectionService,
+          useValue: mockAnomalyDetectionService,
         },
         {
           provide: CACHE_MANAGER,
@@ -113,7 +131,7 @@ describe('TransactionsService', () => {
           location: undefined,
           tags: null,
           isRecurring: false,
-          recurringRule: undefined,
+          recurringRule: null,
           attachments: null,
           metadata: undefined,
         },

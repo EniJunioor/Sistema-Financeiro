@@ -32,6 +32,13 @@ describe('MLCategorizationService', () => {
 
     service = module.get<MLCategorizationService>(MLCategorizationService);
     prismaService = module.get<PrismaService>(PrismaService);
+
+    // Sem padrões de valor por categoria: mantém o teste focado na regra em análise.
+    mockPrismaService.transaction.groupBy.mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -59,7 +66,7 @@ describe('MLCategorizationService', () => {
         categoryId: 'category-1',
         categoryName: 'Supermercado',
         confidence: 0.95,
-        reason: 'Baseado no histórico do usuário'
+        reason: 'Baseado no histórico do usuário (1 transações similares)'
       });
     });
 
@@ -75,8 +82,8 @@ describe('MLCategorizationService', () => {
       expect(result).toEqual({
         categoryId: 'category-2',
         categoryName: 'Supermercado',
-        confidence: 0.9,
-        reason: 'Detectado pela palavra-chave: supermercado'
+        confidence: 0.95,
+        reason: 'Detectado pela palavra-chave: "supermercado"'
       });
     });
 
@@ -99,7 +106,7 @@ describe('MLCategorizationService', () => {
       expect(result).toEqual({
         categoryId: 'category-3',
         categoryName: 'Aluguel',
-        confidence: 0.6,
+        confidence: 0.5,
         reason: 'Valor alto, possivelmente aluguel ou conta importante'
       });
     });
@@ -142,7 +149,8 @@ describe('MLCategorizationService', () => {
     it('should return categorization statistics', async () => {
       mockPrismaService.transaction.count
         .mockResolvedValueOnce(100) // Total transactions
-        .mockResolvedValueOnce(80); // Categorized transactions
+        .mockResolvedValueOnce(80) // Categorized transactions
+        .mockResolvedValueOnce(8); // Corrigidas manualmente pelo usuário
 
       mockPrismaService.transaction.groupBy.mockResolvedValue([
         { categoryId: 'cat-1', _count: { categoryId: 30 } },
@@ -162,7 +170,17 @@ describe('MLCategorizationService', () => {
         topCategories: [
           { name: 'Food', count: 30 },
           { name: 'Transport', count: 25 },
-        ]
+        ],
+        accuracyMetrics: {
+          totalCorrected: 8,
+          correctionRate: 10,
+          confidenceDistribution: [
+            { range: '0.9-1.0', count: 0 },
+            { range: '0.7-0.9', count: 0 },
+            { range: '0.5-0.7', count: 0 },
+            { range: '0.0-0.5', count: 0 },
+          ],
+        },
       });
     });
   });

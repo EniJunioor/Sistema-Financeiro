@@ -4,6 +4,8 @@ import { TransactionsController } from './controllers/transactions.controller';
 import { TransactionsService } from './services/transactions.service';
 import { CategoryService } from './services/category.service';
 import { MLCategorizationService } from './services/ml-categorization.service';
+import { RecurringTransactionsService } from './services/recurring-transactions.service';
+import { RecurringSchedulerService } from './services/recurring-scheduler.service';
 
 describe('TransactionsController', () => {
   let controller: TransactionsController;
@@ -32,6 +34,17 @@ describe('TransactionsController', () => {
     learnFromUserFeedback: jest.fn(),
   };
 
+  const mockRecurringTransactionsService = {
+    getUserRecurringTransactions: jest.fn(),
+    updateRecurringTransaction: jest.fn(),
+    cancelRecurringTransaction: jest.fn(),
+  };
+
+  const mockRecurringSchedulerService = {
+    triggerRecurringTransactionsProcessing: jest.fn(),
+    getQueueStats: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [TransactionsController],
@@ -47,6 +60,14 @@ describe('TransactionsController', () => {
         {
           provide: MLCategorizationService,
           useValue: mockMLService,
+        },
+        {
+          provide: RecurringTransactionsService,
+          useValue: mockRecurringTransactionsService,
+        },
+        {
+          provide: RecurringSchedulerService,
+          useValue: mockRecurringSchedulerService,
         },
       ],
     }).compile();

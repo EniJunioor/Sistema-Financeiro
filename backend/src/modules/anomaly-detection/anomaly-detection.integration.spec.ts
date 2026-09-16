@@ -130,17 +130,34 @@ describe('AnomalyDetection Integration', () => {
         },
       });
 
-      // Create some risky transactions (late night, large amounts)
+      // O perfil de comportamento é derivado das próprias transações do
+      // usuário, então só existem valores "grandes" se houver uma linha de
+      // base de gastos normais para comparar.
       const riskyTransactions = [
-        { 
-          amount: 2000, 
-          description: 'Late night purchase', 
-          date: new Date(new Date().setHours(2, 0, 0, 0)) // 2 AM
+        {
+          amount: 50,
+          description: 'Coffee shop',
+          date: new Date(new Date().setHours(10, 0, 0, 0)),
         },
-        { 
-          amount: 1500, 
-          description: 'Another large purchase', 
-          date: new Date(new Date().setHours(23, 30, 0, 0)) // 11:30 PM
+        {
+          amount: 60,
+          description: 'Grocery store',
+          date: new Date(new Date().setHours(12, 0, 0, 0)),
+        },
+        {
+          amount: 40,
+          description: 'Gas station',
+          date: new Date(new Date().setHours(14, 0, 0, 0)),
+        },
+        {
+          amount: 2000,
+          description: 'Late night purchase',
+          date: new Date(new Date().setHours(2, 0, 0, 0)), // 2 AM
+        },
+        {
+          amount: 1500,
+          description: 'Another large purchase',
+          date: new Date(new Date().setHours(23, 30, 0, 0)), // 11:30 PM
         },
       ];
 

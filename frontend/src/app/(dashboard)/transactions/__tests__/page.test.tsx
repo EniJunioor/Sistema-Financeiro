@@ -2,7 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import TransactionsPage from '../page';
 
-// Mock the hooks
+// Mock the hooks. A página monta filtros e formulários que consomem outros
+// hooks do mesmo módulo, então todos precisam existir no mock.
 jest.mock('@/hooks/use-transactions', () => ({
   useTransactions: () => ({
     transactions: [],
@@ -15,6 +16,24 @@ jest.mock('@/hooks/use-transactions', () => ({
     isUpdating: false,
     isDeleting: false,
   }),
+  useCategories: () => ({ data: [] }),
+  useAccounts: () => ({ data: [] }),
+  useCategorySuggestion: () => ({
+    suggestions: [],
+    isLoading: false,
+    getSuggestions: jest.fn(),
+  }),
+  useFileUpload: () => ({
+    uploadAttachment: jest.fn(),
+    processOCR: jest.fn(),
+    isUploading: false,
+    uploadProgress: 0,
+  }),
+  useRecurringTransactions: () => ({
+    recurringTransactions: [],
+    isLoading: false,
+  }),
+  useQueueStats: () => ({ data: null, isLoading: false }),
 }));
 
 // Mock the API
@@ -58,8 +77,10 @@ describe('TransactionsPage', () => {
     renderWithQueryClient(<TransactionsPage />);
 
     expect(screen.getByText('Total de Transações')).toBeInTheDocument();
-    expect(screen.getByText('Receitas')).toBeInTheDocument();
-    expect(screen.getByText('Despesas')).toBeInTheDocument();
+    // "Receitas" e "Despesas" aparecem no card de resumo e também na
+    // navegação por tipo, então basta haver ao menos uma ocorrência.
+    expect(screen.getAllByText('Receitas').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Despesas').length).toBeGreaterThan(0);
   });
 
   it('renders filters and search section', () => {

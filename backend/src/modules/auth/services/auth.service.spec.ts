@@ -154,19 +154,17 @@ describe('AuthService', () => {
         password: 'ValidPass123!',
       };
 
+      // Só os campos que o login realmente usa. O cast evita que qualquer
+      // coluna nova em User quebre este teste sem relação com a mudança.
       const mockUser = {
         id: '1',
         email: loginDto.email,
         name: 'Test User',
-        avatar: null,
         emailVerified: null,
         twoFactorEnabled: false,
-        twoFactorSecret: null,
-        twoFactorBackupCodes: null,
-        smsPhone: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-      };
+      } as any;
 
       // Mock rate limiting
       mockRateLimitService.isAccountLocked.mockResolvedValue({ locked: false });

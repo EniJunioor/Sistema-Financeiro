@@ -8,7 +8,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -22,6 +22,16 @@ model User {
   twoFactorSecret   String?
   twoFactorBackupCodes String? // JSON array of backup codes
   smsPhone          String?   // Phone number for SMS 2FA
+  // Dados de perfil
+  phone             String?
+  birthDate         DateTime?
+  address           String?
+  city              String?
+  state             String?
+  zipCode           String?
+  bio               String?
+  preferences       String?   // JSON: idioma, moeda, tema, preferências de notificação
+  anonymizedAt      DateTime? // LGPD: marca quando os dados pessoais foram anonimizados
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -40,6 +50,9 @@ model User {
   mlModels          MLModel[]
   fcmTokens         FCMToken[]
   subscriptions     Subscription[]
+  consentRecords    ConsentRecord[]
+  dataExportRequests   DataExportRequest[]
+  dataDeletionRequests DataDeletionRequest[]
 
   @@map("users")
 }
@@ -52,6 +65,7 @@ model Account {
   providerAccountId String?
   name              String
   balance           Decimal
+  creditLimit       Decimal?  // Limite total, apenas para type = 'credit_card'
   currency          String    @default("BRL")
   isActive          Boolean   @default(true)
   lastSyncAt        DateTime?
@@ -369,4 +383,70 @@ model Subscription {
   @@index([isActive])
   @@index([nextPaymentDate])
   @@map("subscriptions")
+}
+// ============================================================
+// LGPD / Privacidade (Lei 13.709/2018)
+// ============================================================
+
+/// Registro imutável de consentimento (art. 8º, §1º - ônus da prova do controlador)
+model ConsentRecord {
+  id         String   @id @default(cuid())
+  userId     String
+  type       String   // 'terms', 'privacy_policy', 'marketing', 'data_sharing', 'analytics'
+  granted    Boolean
+  version    String   // versão do documento aceito/recusado
+  purpose    String?  // finalidade específica do tratamento
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  // Relacionamentos
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("consent_records")
+}
+
+/// Solicitação de portabilidade/acesso aos dados (art. 18, II e V)
+model DataExportRequest {
+  id          String    @id @default(cuid())
+  userId      String
+  status      String    @default("pending") // 'pending', 'processing', 'completed', 'failed', 'expired'
+  format      String    @default("json")
+  payload     String?   // JSON serializado com os dados exportados
+  sizeBytes   Int?
+  error       String?
+  requestedAt DateTime  @default(now())
+  completedAt DateTime?
+  expiresAt   DateTime? // export fica disponível por tempo limitado
+
+  // Relacionamentos
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("data_export_requests")
+}
+
+/// Solicitação de eliminação de dados (art. 18, VI) com período de carência
+model DataDeletionRequest {
+  id           String    @id @default(cuid())
+  userId       String
+  status       String    @default("pending") // 'pending', 'cancelled', 'completed', 'failed'
+  reason       String?
+  requestedAt  DateTime  @default(now())
+  scheduledFor DateTime  // data em que a eliminação será executada
+  completedAt  DateTime?
+  cancelledAt  DateTime?
+  error        String?
+
+  // Relacionamentos
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([scheduledFor])
+  @@map("data_deletion_requests")
 }

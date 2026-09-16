@@ -70,6 +70,15 @@ describe('Open Banking Checkpoint Tests', () => {
       imports: [
         ConfigModule.forRoot({
           isGlobal: true,
+          // Defaults do teste: a suíte não pode depender do .env da máquina,
+          // senão passa localmente e quebra no CI.
+          load: [
+            () => ({
+              NODE_ENV: process.env.NODE_ENV ?? 'test',
+              PORT: process.env.PORT ?? '3001',
+              DATABASE_URL: process.env.DATABASE_URL ?? 'file:./test.db',
+            }),
+          ],
         }),
         HttpModule,
       ],
