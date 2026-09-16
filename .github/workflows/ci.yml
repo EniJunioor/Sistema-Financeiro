@@ -1,0 +1,161 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+# Uma execução por branch: pushes seguidos cancelam a anterior em vez de
+# ocuparem os runners em paralelo.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  # O Chromium do puppeteer não é usado no CI (só testes unitários e build),
+  # e baixá-lo custa ~170MB por job.
+  PUPPETEER_SKIP_DOWNLOAD: 'true'
+
+jobs:
+  backend:
+    name: Backend (lint, typecheck, test, build)
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: file:./test.db
+      NODE_ENV: test
+      JWT_SECRET: ci-jwt-secret
+      ENCRYPTION_SECRET: ci-encryption-secret-32-chars-ok
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate --workspace @plataforma-financeira/backend
+
+      - name: Lint
+        run: npm run lint:backend
+
+      - name: Typecheck
+        run: npx tsc --noEmit -p backend/tsconfig.json
+
+      - name: Unit tests
+        run: npm run test:backend
+
+      - name: Build
+        run: npm run build:backend
+
+  backend-integration:
+    name: Backend (integration tests)
+    runs-on: ubuntu-latest
+
+    # Os testes de integração dependem de Redis (filas Bull) e de um banco
+    # migrado do zero.
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: file:./test.db
+      NODE_ENV: test
+      JWT_SECRET: ci-jwt-secret
+      ENCRYPTION_SECRET: ci-encryption-secret-32-chars-ok
+      REDIS_HOST: localhost
+      REDIS_PORT: '6379'
+      REDIS_PASSWORD: ''
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate --workspace @plataforma-financeira/backend
+
+      - name: Integration tests
+        run: npm run test:integration --workspace @plataforma-financeira/backend
+
+  frontend:
+    name: Frontend (lint, typecheck, test, build)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        # O frontend não usa Prisma, mas o postinstall do workspace pode exigi-lo.
+        run: npm run prisma:generate --workspace @plataforma-financeira/backend
+
+      - name: Lint
+        run: npm run lint:frontend
+
+      - name: Typecheck
+        run: npx tsc --noEmit -p frontend/tsconfig.json
+
+      - name: Tests
+        run: npm run test:frontend
+
+      - name: Build
+        run: npm run build:frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:3001
+          NEXTAUTH_SECRET: ci-nextauth-secret
+          NEXTAUTH_URL: http://localhost:3000
+
+  migrations:
+    name: Prisma migrations apply cleanly
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: file:./ci-check.db
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply migrations from scratch
+        working-directory: backend
+        run: npx prisma migrate deploy
+
+      - name: Ensure schema matches migrations
+        working-directory: backend
+        # Falha se o schema.prisma tiver mudanças que nenhuma migration cobre.
+        run: npx prisma migrate diff --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma --shadow-database-url file:./shadow.db --exit-code
