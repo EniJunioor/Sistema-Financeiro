@@ -1,27 +1,48 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Palette, Globe, DollarSign, Moon, Sun, Save } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Palette, Globe, DollarSign, Moon, Sun, Save, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { usePreferences, useUpdatePreferences } from '@/hooks/use-profile';
 import Link from 'next/link';
 
+const DEFAULT_FORM = {
+  language: 'pt-BR',
+  currency: 'BRL',
+  dateFormat: 'DD/MM/YYYY',
+  timeFormat: '24h',
+  theme: 'light',
+  autoSync: true,
+  emailReports: true,
+  compactMode: false,
+};
+
 export default function PreferencesSettingsPage() {
-  const [isSaving, setIsSaving] = useState(false);
-  const [preferences, setPreferences] = useState({
-    language: 'pt-BR',
-    currency: 'BRL',
-    dateFormat: 'DD/MM/YYYY',
-    timeFormat: '24h',
-    theme: 'light',
-    autoSync: true,
-    emailReports: true,
-    compactMode: false,
-  });
+  const { data: savedPreferences, isLoading } = usePreferences();
+  const updatePreferences = useUpdatePreferences();
+
+  const [preferences, setPreferences] = useState(DEFAULT_FORM);
+
+  // Sincroniza o formulário com o que está salvo assim que a API responde.
+  useEffect(() => {
+    if (!savedPreferences) return;
+
+    setPreferences(prev => ({
+      ...prev,
+      ...savedPreferences,
+      // Flags booleanas ficam junto das preferências de notificação no backend.
+      autoSync: savedPreferences.notifications?.autoSync ?? prev.autoSync,
+      emailReports: savedPreferences.notifications?.emailReports ?? prev.emailReports,
+      compactMode: savedPreferences.notifications?.compactMode ?? prev.compactMode,
+    }));
+  }, [savedPreferences]);
+
+  const isSaving = updatePreferences.isPending;
 
   const handleSelectChange = (key: string, value: string) => {
     setPreferences(prev => ({ ...prev, [key]: value }));
@@ -32,11 +53,27 @@ export default function PreferencesSettingsPage() {
   };
 
   const handleSave = async () => {
-    setIsSaving(true);
-    // Simular salvamento
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsSaving(false);
+    const { autoSync, emailReports, compactMode, timeFormat, ...rest } = preferences;
+
+    await updatePreferences.mutateAsync({
+      ...rest,
+      notifications: {
+        ...(savedPreferences?.notifications ?? {}),
+        autoSync,
+        emailReports,
+        compactMode,
+      },
+    });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center gap-2 py-20 text-gray-500">
+        <Loader2 className="h-5 w-5 animate-spin" />
+        <span className="text-sm">Carregando preferências...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

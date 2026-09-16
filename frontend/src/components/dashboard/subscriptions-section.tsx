@@ -1,30 +1,35 @@
 'use client';
 
+import Link from 'next/link';
 import { Plus, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useUpcomingSubscriptions } from '@/hooks/use-subscriptions';
 
-interface Subscription {
+interface SubscriptionItem {
   id: string;
   name: string;
   amount: number;
   nextPaymentDate: string;
-  logo?: string;
+  logo?: string | null;
   status?: 'active' | 'scheduled' | 'cancelled';
 }
 
 interface SubscriptionsSectionProps {
-  subscriptions?: Subscription[];
+  /** Quando omitido, o componente busca as próximas cobranças na API. */
+  subscriptions?: SubscriptionItem[];
   isLoading?: boolean;
   onAdd?: () => void;
 }
 
-export function SubscriptionsSection({ 
-  subscriptions, 
+export function SubscriptionsSection({
+  subscriptions,
   isLoading = false,
-  onAdd 
+  onAdd,
 }: SubscriptionsSectionProps) {
+  // Só consulta a API quando a lista não vem pronta do componente pai.
+  const { data: fetchedSubscriptions, isLoading: isFetching } = useUpcomingSubscriptions(30);
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -43,29 +48,18 @@ export function SubscriptionsSection({
     });
   };
 
-  // Mock data - substituir com dados reais
-  const mockSubscriptions: Subscription[] = [
-    {
-      id: '1',
-      name: 'Netflix',
-      amount: 55.90,
-      nextPaymentDate: '2024-08-15',
-      status: 'scheduled',
-      logo: 'N',
-    },
-    {
-      id: '2',
-      name: 'Spotify',
-      amount: 21.90,
-      nextPaymentDate: '2024-08-15',
-      status: 'active',
-      logo: 'S',
-    },
-  ];
+  const displaySubscriptions: SubscriptionItem[] =
+    subscriptions ??
+    (fetchedSubscriptions ?? []).slice(0, 4).map((subscription) => ({
+      id: subscription.id,
+      name: subscription.name,
+      amount: Number(subscription.amount),
+      nextPaymentDate: subscription.nextPaymentDate,
+      logo: subscription.logo,
+      status: new Date(subscription.nextPaymentDate) > new Date() ? 'scheduled' : 'active',
+    }));
 
-  const displaySubscriptions = subscriptions || mockSubscriptions;
-
-  if (isLoading) {
+  if (isLoading || (!subscriptions && isFetching)) {
     return (
       <Card className="bg-gray-800 border-gray-700 rounded-xl">
         <CardHeader>
@@ -117,8 +111,9 @@ export function SubscriptionsSection({
           </div>
         ) : (
           displaySubscriptions.map((subscription) => (
-            <div
+            <Link
               key={subscription.id}
+              href="/subscriptions"
               className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors cursor-pointer group"
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -144,7 +139,7 @@ export function SubscriptionsSection({
                 </div>
               </div>
               <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors flex-shrink-0" />
-            </div>
+            </Link>
           ))
         )}
       </CardContent>

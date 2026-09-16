@@ -111,7 +111,7 @@ export function ReportGenerator({ onClose, initialTemplate }: ReportGeneratorPro
 
   const handleGenerate = async (data: ReportConfigForm) => {
     try {
-      const report = await generateReport(data);
+      const report = await generateReport.mutateAsync(data);
       setGeneratedReport(report);
       toast.success('Relatório gerado com sucesso!');
       setActiveTab('result');
@@ -123,7 +123,7 @@ export function ReportGenerator({ onClose, initialTemplate }: ReportGeneratorPro
   const handleDownload = async () => {
     const config = form.getValues();
     try {
-      await downloadReport(config);
+      await downloadReport.mutateAsync(config);
     } catch (error) {
       toast.error('Erro ao baixar relatório');
     }

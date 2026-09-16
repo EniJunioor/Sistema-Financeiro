@@ -25,19 +25,9 @@ export function CashFlowSection({ data, isLoading }: CashFlowSectionProps) {
     }).format(value);
   };
 
-  // Mock data - substituir com dados reais
-  const mockData = [
-    { name: 'Seg', value: 12000 },
-    { name: 'Ter', value: 15000 },
-    { name: 'Qua', value: 10000 },
-    { name: 'Qui', value: 18000 },
-    { name: 'Sex', value: 14000 },
-    { name: 'Sáb', value: 16200 },
-    { name: 'Dom', value: 11000 },
-  ];
-
-  const chartData = data || mockData;
+  const chartData = data ?? [];
   const totalValue = chartData.reduce((sum, item) => sum + item.value, 0);
+  const hasData = chartData.length > 0;
 
   if (isLoading) {
     return (
@@ -116,6 +106,14 @@ export function CashFlowSection({ data, isLoading }: CashFlowSectionProps) {
         </div>
 
         {/* Chart */}
+        {!hasData ? (
+          <div className="flex h-[300px] flex-col items-center justify-center gap-2 text-center">
+            <p className="text-sm font-medium text-gray-300">Sem dados no período</p>
+            <p className="text-sm text-gray-500">
+              Registre transações para acompanhar seu fluxo de caixa aqui.
+            </p>
+          </div>
+        ) : (
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -145,6 +143,7 @@ export function CashFlowSection({ data, isLoading }: CashFlowSectionProps) {
             />
           </BarChart>
         </ResponsiveContainer>
+        )}
       </CardContent>
     </Card>
   );
