@@ -1,42 +1,85 @@
 'use client';
 
-import React, { useState } from 'react';
-import { User, Save, Camera, Mail, Phone, MapPin, Calendar } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { User, Save, Camera, Mail, Phone, MapPin, Calendar, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { useProfile, useUpdateProfile } from '@/hooks/use-profile';
 import Link from 'next/link';
 
+const EMPTY_FORM = {
+  name: '',
+  email: '',
+  phone: '',
+  birthDate: '',
+  address: '',
+  city: '',
+  state: '',
+  zipCode: '',
+  bio: '',
+};
+
 export default function ProfileSettingsPage() {
-  const [isSaving, setIsSaving] = useState(false);
-  const [formData, setFormData] = useState({
-    name: 'Enivander Junior',
-    email: 'enivander@example.com',
-    phone: '(11) 98765-4321',
-    birthDate: '1990-01-15',
-    address: 'Rua Exemplo, 123',
-    city: 'São Paulo',
-    state: 'SP',
-    zipCode: '01234-567',
-    bio: 'Usuário do sistema financeiro',
-  });
+  const { data: profile, isLoading } = useProfile();
+  const updateProfile = useUpdateProfile();
+
+  const [formData, setFormData] = useState(EMPTY_FORM);
+  const [showAvatarInput, setShowAvatarInput] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState('');
+
+  // Preenche o formulário assim que o perfil chega da API.
+  useEffect(() => {
+    if (!profile) return;
+
+    setFormData({
+      name: profile.name ?? '',
+      email: profile.email,
+      phone: profile.phone ?? '',
+      birthDate: profile.birthDate ? profile.birthDate.slice(0, 10) : '',
+      address: profile.address ?? '',
+      city: profile.city ?? '',
+      state: profile.state ?? '',
+      zipCode: profile.zipCode ?? '',
+      bio: profile.bio ?? '',
+    });
+  }, [profile]);
+
+  const isSaving = updateProfile.isPending;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleAvatarSave = async () => {
+    await updateProfile.mutateAsync({ avatar: avatarUrl.trim() });
+    setShowAvatarInput(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSaving(true);
-    // Simular salvamento
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    // Aqui você pode adicionar uma notificação de sucesso
+
+    // O e-mail é somente leitura e não faz parte do payload de atualização.
+    const { email, ...updatable } = formData;
+
+    await updateProfile.mutateAsync({
+      ...updatable,
+      birthDate: updatable.birthDate || undefined,
+    });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center gap-2 py-20 text-gray-500">
+        <Loader2 className="h-5 w-5 animate-spin" />
+        <span className="text-sm">Carregando perfil...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -71,13 +114,65 @@ export default function ProfileSettingsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex flex-col items-center">
-                  <div className="w-32 h-32 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
-                    <User className="w-16 h-16 text-emerald-600" />
+                  <div className="w-32 h-32 bg-emerald-100 rounded-full flex items-center justify-center mb-4 overflow-hidden">
+                    {profile?.avatar ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={profile.avatar}
+                        alt={profile.name ?? 'Foto de perfil'}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-16 h-16 text-emerald-600" />
+                    )}
                   </div>
-                  <Button type="button" variant="outline" size="sm" className="w-full">
-                    <Camera className="h-4 w-4 mr-2" />
-                    Alterar Foto
-                  </Button>
+
+                  {showAvatarInput ? (
+                    <div className="w-full space-y-2">
+                      <Label htmlFor="avatar-url" className="text-xs">
+                        URL da imagem
+                      </Label>
+                      <Input
+                        id="avatar-url"
+                        value={avatarUrl}
+                        onChange={(e) => setAvatarUrl(e.target.value)}
+                        placeholder="https://..."
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="flex-1"
+                          disabled={!avatarUrl.trim() || isSaving}
+                          onClick={handleAvatarSave}
+                        >
+                          Salvar
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowAvatarInput(false)}
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        setAvatarUrl(profile?.avatar ?? '');
+                        setShowAvatarInput(true);
+                      }}
+                    >
+                      <Camera className="h-4 w-4 mr-2" />
+                      Alterar Foto
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -106,7 +201,14 @@ export default function ProfileSettingsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Membro desde</Label>
-                  <p className="text-sm text-gray-600">Janeiro 2024</p>
+                  <p className="text-sm text-gray-600">
+                    {profile
+                      ? new Date(profile.createdAt).toLocaleDateString('pt-BR', {
+                          month: 'long',
+                          year: 'numeric',
+                        })
+                      : '—'}
+                  </p>
                 </div>
               </CardContent>
             </Card>

@@ -4,3 +4,4 @@ export * from './auth-response.dto';
 export * from './oauth.dto';
 export * from './two-factor.dto';
 export * from './refresh-token.dto';
+export * from './update-profile.dto';

@@ -325,22 +325,11 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <OAuthButton provider="google" disabled={isLoading}>
-            Google
-          </OAuthButton>
-          <OAuthButton provider="microsoft" disabled={isLoading}>
-            Microsoft
-          </OAuthButton>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <OAuthButton provider="facebook" disabled={isLoading}>
-            Facebook
-          </OAuthButton>
-          <OAuthButton provider="apple" disabled={isLoading}>
-            Apple
-          </OAuthButton>
+        <div className="flex items-center justify-center gap-4">
+          <OAuthButton provider="google" disabled={isLoading} />
+          <OAuthButton provider="microsoft" disabled={isLoading} />
+          <OAuthButton provider="facebook" disabled={isLoading} />
+          <OAuthButton provider="apple" disabled={isLoading} />
         </div>
       </CardContent>
     </Card>

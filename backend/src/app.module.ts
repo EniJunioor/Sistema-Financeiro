@@ -19,6 +19,7 @@ import { AnomalyDetectionModule } from './modules/anomaly-detection/anomaly-dete
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { CurrenciesModule } from './modules/currencies/currencies.module';
+import { PrivacyModule } from './modules/privacy/privacy.module';
 
 @Module({
   imports: [
@@ -33,10 +34,12 @@ import { CurrenciesModule } from './modules/currencies/currencies.module';
     ScheduleModule.forRoot(),
 
     // Enhanced rate limiting
-    ThrottlerModule.forRoot({
-      ttl: 60000, // 1 minute
-      limit: 100, // 100 requests per minute
-    }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 1 minute
+        limit: 100, // 100 requests per minute
+      },
+    ]),
 
     // Cache with Redis
     CacheModule.register({
@@ -77,6 +80,7 @@ import { CurrenciesModule } from './modules/currencies/currencies.module';
     SubscriptionsModule,
     NotificationsModule,
     CurrenciesModule,
+    PrivacyModule,
   ],
   controllers: [AppController],
   providers: [AppService],

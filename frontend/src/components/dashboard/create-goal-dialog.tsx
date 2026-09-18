@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { GoalForm } from '@/components/goals/goal-form';
 import { useCreateGoal } from '@/hooks/use-goals';
-import type { CreateGoalData } from '@/lib/goals-api';
+import type { CreateGoalData, UpdateGoalData } from '@/lib/goals-api';
 
 interface CreateGoalDialogProps {
   open: boolean;
@@ -20,8 +20,11 @@ interface CreateGoalDialogProps {
 export function CreateGoalDialog({ open, onOpenChange }: CreateGoalDialogProps) {
   const createGoal = useCreateGoal();
 
-  const handleSubmit = async (data: CreateGoalData) => {
-    await createGoal.mutateAsync(data);
+  // GoalForm serve tanto criação quanto edição, por isso o onSubmit recebe a
+  // união. Aqui o form é montado sem a prop `goal`, então o payload é sempre
+  // de criação.
+  const handleSubmit = async (data: CreateGoalData | UpdateGoalData) => {
+    await createGoal.mutateAsync(data as CreateGoalData);
     onOpenChange(false);
   };
 

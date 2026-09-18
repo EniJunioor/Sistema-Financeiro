@@ -28,6 +28,13 @@ describe('Security Services', () => {
                 'security.audit.logLevel': 'info',
                 'security.audit.retentionDays': 365,
                 'security.audit.sensitiveFields': ['password', 'token'],
+                // TLSService lê o objeto inteiro (`security.hsts`), não as
+                // chaves achatadas — por isso as duas formas estão aqui.
+                'security.hsts': {
+                  maxAge: 31536000,
+                  includeSubDomains: true,
+                  preload: true,
+                },
                 'security.hsts.maxAge': 31536000,
                 'security.hsts.includeSubDomains': true,
                 'security.hsts.preload': true,

@@ -48,8 +48,11 @@ export class ChartGeneratorService {
 
   private async initializeCanvas() {
     try {
-      // Try to dynamically import chartjs-node-canvas
-      const { ChartJSNodeCanvas } = await import('chartjs-node-canvas');
+      // Try to dynamically import chartjs-node-canvas.
+      // Specifier indireto: pacote opcional (requer o módulo nativo `canvas`),
+      // então não deve ser resolvido estaticamente pelo TypeScript.
+      const chartCanvasModule = 'chartjs-node-canvas';
+      const { ChartJSNodeCanvas } = await import(chartCanvasModule);
       this.ChartJSNodeCanvas = ChartJSNodeCanvas;
       this.canvasAvailable = true;
       this.logger.log('Canvas support enabled for chart generation');

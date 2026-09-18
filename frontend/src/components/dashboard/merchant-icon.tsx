@@ -44,8 +44,11 @@ function extractMerchantName(description: string): string {
   for (const prefix of commonPrefixes) {
     if (lowerDesc.startsWith(prefix)) {
       const withoutPrefix = description.substring(prefix.length).trim()
-      // Remove hífen ou dois pontos se houver
-      return withoutPrefix.replace(/^[-:\s]+/, '').trim() || description
+      // Remove hífen ou dois pontos se houver.
+      // Usa alternância em vez de classe de caracteres de propósito: uma classe
+      // contendo dois-pontos é lida pelo scanner do Tailwind como propriedade
+      // arbitrária, gerando CSS inválido que o Turbopack rejeita no build.
+      return withoutPrefix.replace(/^(?:-|:|\s)+/, '').trim() || description
     }
   }
   

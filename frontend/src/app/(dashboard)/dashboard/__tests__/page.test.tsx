@@ -2,28 +2,35 @@ import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DashboardPage from '../page';
 
-// Mock the hooks
-jest.mock('@/hooks/use-dashboard', () => ({
-  useDashboard: () => ({
-    dashboardData: null,
-    isLoading: false,
-    error: null,
-    refetch: jest.fn(),
-    query: { period: '30d' },
-    setPeriod: jest.fn(),
-    setCustomDateRange: jest.fn(),
-  }),
-}));
+// Estado padrão do dashboard nos testes. Cada caso pode sobrescrevê-lo antes
+// de renderizar, já que o mock lê esta variável a cada chamada.
+let dashboardState: any = {
+  dashboardData: null,
+  isLoading: false,
+  error: null,
+  refetch: jest.fn(),
+  query: { period: '30d' },
+  setPeriod: jest.fn(),
+  setCustomDateRange: jest.fn(),
+};
 
 jest.mock('@/hooks/use-dashboard', () => ({
-  ...jest.requireActual('@/hooks/use-dashboard'),
-  useRealtimeUpdates: () => ({
-    isConnected: true,
-    lastMessage: { timestamp: new Date().toISOString() },
-  }),
+  useDashboard: () => dashboardState,
 }));
 
-// Mock Recharts components
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), prefetch: jest.fn() }),
+}));
+
+jest.mock('@/hooks/use-accounts', () => ({
+  useAccounts: () => ({ data: [], isLoading: false }),
+}));
+
+jest.mock('@/hooks/use-subscriptions', () => ({
+  useUpcomingSubscriptions: () => ({ data: [], isLoading: false }),
+}));
+
+// Recharts depende de medição de layout, indisponível no jsdom.
 jest.mock('recharts', () => ({
   LineChart: ({ children }: any) => <div data-testid="line-chart">{children}</div>,
   Line: () => <div data-testid="line" />,
@@ -32,7 +39,9 @@ jest.mock('recharts', () => ({
   CartesianGrid: () => <div data-testid="cartesian-grid" />,
   Tooltip: () => <div data-testid="tooltip" />,
   Legend: () => <div data-testid="legend" />,
-  ResponsiveContainer: ({ children }: any) => <div data-testid="responsive-container">{children}</div>,
+  ResponsiveContainer: ({ children }: any) => (
+    <div data-testid="responsive-container">{children}</div>
+  ),
   PieChart: ({ children }: any) => <div data-testid="pie-chart">{children}</div>,
   Pie: () => <div data-testid="pie" />,
   Cell: () => <div data-testid="cell" />,
@@ -43,69 +52,69 @@ jest.mock('recharts', () => ({
 const createTestQueryClient = () =>
   new QueryClient({
     defaultOptions: {
-      queries: {
-        retry: false,
-      },
+      queries: { retry: false },
     },
   });
 
 const renderWithQueryClient = (component: React.ReactElement) => {
   const testQueryClient = createTestQueryClient();
   return render(
-    <QueryClientProvider client={testQueryClient}>
-      {component}
-    </QueryClientProvider>
+    <QueryClientProvider client={testQueryClient}>{component}</QueryClientProvider>,
   );
 };
 
 describe('Dashboard Page', () => {
-  it('renders dashboard title and description', () => {
-    renderWithQueryClient(<DashboardPage />);
-    
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
-    expect(screen.getByText('Visão geral das suas finanças')).toBeInTheDocument();
+  beforeEach(() => {
+    dashboardState = {
+      dashboardData: null,
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+      query: { period: '30d' },
+      setPeriod: jest.fn(),
+      setCustomDateRange: jest.fn(),
+    };
   });
 
-  it('renders financial summary cards', () => {
+  it('renderiza as seções principais do dashboard', () => {
     renderWithQueryClient(<DashboardPage />);
-    
-    expect(screen.getByText('Saldo Total')).toBeInTheDocument();
-    expect(screen.getByText('Receitas')).toBeInTheDocument();
-    expect(screen.getByText('Despesas')).toBeInTheDocument();
-    expect(screen.getByText('Saldo Líquido')).toBeInTheDocument();
+
+    expect(screen.getByText('Contas')).toBeInTheDocument();
+    expect(screen.getByText('Fluxo de Caixa')).toBeInTheDocument();
+    expect(screen.getByText('Assinaturas')).toBeInTheDocument();
   });
 
-  it('renders chart components', () => {
+  it('mostra as ações de conta no cabeçalho', () => {
     renderWithQueryClient(<DashboardPage />);
-    
-    expect(screen.getByText('Visão Geral Financeira')).toBeInTheDocument();
-    expect(screen.getByText('Tendência de Gastos')).toBeInTheDocument();
-    expect(screen.getByText('Gastos por Categoria')).toBeInTheDocument();
+
+    expect(screen.getByText('Gerenciar Saldo')).toBeInTheDocument();
+    expect(screen.getByText('Novo Pagamento')).toBeInTheDocument();
   });
 
-  it('renders recent transactions section', () => {
+  it('avisa quando não há dados de fluxo de caixa no período', () => {
     renderWithQueryClient(<DashboardPage />);
-    
-    expect(screen.getByText('Transações Recentes')).toBeInTheDocument();
-    expect(screen.getByText('Suas últimas movimentações financeiras')).toBeInTheDocument();
+
+    expect(screen.getByText('Sem dados no período')).toBeInTheDocument();
   });
 
-  it('renders goals progress section', () => {
+  it('exibe erro com opção de recarregar quando a API falha', () => {
+    dashboardState = {
+      ...dashboardState,
+      error: new Error('Falha de conexão'),
+    };
+
     renderWithQueryClient(<DashboardPage />);
-    
-    expect(screen.getByText('Metas Financeiras')).toBeInTheDocument();
-    expect(screen.getByText('Progresso das suas metas')).toBeInTheDocument();
+
+    expect(screen.getByText('Não foi possível carregar o dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Falha de conexão')).toBeInTheDocument();
+    expect(screen.getByText('Tentar novamente')).toBeInTheDocument();
   });
 
-  it('renders period selector', () => {
+  it('não exibe dados de demonstração quando a API não responde', () => {
     renderWithQueryClient(<DashboardPage />);
-    
-    expect(screen.getByText('Período de análise')).toBeInTheDocument();
-  });
 
-  it('renders refresh button', () => {
-    renderWithQueryClient(<DashboardPage />);
-    
-    expect(screen.getByText('Atualizar')).toBeInTheDocument();
+    // O dashboard exibia mocks com fallback silencioso; agora um período sem
+    // dados precisa aparecer como vazio, nunca como número inventado.
+    expect(screen.queryByText(/R\$\s*45\.231,89/)).not.toBeInTheDocument();
   });
 });

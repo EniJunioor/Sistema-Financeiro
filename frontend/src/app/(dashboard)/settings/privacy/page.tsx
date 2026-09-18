@@ -1,59 +1,89 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Lock, Eye, EyeOff, Download, Trash2, Shield, Save, AlertTriangle } from 'lucide-react';
+import {
+  AlertTriangle,
+  Download,
+  Eye,
+  FileJson,
+  Loader2,
+  Lock,
+  Share2,
+  Trash2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
-import Link from 'next/link';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+  useCancelDeletion,
+  useDownloadDataExport,
+  usePrivacySummary,
+  useRecordConsent,
+  useRequestDataExport,
+  useRequestDeletion,
+} from '@/hooks/use-privacy';
+import type { ConsentType } from '@/lib/privacy-api';
+
+const CONSENT_LABELS: Record<ConsentType, string> = {
+  terms: 'Termos de uso',
+  privacy_policy: 'Política de privacidade',
+  marketing: 'Comunicações de marketing',
+  data_sharing: 'Compartilhamento com parceiros (Open Banking)',
+  analytics: 'Análise de uso e detecção de fraude',
+};
+
+function formatDate(isoDate: string) {
+  return new Date(isoDate).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+function formatBytes(bytes?: number | null) {
+  if (!bytes) return '—';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 export default function PrivacySettingsPage() {
-  const [isSaving, setIsSaving] = useState(false);
-  const [privacySettings, setPrivacySettings] = useState({
-    profileVisibility: 'private',
-    showBalance: true,
-    shareAnalytics: false,
-    marketingEmails: false,
-    dataRetention: '1year',
-  });
+  const { data: summary, isLoading } = usePrivacySummary();
 
-  const handleSwitchChange = (key: string, value: boolean) => {
-    setPrivacySettings(prev => ({ ...prev, [key]: value }));
+  const recordConsent = useRecordConsent();
+  const requestExport = useRequestDataExport();
+  const downloadExport = useDownloadDataExport();
+  const requestDeletion = useRequestDeletion();
+  const cancelDeletion = useCancelDeletion();
+
+  const [showDeletionForm, setShowDeletionForm] = useState(false);
+  const [deletionReason, setDeletionReason] = useState('');
+
+  const handleDeletionRequest = async () => {
+    await requestDeletion.mutateAsync(deletionReason.trim() || undefined);
+    setShowDeletionForm(false);
+    setDeletionReason('');
   };
 
-  const handleSelectChange = (key: string, value: string) => {
-    setPrivacySettings(prev => ({ ...prev, [key]: value }));
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center gap-2 py-20 text-gray-500">
+        <Loader2 className="h-5 w-5 animate-spin" />
+        <span className="text-sm">Carregando configurações de privacidade...</span>
+      </div>
+    );
+  }
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsSaving(false);
-  };
-
-  const handleExportData = () => {
-    // Simular exportação de dados
-    alert('Iniciando exportação dos seus dados...');
-  };
+  const consents = summary?.consents ?? [];
+  const exports = summary?.exports ?? [];
+  const pendingDeletion = summary?.pendingDeletion ?? null;
+  const latestCompletedExport = exports.find((item) => item.status === 'completed');
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
       <Breadcrumb
         items={[
           { label: 'Settings', href: '/settings' },
@@ -61,227 +91,257 @@ export default function PrivacySettingsPage() {
         ]}
       />
 
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-          <Lock className="h-8 w-8 mr-3 text-indigo-600" />
-          Privacidade
+          <Lock className="h-8 w-8 mr-3 text-blue-600" />
+          Privacidade e Dados
         </h1>
         <p className="text-gray-600 mt-2">
-          Controle seus dados e configurações de privacidade
+          Seus direitos como titular de dados, conforme a LGPD (Lei 13.709/2018)
         </p>
       </div>
 
-      {/* Visibilidade do Perfil */}
+      {/* Exclusão pendente: precisa aparecer antes de tudo */}
+      {pendingDeletion && (
+        <Card className="border border-red-200 bg-red-50">
+          <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-5">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-red-900">Exclusão de conta agendada</p>
+                <p className="text-sm text-red-700 mt-1">
+                  Seus dados serão eliminados em {formatDate(pendingDeletion.scheduledFor)}. Essa
+                  ação é irreversível, mas você pode cancelar até lá.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              className="flex-shrink-0 border-red-300 text-red-700 hover:bg-red-100"
+              disabled={cancelDeletion.isPending}
+              onClick={() => cancelDeletion.mutate()}
+            >
+              Cancelar exclusão
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Consentimentos */}
+      <Card className="border border-gray-200">
+        <CardHeader>
+          <div className="flex items-center space-x-2">
+            <Share2 className="h-5 w-5 text-gray-600" />
+            <CardTitle className="text-lg font-semibold text-gray-900">Consentimentos</CardTitle>
+          </div>
+          <CardDescription>
+            Cada decisão é registrada com data e versão do documento. Consentimentos opcionais
+            podem ser revogados a qualquer momento.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {consents.map((consent) => (
+            <div
+              key={consent.type}
+              className="flex items-start justify-between gap-4 p-4 bg-gray-50 rounded-lg"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <h3 className="font-medium text-gray-900">{CONSENT_LABELS[consent.type]}</h3>
+                  {!consent.revocable && (
+                    <Badge variant="outline" className="text-xs bg-gray-100">
+                      Obrigatório
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600">{consent.purpose}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {consent.updatedAt
+                    ? `Atualizado em ${formatDate(consent.updatedAt)}${
+                        consent.version ? ` • versão ${consent.version}` : ''
+                      }`
+                    : 'Nunca respondido'}
+                </p>
+              </div>
+              <Switch
+                checked={consent.granted}
+                disabled={!consent.revocable || recordConsent.isPending}
+                onCheckedChange={(granted) =>
+                  recordConsent.mutate({ type: consent.type, granted })
+                }
+              />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Exportação de dados */}
+      <Card className="border border-gray-200">
+        <CardHeader>
+          <div className="flex items-center space-x-2">
+            <FileJson className="h-5 w-5 text-gray-600" />
+            <CardTitle className="text-lg font-semibold text-gray-900">
+              Acesso e Portabilidade
+            </CardTitle>
+          </div>
+          <CardDescription>
+            Baixe tudo o que a plataforma armazena sobre você em formato legível por máquina
+            (LGPD, art. 18, II e V).
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <Button
+              disabled={requestExport.isPending}
+              onClick={() => requestExport.mutate()}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {requestExport.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Gerando...
+                </>
+              ) : (
+                <>
+                  <FileJson className="h-4 w-4 mr-2" />
+                  Gerar nova exportação
+                </>
+              )}
+            </Button>
+
+            {latestCompletedExport && (
+              <Button
+                variant="outline"
+                disabled={downloadExport.isPending}
+                onClick={() => downloadExport.mutate(latestCompletedExport.id)}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Baixar a mais recente
+              </Button>
+            )}
+          </div>
+
+          {exports.length > 0 && (
+            <div className="space-y-2">
+              {exports.slice(0, 5).map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between gap-3 p-3 border border-gray-200 rounded-lg"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900">
+                      Solicitada em {formatDate(item.requestedAt)}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {formatBytes(item.sizeBytes)}
+                      {item.expiresAt && item.status === 'completed'
+                        ? ` • disponível até ${formatDate(item.expiresAt)}`
+                        : ''}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Badge
+                      variant="outline"
+                      className={
+                        item.status === 'completed'
+                          ? 'bg-green-50 text-green-700 border-green-200'
+                          : item.status === 'failed'
+                            ? 'bg-red-50 text-red-700 border-red-200'
+                            : 'bg-gray-50 text-gray-700'
+                      }
+                    >
+                      {item.status}
+                    </Badge>
+                    {item.status === 'completed' && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Baixar exportação"
+                        disabled={downloadExport.isPending}
+                        onClick={() => downloadExport.mutate(item.id)}
+                      >
+                        <Download className="h-4 w-4 text-gray-500" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Eliminação */}
+      {!pendingDeletion && (
+        <Card className="border border-red-200">
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <Trash2 className="h-5 w-5 text-red-600" />
+              <CardTitle className="text-lg font-semibold text-gray-900">
+                Eliminar minha conta
+              </CardTitle>
+            </div>
+            <CardDescription>
+              Remove permanentemente seus dados pessoais e financeiros (LGPD, art. 18, VI). A
+              exclusão só é executada após um período de carência, e pode ser cancelada até lá.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {showDeletionForm ? (
+              <>
+                <Textarea
+                  value={deletionReason}
+                  onChange={(e) => setDeletionReason(e.target.value)}
+                  placeholder="Motivo (opcional)"
+                  rows={3}
+                />
+                <div className="flex gap-2">
+                  <Button
+                    variant="destructive"
+                    disabled={requestDeletion.isPending}
+                    onClick={handleDeletionRequest}
+                  >
+                    {requestDeletion.isPending ? 'Agendando...' : 'Confirmar exclusão'}
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowDeletionForm(false)}>
+                    Cancelar
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <Button
+                variant="outline"
+                className="border-red-300 text-red-700 hover:bg-red-50"
+                onClick={() => setShowDeletionForm(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Solicitar exclusão da conta
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Direitos do titular */}
       <Card className="border border-gray-200">
         <CardHeader>
           <div className="flex items-center space-x-2">
             <Eye className="h-5 w-5 text-gray-600" />
-            <CardTitle className="text-lg font-semibold text-gray-900">Visibilidade do Perfil</CardTitle>
+            <CardTitle className="text-lg font-semibold text-gray-900">
+              Seus direitos como titular
+            </CardTitle>
           </div>
-          <CardDescription>Controle quem pode ver suas informações</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="profileVisibility">Visibilidade do Perfil</Label>
-            <Select
-              value={privacySettings.profileVisibility}
-              onValueChange={(value) => handleSelectChange('profileVisibility', value)}
-            >
-              <SelectTrigger id="profileVisibility">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="private">Privado - Apenas você</SelectItem>
-                <SelectItem value="friends">Amigos - Apenas pessoas que você adicionou</SelectItem>
-                <SelectItem value="public">Público - Todos podem ver</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-            <div className="flex-1">
-              <Label htmlFor="showBalance" className="font-medium">Mostrar Saldo</Label>
-              <p className="text-sm text-gray-600">Exibir valores de saldo nas visualizações</p>
-            </div>
-            <Switch
-              id="showBalance"
-              checked={privacySettings.showBalance}
-              onCheckedChange={(value) => handleSwitchChange('showBalance', value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Compartilhamento de Dados */}
-      <Card className="border border-gray-200">
-        <CardHeader>
-          <div className="flex items-center space-x-2">
-            <Shield className="h-5 w-5 text-gray-600" />
-            <CardTitle className="text-lg font-semibold text-gray-900">Compartilhamento de Dados</CardTitle>
-          </div>
-          <CardDescription>Controle como seus dados são utilizados</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-            <div className="flex-1">
-              <Label htmlFor="shareAnalytics" className="font-medium">Compartilhar Dados Analíticos</Label>
-              <p className="text-sm text-gray-600">
-                Permitir uso de dados anonimizados para melhorar o serviço
-              </p>
-            </div>
-            <Switch
-              id="shareAnalytics"
-              checked={privacySettings.shareAnalytics}
-              onCheckedChange={(value) => handleSwitchChange('shareAnalytics', value)}
-            />
-          </div>
-          <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-            <div className="flex-1">
-              <Label htmlFor="marketingEmails" className="font-medium">Emails de Marketing</Label>
-              <p className="text-sm text-gray-600">
-                Receber emails sobre novos recursos e ofertas
-              </p>
-            </div>
-            <Switch
-              id="marketingEmails"
-              checked={privacySettings.marketingEmails}
-              onCheckedChange={(value) => handleSwitchChange('marketingEmails', value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Retenção de Dados */}
-      <Card className="border border-gray-200">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gray-900">Retenção de Dados</CardTitle>
-          <CardDescription>Configure por quanto tempo seus dados serão mantidos</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="dataRetention">Período de Retenção</Label>
-            <Select
-              value={privacySettings.dataRetention}
-              onValueChange={(value) => handleSelectChange('dataRetention', value)}
-            >
-              <SelectTrigger id="dataRetention">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="6months">6 meses</SelectItem>
-                <SelectItem value="1year">1 ano</SelectItem>
-                <SelectItem value="2years">2 anos</SelectItem>
-                <SelectItem value="indefinite">Indefinido</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-gray-500">
-              Dados mais antigos que o período selecionado serão automaticamente removidos
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Gerenciamento de Dados */}
-      <Card className="border border-gray-200">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gray-900">Gerenciamento de Dados</CardTitle>
-          <CardDescription>Exporte ou exclua seus dados</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="p-4 border border-gray-200 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <h3 className="font-medium text-gray-900">Exportar Dados</h3>
-                <p className="text-sm text-gray-600">
-                  Baixe uma cópia de todos os seus dados em formato JSON
-                </p>
-              </div>
-              <Button variant="outline" onClick={handleExportData}>
-                <Download className="h-4 w-4 mr-2" />
-                Exportar
-              </Button>
-            </div>
-          </div>
-
-          <div className="p-4 border-2 border-red-200 bg-red-50 rounded-lg">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center space-x-2 mb-2">
-                  <AlertTriangle className="h-5 w-5 text-red-600" />
-                  <h3 className="font-medium text-red-900">Excluir Conta</h3>
-                </div>
-                <p className="text-sm text-red-700 mb-4">
-                  Esta ação é permanente e não pode ser desfeita. Todos os seus dados serão
-                  excluídos permanentemente.
-                </p>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" className="border-red-300 text-red-700 hover:bg-red-100">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Excluir Conta
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Esta ação não pode ser desfeita. Isso excluirá permanentemente sua conta
-                        e todos os seus dados do nosso servidor.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction className="bg-red-600 hover:bg-red-700">
-                        Sim, excluir conta
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Política de Privacidade */}
-      <Card className="border border-gray-200 bg-gray-50">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gray-900">Política de Privacidade</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-600 mb-4">
-            Leia nossa política de privacidade completa para entender como coletamos, usamos e protegemos seus dados.
-          </p>
-          <div className="flex space-x-4">
-            <Button variant="outline" size="sm">
-              Política de Privacidade
-            </Button>
-            <Button variant="outline" size="sm">
-              Termos de Uso
-            </Button>
-          </div>
+          <ul className="space-y-2 text-sm text-gray-600 list-disc pl-5">
+            <li>Confirmação da existência de tratamento e acesso aos dados (art. 18, I e II)</li>
+            <li>Correção de dados incompletos ou desatualizados (art. 18, III)</li>
+            <li>Portabilidade em formato legível por máquina (art. 18, V)</li>
+            <li>Eliminação dos dados tratados com base no consentimento (art. 18, VI)</li>
+            <li>Revogação do consentimento a qualquer momento (art. 8º, §5º)</li>
+          </ul>
         </CardContent>
       </Card>
-
-      {/* Botões de Ação */}
-      <div className="flex justify-end space-x-4">
-        <Button variant="outline" asChild>
-          <Link href="/settings">Cancelar</Link>
-        </Button>
-        <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700">
-          {isSaving ? (
-            <>
-              <Save className="h-4 w-4 mr-2 animate-spin" />
-              Salvando...
-            </>
-          ) : (
-            <>
-              <Save className="h-4 w-4 mr-2" />
-              Salvar Configurações
-            </>
-          )}
-        </Button>
-      </div>
     </div>
   );
 }

@@ -1,18 +1,20 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { 
-  Plus, 
-  Building2, 
-  Wallet, 
-  CreditCard, 
+import {
+  Plus,
+  Building2,
+  Wallet,
+  CreditCard,
   PiggyBank,
   Search,
   ChevronDown,
   MoreVertical,
   ArrowDown,
   ArrowUp,
-  TrendingUp
+  TrendingUp,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,141 +25,26 @@ import { ConnectAccountDialog } from '@/components/accounts/connect-account-dial
 import { BankIcon } from '@/components/accounts/bank-icon';
 import { WalletCreditCard } from '@/components/accounts/wallet-credit-card';
 import { getBankConfig } from '@/lib/bank-colors';
+import { useAccounts } from '@/hooks/use-accounts';
+import { useTransactions } from '@/hooks/use-transactions';
 import type { Account } from '@/types/transaction';
-
-// Dados fictícios para visualização
-const mockAccounts: Account[] = [
-  {
-    id: '1',
-    name: 'Banco do Brasil',
-    type: 'checking',
-    balance: 28450.30,
-    currency: 'BRL',
-    isActive: true,
-    provider: 'bb',
-    providerAccountId: 'bb-567890',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    name: 'Nubank',
-    type: 'checking',
-    balance: 8730.20,
-    currency: 'BRL',
-    isActive: true,
-    provider: 'nubank',
-    providerAccountId: 'nubank-12345678',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    name: 'Inter',
-    type: 'checking',
-    balance: 5300.00,
-    currency: 'BRL',
-    isActive: true,
-    provider: 'inter',
-    providerAccountId: 'inter-9876543',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '4',
-    name: 'Caixa',
-    type: 'savings',
-    balance: 2800.00,
-    currency: 'BRL',
-    isActive: true,
-    provider: 'caixa',
-    providerAccountId: 'caixa-123456',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '5',
-    name: 'Nubank',
-    type: 'credit_card',
-    balance: -3240.50,
-    currency: 'BRL',
-    isActive: true,
-    provider: 'nubank',
-    providerAccountId: 'nubank-cc-4532',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '6',
-    name: 'Inter',
-    type: 'credit_card',
-    balance: -1890.00,
-    currency: 'BRL',
-    isActive: true,
-    provider: 'inter',
-    providerAccountId: 'inter-cc-8821',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '7',
-    name: 'Banco do Brasil',
-    type: 'credit_card',
-    balance: -580.00,
-    currency: 'BRL',
-    isActive: true,
-    provider: 'bb',
-    providerAccountId: 'bb-cc-1009',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
-
-// Dados fictícios de transações para atividade recente
-const mockTransactions = [
-  {
-    id: '1',
-    type: 'income',
-    description: 'Depósito recebido',
-    account: 'Banco do Brasil',
-    amount: 5000.00,
-    date: new Date(),
-    time: '14:30'
-  },
-  {
-    id: '2',
-    type: 'expense',
-    description: 'Transferência enviada',
-    account: 'Nubank → Inter',
-    amount: 1200.00,
-    date: new Date(),
-    time: '10:15'
-  },
-  {
-    id: '3',
-    type: 'expense',
-    description: 'Pagamento de fatura',
-    account: 'Nubank',
-    amount: 3240.50,
-    date: new Date(Date.now() - 86400000),
-    time: '16:45'
-  },
-  {
-    id: '4',
-    type: 'income',
-    description: 'Aplicação poupança',
-    account: 'Caixa',
-    amount: 500.00,
-    date: new Date(Date.now() - 172800000),
-    time: ''
-  },
-];
 
 export default function AccountsPage() {
   const [showConnectDialog, setShowConnectDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const accounts = mockAccounts;
+  const {
+    data: accountsData,
+    isLoading: isLoadingAccounts,
+    isError: hasAccountsError,
+    error: accountsError,
+  } = useAccounts();
+
+  // Atividade recente: as últimas movimentações em todas as contas.
+  const { transactions: recentTransactions, isLoading: isLoadingTransactions } =
+    useTransactions({ limit: 5, page: 1 });
+
+  const accounts = useMemo<Account[]>(() => accountsData ?? [], [accountsData]);
 
   // Separar contas bancárias de cartões
   const bankAccounts = accounts.filter(acc => acc.type !== 'credit_card');
@@ -166,11 +53,21 @@ export default function AccountsPage() {
 
   // Calcular totais
   const totalBalance = bankAccounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
-  const totalCreditLimit = creditCards.reduce((sum, acc) => {
-    const limit = Math.abs(Number(acc.balance)) * 3; // Mock
-    return sum + limit;
-  }, 0);
-  const totalAvailableLimit = totalCreditLimit - creditCards.reduce((sum, acc) => sum + Math.abs(Number(acc.balance)), 0);
+
+  // Cartões sem limite cadastrado ficam de fora do cálculo: melhor mostrar um
+  // limite menor do que inventar um valor.
+  const cardsWithLimit = creditCards.filter(
+    acc => acc.creditLimit !== null && acc.creditLimit !== undefined,
+  );
+  const totalCreditLimit = cardsWithLimit.reduce(
+    (sum, acc) => sum + Number(acc.creditLimit),
+    0,
+  );
+  const totalCreditUsed = cardsWithLimit.reduce(
+    (sum, acc) => sum + Math.abs(Number(acc.balance)),
+    0,
+  );
+  const totalAvailableLimit = totalCreditLimit - totalCreditUsed;
   const totalInvested = savingsAccounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
 
   const formatCurrency = (value: number) => {
@@ -180,10 +77,11 @@ export default function AccountsPage() {
     }).format(value);
   };
 
-  const formatDate = (date: Date) => {
+  const formatDate = (value: string | Date) => {
+    const date = value instanceof Date ? value : new Date(value);
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 24) {
       return `Hoje às ${date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
     } else if (diffInHours < 48) {
@@ -215,6 +113,20 @@ export default function AccountsPage() {
         </Button>
       </div>
 
+      {hasAccountsError && (
+        <Card className="border border-red-200 bg-red-50">
+          <CardContent className="flex items-start gap-3 py-4">
+            <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-red-900">Não foi possível carregar suas contas</p>
+              <p className="text-sm text-red-700 mt-1">
+                {(accountsError as Error)?.message ?? 'Tente novamente em alguns instantes.'}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         {/* Saldo Total */}
@@ -245,7 +157,11 @@ export default function AccountsPage() {
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">{formatCurrency(totalAvailableLimit)}</div>
             <div className="flex items-center justify-between mt-2">
-              <p className="text-xs text-gray-500">{creditCards.length} cartões ativos</p>
+              <p className="text-xs text-gray-500">
+                {cardsWithLimit.length < creditCards.length
+                  ? `${cardsWithLimit.length} de ${creditCards.length} cartões com limite cadastrado`
+                  : `${creditCards.length} cartões ativos`}
+              </p>
               <Badge variant="outline" className="text-xs bg-gray-50">Cartões</Badge>
             </div>
           </CardContent>
@@ -296,6 +212,27 @@ export default function AccountsPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {isLoadingAccounts && (
+            <div className="flex items-center justify-center gap-2 py-10 text-gray-500">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span className="text-sm">Carregando contas...</span>
+            </div>
+          )}
+
+          {!isLoadingAccounts && filteredAccounts.length === 0 && (
+            <div className="flex flex-col items-center gap-2 py-10 text-center">
+              <Building2 className="h-8 w-8 text-gray-300" />
+              <p className="text-sm font-medium text-gray-700">
+                {searchTerm ? 'Nenhuma conta encontrada' : 'Você ainda não tem contas'}
+              </p>
+              <p className="text-sm text-gray-500">
+                {searchTerm
+                  ? 'Tente outro termo de busca.'
+                  : 'Conecte uma conta bancária para começar a acompanhar seus saldos.'}
+              </p>
+            </div>
+          )}
+
           {filteredAccounts.map((account) => {
             const bankConfig = getBankConfig(account.name);
             return (
@@ -322,9 +259,8 @@ export default function AccountsPage() {
                       )}
                     </div>
                     <p className="text-sm text-gray-500">
-                      {account.type === 'checking' ? 'Conta Corrente' : 'Conta Poupança'} • 
-                      Ag: {account.providerAccountId?.slice(-4) || '0001'} • 
-                      CC: {account.providerAccountId?.slice(-6) || '000000-0'}
+                      {account.type === 'checking' ? 'Conta Corrente' : 'Conta Poupança'}
+                      {account.providerAccountId && ` • Nº ${account.providerAccountId.slice(-6)}`}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">{bankConfig.name}</p>
                   </div>
@@ -334,7 +270,11 @@ export default function AccountsPage() {
                     <div className="text-lg font-bold text-gray-900">
                       {formatCurrency(Number(account.balance))}
                     </div>
-                    <p className="text-sm text-green-600">+R$ 2.340,00 este mês</p>
+                    <p className="text-sm text-gray-500">
+                      {account.lastSyncAt
+                        ? `Sincronizado ${formatDate(account.lastSyncAt)}`
+                        : 'Nunca sincronizado'}
+                    </p>
                   </div>
                   <button className="p-2 hover:bg-gray-100 rounded transition-colors">
                     <MoreVertical className="h-5 w-5 text-gray-400" />
@@ -355,6 +295,20 @@ export default function AccountsPage() {
               <CardTitle className="text-lg font-semibold text-gray-900">Cartões de Crédito</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {isLoadingAccounts && (
+                <div className="flex items-center justify-center gap-2 py-8 text-gray-500">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span className="text-sm">Carregando cartões...</span>
+                </div>
+              )}
+
+              {!isLoadingAccounts && creditCards.length === 0 && (
+                <div className="flex flex-col items-center gap-2 py-8 text-center">
+                  <CreditCard className="h-8 w-8 text-gray-300" />
+                  <p className="text-sm text-gray-500">Nenhum cartão de crédito cadastrado</p>
+                </div>
+              )}
+
               {creditCards.map((card) => {
                 return (
                   <WalletCreditCard
@@ -375,7 +329,20 @@ export default function AccountsPage() {
               <CardTitle className="text-lg font-semibold text-gray-900">Atividade Recente</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {mockTransactions.map((transaction) => (
+              {isLoadingTransactions && (
+                <div className="flex items-center justify-center gap-2 py-8 text-gray-500">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span className="text-sm">Carregando...</span>
+                </div>
+              )}
+
+              {!isLoadingTransactions && recentTransactions.length === 0 && (
+                <p className="py-8 text-center text-sm text-gray-500">
+                  Nenhuma movimentação recente
+                </p>
+              )}
+
+              {recentTransactions.map((transaction) => (
                 <div key={transaction.id} className="flex items-start gap-3">
                   <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
                     {transaction.type === 'income' ? (
@@ -386,7 +353,9 @@ export default function AccountsPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900">{transaction.description}</p>
-                    <p className="text-xs text-gray-500">{transaction.account}</p>
+                    <p className="text-xs text-gray-500">
+                      {transaction.account?.name ?? 'Sem conta vinculada'}
+                    </p>
                     <p className="text-xs text-gray-500">{formatDate(transaction.date)}</p>
                   </div>
                   <div className="text-right flex-shrink-0">
@@ -396,16 +365,11 @@ export default function AccountsPage() {
                       }`}
                     >
                       {transaction.type === 'income' ? '+' : '-'}
-                      {formatCurrency(transaction.amount)}
+                      {formatCurrency(Math.abs(Number(transaction.amount)))}
                     </p>
                   </div>
                 </div>
               ))}
-              <div className="flex justify-center pt-2">
-                <button className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
-                  <Plus className="h-4 w-4 text-gray-600" />
-                </button>
-              </div>
             </CardContent>
           </Card>
         </div>

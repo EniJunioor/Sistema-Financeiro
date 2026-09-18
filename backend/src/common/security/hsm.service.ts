@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as AWS from 'aws-sdk';
-import * as vault from 'node-vault';
+
+// @aws-sdk/client-kms e node-vault são optionalDependencies: o HSM vem
+// desabilitado por padrão e os SDKs só são carregados quando
+// security.hsm.enabled for true.
 
 export interface HSMKeyInfo {
   keyId: string;
@@ -19,7 +21,7 @@ export interface SignatureResult {
 @Injectable()
 export class HSMService {
   private readonly logger = new Logger(HSMService.name);
-  private kms: AWS.KMS;
+  private kms: any;
   private vaultClient: any;
   private readonly hsmEnabled: boolean;
   private readonly provider: string;
@@ -29,46 +31,94 @@ export class HSMService {
     this.provider = this.configService.get<string>('security.hsm.provider', 'aws-cloudhsm');
 
     if (this.hsmEnabled) {
-      this.initializeHSM();
+      void this.initializeHSM();
     }
   }
 
-  private initializeHSM() {
+  private async initializeHSM() {
     switch (this.provider) {
       case 'aws-cloudhsm':
       case 'aws-kms':
-        this.initializeAWS();
+        await this.initializeAWS();
         break;
       case 'hashicorp-vault':
-        this.initializeVault();
+        await this.initializeVault();
         break;
       default:
         this.logger.warn(`Unsupported HSM provider: ${this.provider}`);
     }
   }
 
-  private initializeAWS() {
+  private async initializeAWS() {
     const region = this.configService.get<string>('security.hsm.region');
-    
-    AWS.config.update({
-      region,
-      accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID'),
-      secretAccessKey: this.configService.get<string>('AWS_SECRET_ACCESS_KEY'),
-    });
+    const accessKeyId = this.configService.get<string>('AWS_ACCESS_KEY_ID');
+    const secretAccessKey = this.configService.get<string>('AWS_SECRET_ACCESS_KEY');
 
-    this.kms = new AWS.KMS();
-    this.logger.log('AWS KMS/CloudHSM initialized');
+    try {
+      // Specifier indireto: o pacote é opcional e pode não estar instalado,
+      // então não deve ser resolvido estaticamente pelo TypeScript.
+      const kmsModule = '@aws-sdk/client-kms';
+      const { KMSClient } = await import(kmsModule);
+
+      this.kms = new KMSClient({
+        region,
+        // Sem credenciais explícitas o SDK v3 usa a cadeia padrão de
+        // provedores (perfil, variáveis de ambiente, IAM role da instância),
+        // que é o caminho preferido em produção.
+        ...(accessKeyId && secretAccessKey
+          ? { credentials: { accessKeyId, secretAccessKey } }
+          : {}),
+      });
+
+      this.logger.log('AWS KMS/CloudHSM initialized');
+    } catch (error) {
+      this.logger.error(
+        'HSM habilitado mas "@aws-sdk/client-kms" não está instalado. ' +
+          'Execute: npm install @aws-sdk/client-kms',
+      );
+    }
   }
 
-  private initializeVault() {
+  /**
+   * Envia um comando ao KMS. O SDK v3 é modular: cada operação é uma classe
+   * carregada sob demanda, então o import fica junto do uso.
+   */
+  private async sendKmsCommand(commandName: string, params: Record<string, any>) {
+    const kmsModule = '@aws-sdk/client-kms';
+    const sdk = await import(kmsModule);
+    const Command = sdk[commandName];
+
+    if (!Command) {
+      throw new Error(`Comando KMS desconhecido: ${commandName}`);
+    }
+
+    return this.kms.send(new Command(params));
+  }
+
+  /** O SDK v3 devolve Uint8Array onde o v2 devolvia Buffer. */
+  private toBuffer(value: Uint8Array | Buffer): Buffer {
+    return Buffer.isBuffer(value) ? value : Buffer.from(value);
+  }
+
+  private async initializeVault() {
     const vaultOptions = {
       apiVersion: 'v1',
       endpoint: this.configService.get<string>('VAULT_ENDPOINT'),
       token: this.configService.get<string>('VAULT_TOKEN'),
     };
 
-    this.vaultClient = vault(vaultOptions);
-    this.logger.log('HashiCorp Vault initialized');
+    try {
+      const vaultSpecifier = 'node-vault';
+      const vaultModule = await import(vaultSpecifier);
+      const vault = (vaultModule as any).default ?? vaultModule;
+
+      this.vaultClient = vault(vaultOptions);
+      this.logger.log('HashiCorp Vault initialized');
+    } catch (error) {
+      this.logger.error(
+        'HSM habilitado mas "node-vault" não está instalado. Execute: npm install node-vault',
+      );
+    }
   }
 
   /**
@@ -111,7 +161,7 @@ export class HSMService {
       ],
     };
 
-    const result = await this.kms.createKey(params).promise();
+    const result = await this.sendKmsCommand('CreateKeyCommand', params);
     
     return {
       keyId: result.KeyMetadata.KeyId,
@@ -168,8 +218,8 @@ export class HSMService {
       Plaintext: Buffer.from(plaintext, 'utf8'),
     };
 
-    const result = await this.kms.encrypt(params).promise();
-    return result.CiphertextBlob.toString('base64');
+    const result = await this.sendKmsCommand('EncryptCommand', params);
+    return this.toBuffer(result.CiphertextBlob).toString('base64');
   }
 
   private async encryptWithVault(plaintext: string, keyId: string): Promise<string> {
@@ -210,8 +260,8 @@ export class HSMService {
       CiphertextBlob: Buffer.from(ciphertext, 'base64'),
     };
 
-    const result = await this.kms.decrypt(params).promise();
-    return result.Plaintext.toString('utf8');
+    const result = await this.sendKmsCommand('DecryptCommand', params);
+    return this.toBuffer(result.Plaintext).toString('utf8');
   }
 
   private async decryptWithVault(ciphertext: string, keyId: string): Promise<string> {
@@ -254,10 +304,10 @@ export class HSMService {
       SigningAlgorithm: algorithm,
     };
 
-    const result = await this.kms.sign(params).promise();
-    
+    const result = await this.sendKmsCommand('SignCommand', params);
+
     return {
-      signature: result.Signature.toString('base64'),
+      signature: this.toBuffer(result.Signature).toString('base64'),
       algorithm: result.SigningAlgorithm,
       keyId: result.KeyId,
     };
@@ -309,7 +359,7 @@ export class HSMService {
       SigningAlgorithm: algorithm,
     };
 
-    const result = await this.kms.verify(params).promise();
+    const result = await this.sendKmsCommand('VerifyCommand', params);
     return result.SignatureValid;
   }
 
@@ -333,7 +383,7 @@ export class HSMService {
     try {
       switch (this.provider) {
         case 'aws-kms':
-          await this.kms.listKeys({ Limit: 1 }).promise();
+          await this.sendKmsCommand('ListKeysCommand', { Limit: 1 });
           return true;
         case 'hashicorp-vault':
           await this.vaultClient.read('sys/health');

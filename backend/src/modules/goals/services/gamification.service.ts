@@ -168,7 +168,7 @@ export class GamificationService {
     // Check achievement badges
     for (const badge of this.badges) {
       let earned = false;
-      let earnedAt = new Date();
+      const earnedAt = new Date();
 
       switch (badge.requirement.type) {
         case 'goals_created':

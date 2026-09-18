@@ -25,9 +25,16 @@ export function WalletCreditCard({ account, cardholderName = 'USUÁRIO' }: Walle
   
   // Para cartões de crédito, o balance negativo representa a fatura atual
   const currentBill = Math.abs(Number(account.balance))
-  const creditLimit = currentBill * 3 // Mock - assumindo limite 3x a fatura
-  const availableLimit = creditLimit - currentBill
-  const usedPercentage = (currentBill / creditLimit) * 100
+
+  // O limite só é conhecido quando foi cadastrado; sem ele não dá para
+  // calcular limite disponível nem percentual de uso.
+  const hasCreditLimit = account.creditLimit !== null && account.creditLimit !== undefined
+  const creditLimit = hasCreditLimit ? Number(account.creditLimit) : null
+  const availableLimit = creditLimit !== null ? creditLimit - currentBill : null
+  const usedPercentage =
+    creditLimit !== null && creditLimit > 0
+      ? Math.min((currentBill / creditLimit) * 100, 100)
+      : null
 
   // Determinar a cor principal do banco (usar cor mais escura/saturada para o cartão)
   const cardColor = bankConfig.primaryColor || '#820AD1'
@@ -91,30 +98,33 @@ export function WalletCreditCard({ account, cardholderName = 'USUÁRIO' }: Walle
         {/* Informações do limite - Base do cartão */}
         <div className="flex flex-col gap-1.5">
           {/* Barra de progresso do limite */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] text-white/90 font-medium">Limite utilizado</span>
-              <span className="text-[11px] font-semibold text-white">{usedPercentage.toFixed(0)}%</span>
+          {usedPercentage !== null && (
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] text-white/90 font-medium">Limite utilizado</span>
+                <span className="text-[11px] font-semibold text-white">{usedPercentage.toFixed(0)}%</span>
+              </div>
+              <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-white/70 rounded-full transition-all duration-500"
+                  style={{ width: `${usedPercentage}%` }}
+                />
+              </div>
             </div>
-            <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-white/70 rounded-full transition-all duration-500"
-                style={{ width: `${usedPercentage}%` }}
-              />
-            </div>
-          </div>
-          
+          )}
+
           {/* Informações financeiras - Completamente visíveis */}
           <div className="space-y-0.5 pt-0.5">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] text-white/80">Usado</span>
+              <span className="text-[11px] text-white/80">Fatura atual</span>
               <span className="text-[11px] font-semibold text-white">{formatCurrency(currentBill)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[11px] text-white/80">Restante</span>
-              <span className="text-[11px] font-semibold text-white">{formatCurrency(availableLimit)}</span>
+              <span className="text-[11px] font-semibold text-white">
+                {availableLimit !== null ? formatCurrency(availableLimit) : 'Limite não cadastrado'}
+              </span>
             </div>
-            
           </div>
         </div>
       </div>

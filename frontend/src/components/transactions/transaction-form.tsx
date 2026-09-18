@@ -206,11 +206,14 @@ export function TransactionForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Valor</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                          R$
-                        </span>
+                    {/* O FormControl envolve só o Input: se envolver a div do
+                        prefixo "R$", o id do label cai na div e o campo deixa
+                        de ser associado ao rótulo. */}
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 z-10">
+                        R$
+                      </span>
+                      <FormControl>
                         <Input
                           type="number"
                           step="0.01"
@@ -220,8 +223,8 @@ export function TransactionForm({
                           {...field}
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         />
-                      </div>
-                    </FormControl>
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

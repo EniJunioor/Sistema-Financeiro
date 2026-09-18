@@ -114,7 +114,25 @@ describe('AccountsService', () => {
       expect(result).toEqual(mockAccount);
       expect(mockPrismaService.account.findFirst).toHaveBeenCalledWith({
         where: { id: accountId, userId },
-        include: {
+        select: {
+          id: true,
+          userId: true,
+          type: true,
+          provider: true,
+          providerAccountId: true,
+          name: true,
+          balance: true,
+          creditLimit: true,
+          currency: true,
+          isActive: true,
+          lastSyncAt: true,
+          accessToken: true,
+          refreshToken: true,
+          tokenExpiresAt: true,
+          syncError: true,
+          metadata: true,
+          createdAt: true,
+          updatedAt: true,
           _count: {
             select: { transactions: true },
           },

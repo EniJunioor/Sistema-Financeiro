@@ -311,11 +311,11 @@ Implementação incremental da plataforma financeira usando TypeScript + NestJS 
   - **Propriedade 30: Criptografia Adequada**
   - **Valida: Requisitos 10.1, 10.2**
 
-- [ ] 29. Implementar compliance LGPD
-  - Adicionar endpoints para portabilidade de dados
-  - Implementar exclusão completa de dados
-  - Criar sistema de consentimento
-  - Adicionar relatórios de compliance
+- [x] 29. Implementar compliance LGPD
+  - Adicionar endpoints para portabilidade de dados (`POST /privacy/export`, download em JSON)
+  - Implementar exclusão completa de dados (carência de 30 dias + anonimização irreversível)
+  - Criar sistema de consentimento (registro append-only com versão, IP e user agent)
+  - Adicionar relatórios de compliance (`GET /privacy/me` com os direitos do art. 18)
   - _Requisitos: 10.1, 10.2_
 
 ### Fase 11: Aplicativo Mobile (React Native)
@@ -366,10 +366,12 @@ Implementação incremental da plataforma financeira usando TypeScript + NestJS 
 ### Fase 13: Finalização e Deploy
 
 - [ ] 34. Configurar CI/CD e deploy
-  - Configurar GitHub Actions para testes automáticos
-  - Implementar deploy automático para staging/produção
-  - Configurar monitoramento com Sentry e DataDog
-  - Implementar backup automático e disaster recovery
+  - [x] Configurar GitHub Actions para testes automáticos (`.github/workflows/ci.yml`:
+        lint, typecheck, testes e build de backend e frontend, testes de integração
+        com Redis e verificação de migrations)
+  - [ ] Implementar deploy automático para staging/produção
+  - [ ] Configurar monitoramento com Sentry e DataDog
+  - [ ] Implementar backup automático e disaster recovery
   - _Requisitos: Infraestrutura_
 
 - [ ] 35. Testes finais e otimização
